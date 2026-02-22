@@ -2,10 +2,12 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { observable } from "@trpc/server/observable";
 import { serviceProcedure } from "./serviceAuth";
 import { z } from "zod";
 import * as db from "./db";
 import { parseMarkdownTasks, findBestAgent, hasCyclicDependency } from "./utils";
+import { eventEmitter } from "./ee";
 import { notificationsRouter } from "./notificationsRouter";
 import { webhooksRouter } from "./webhooksRouter";
 
@@ -122,21 +124,22 @@ export const appRouter = router({
     updateStatus: protectedProcedure
       .input(z.object({ taskId: z.number(), status: z.string(), agentId: z.number().optional() }))
       .mutation(async ({ input }) => {
-        await db.updateTaskStatus(input.taskId, input.status, input.agentId);
+        const updatedTask = await db.updateTaskStatus(input.taskId, input.status, input.agentId);
+        eventEmitter.emit("taskUpdated", updatedTask);
         return { success: true };
       }),
 
     assignToAgent: protectedProcedure
       .input(z.object({ taskId: z.number(), agentId: z.number() }))
       .mutation(async ({ input }) => {
-        await db.assignTaskToAgent(input.taskId, input.agentId);
+        const assignedTask = await db.assignTaskToAgent(input.taskId, input.agentId);
         
         // Actualizar carga de trabajo del agente
         const agent = await db.getAgentById(input.agentId);
         if (agent) {
           await db.updateAgentWorkload(input.agentId, agent.currentWorkload + 1);
         }
-
+        eventEmitter.emit("taskUpdated", assignedTask);
         return { success: true };
       }),
 
@@ -188,9 +191,9 @@ export const appRouter = router({
           throw new Error("No available agent with required skills");
         }
 
-        await db.assignTaskToAgent(input.taskId, bestAgent.id);
+        const assignedTask = await db.assignTaskToAgent(input.taskId, bestAgent.id);
         await db.updateAgentWorkload(bestAgent.id, bestAgent.currentWorkload + 1);
-
+        eventEmitter.emit("taskUpdated", assignedTask);
         return { agentId: bestAgent.id, agentName: bestAgent.name };
       }),
 
@@ -198,6 +201,19 @@ export const appRouter = router({
     serviceAutoAssign: serviceProcedure
       .input(z.object({ taskId: z.number() }))
       .mutation(async ({ input }) => {
+
+    onUpdate: publicProcedure.subscription(() => {
+      return observable<any>(emit => {
+        const onTaskUpdate = (task: any) => {
+          emit.next(task);
+        };
+        eventEmitter.on("taskUpdated", onTaskUpdate);
+        return () => {
+          eventEmitter.off("taskUpdated", onTaskUpdate);
+        };
+      });
+    }),
+
         const task = await db.getTaskById(input.taskId);
         if (!task) throw new Error("Task not found");
 
@@ -218,9 +234,9 @@ export const appRouter = router({
           throw new Error("No available agent with required skills");
         }
 
-        await db.assignTaskToAgent(input.taskId, bestAgent.id);
+        const assignedTask = await db.assignTaskToAgent(input.taskId, bestAgent.id);
         await db.updateAgentWorkload(bestAgent.id, bestAgent.currentWorkload + 1);
-
+        eventEmitter.emit("taskUpdated", assignedTask);
         return { agentId: bestAgent.id, agentName: bestAgent.name };
       }),
   }),
