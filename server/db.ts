@@ -1,4 +1,4 @@
-import { eq, and, desc, sql } from "drizzle-orm";
+import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications, Agent, Task, Sprint, TaskDependency } from "../drizzle/schema";
 import { ENV } from './_core/env';
@@ -333,17 +333,75 @@ export async function createNotification(data: {
   });
 }
 
-export async function getNotifications(userId: number, unreadOnly = false) {
+export async function getNotifications(userId: number, unreadOnly = false, notArchived = false, type?: string) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
 
+  const conditions: any[] = [eq(notifications.userId, userId)];
+
   if (unreadOnly) {
-    return await db.select().from(notifications)
-      .where(and(eq(notifications.userId, userId), eq(notifications.read, false)))
-      .orderBy(desc(notifications.createdAt));
+    conditions.push(eq(notifications.read, false));
+  }
+
+  if (notArchived) {
+    conditions.push(eq(notifications.archived, false));
+  }
+
+  if (type) {
+    // Usar una comparación de string para el tipo
+    conditions.push(sql`${notifications.type} = ${type}`);
   }
 
   return await db.select().from(notifications)
-    .where(eq(notifications.userId, userId))
+    .where(and(...conditions))
+    .orderBy(desc(notifications.createdAt));
+}
+
+export async function markNotificationAsRead(notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.update(notifications)
+    .set({ read: true })
+    .where(eq(notifications.id, notificationId));
+}
+
+export async function markNotificationsAsRead(notificationIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  if (notificationIds.length === 0) return;
+
+  return await db.update(notifications)
+    .set({ read: true })
+    .where(inArray(notifications.id, notificationIds));
+}
+
+export async function archiveNotification(notificationId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.update(notifications)
+    .set({ archived: true })
+    .where(eq(notifications.id, notificationId));
+}
+
+export async function archiveNotifications(notificationIds: number[]) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  if (notificationIds.length === 0) return;
+
+  return await db.update(notifications)
+    .set({ archived: true })
+    .where(inArray(notifications.id, notificationIds));
+}
+
+export async function getNotificationsByType(userId: number, type: string) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.select().from(notifications)
+    .where(and(eq(notifications.userId, userId), sql`${notifications.type} = ${type}`, eq(notifications.archived, false)))
     .orderBy(desc(notifications.createdAt));
 }

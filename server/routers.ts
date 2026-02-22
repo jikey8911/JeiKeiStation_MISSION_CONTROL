@@ -5,6 +5,7 @@ import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
 import { z } from "zod";
 import * as db from "./db";
 import { parseMarkdownTasks, findBestAgent, hasCyclicDependency } from "./utils";
+import { notificationsRouter } from "./notificationsRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -219,28 +220,7 @@ export const appRouter = router({
   }),
 
   // ==================== NOTIFICACIONES ====================
-  notifications: router({
-    list: protectedProcedure
-      .input(z.object({ unreadOnly: z.boolean().optional() }))
-      .query(async ({ input, ctx }) => {
-        return await db.getNotifications(ctx.user.id, input.unreadOnly);
-      }),
-
-    create: protectedProcedure
-      .input(
-        z.object({
-          userId: z.number(),
-          type: z.enum(["approval_pending", "task_blocked", "qa_completed", "sprint_closed", "task_assigned"]),
-          title: z.string(),
-          message: z.string().optional(),
-          taskId: z.number().optional(),
-          sprintId: z.number().optional(),
-        })
-      )
-      .mutation(async ({ input }) => {
-        return await db.createNotification(input);
-      }),
-  }),
+  notifications: notificationsRouter,
 });
 
 export type AppRouter = typeof appRouter;
