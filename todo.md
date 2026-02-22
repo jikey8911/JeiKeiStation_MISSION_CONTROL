@@ -16,7 +16,7 @@
 - [x] Componente TaskBoard con 5 columnas SCRUM
 - [x] Animaciones FLIP para movimiento de tarjetas
 - [x] Drag-and-drop entre columnas
-- [ ] Transiciones de estado con validación
+- [x] Transiciones de estado con validación (SCRUM)
 - [x] Tarjetas de tareas con metadatos
 - [x] Indicadores de prioridad y estimación
 - [ ] Visualización de dependencias en tarjetas
@@ -61,7 +61,7 @@
 - [ ] Visualización de grafo de dependencias
 - [ ] Modal de edición de dependencias
 - [ ] Validación de ciclos circulares
-- [ ] Prevención de asignación de tareas bloqueadas
+- [x] Prevención de asignación de tareas bloqueadas (TaskBoard validation)
 - [ ] Indicadores visuales de tareas bloqueadas
 
 ## Frontend - Gestión de Sprints
@@ -81,7 +81,7 @@
 - [ ] Centro de notificaciones
 
 ## Integración General
-- [ ] Autenticación y autorización
+- [x] Autenticación y autorización (API Key para OpenClaw)
 - [ ] Sincronización en tiempo real (WebSocket o polling)
 - [ ] Manejo de errores global
 - [ ] Logging y monitoreo
@@ -89,7 +89,7 @@
 
 ## Documentación y Despliegue
 - [ ] README.md con instrucciones de instalación
-- [ ] Documentación de API tRPC
+- [x] Documentación de API tRPC (OpenClaw SKILL.md)
 - [ ] Guía de uso de la plataforma
 - [ ] Crear repositorio GitHub privado
 - [ ] Subir código a GitHub
