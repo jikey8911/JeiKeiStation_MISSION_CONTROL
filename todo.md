@@ -105,3 +105,16 @@
 - [x] Componente NotificationBell en la barra de navegación
 - [x] Integración en el Dashboard principal
 - [ ] Tests unitarios para notificaciones
+
+## Integración con OpenClaw (Nueva Implementación)
+- [x] Autenticación por API Key en tRPC (server/serviceAuth.ts)
+- [x] Router de webhooks para notificaciones externas (server/webhooksRouter.ts)
+- [x] Definición de SKILL.md con capacidades de la skill
+- [x] Script jeikei_skill.py con lógica de matching de habilidades
+- [x] Cliente HTTP en Python para consumir endpoints tRPC
+- [x] Validación SCRUM en TaskBoard (prevención de movimiento de tareas bloqueadas)
+- [x] Indicadores visuales de tareas bloqueadas en TaskCard
+- [x] Componente TaskDependencyGraph para visualizar dependencias
+- [x] Script heartbeat.py para monitoreo automático cada 30 minutos
+- [x] Documentación completa de integración (OPENCLAW_INTEGRATION.md)
+- [x] Variables de entorno configuradas (.env.example)

@@ -1,7 +1,8 @@
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { AlertCircle, CheckCircle2, Clock } from "lucide-react";
+import { AlertCircle, CheckCircle2, Clock, Lock } from "lucide-react";
 import { motion } from "framer-motion";
+import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
 
 interface TaskCardProps {
   id: number;
@@ -12,6 +13,8 @@ interface TaskCardProps {
   estimationHours?: number;
   assignedAgentId?: number;
   status: string;
+  isBlocked?: boolean;
+  blockingTaskTitles?: string[];
   onDragStart?: (e: React.DragEvent) => void;
 }
 
@@ -40,6 +43,8 @@ export function TaskCard({
   estimationHours,
   assignedAgentId,
   status,
+  isBlocked = false,
+  blockingTaskTitles = [],
   onDragStart,
 }: TaskCardProps) {
   return (
@@ -55,13 +60,29 @@ export function TaskCard({
         exit={{ opacity: 0, y: -20 }}
         transition={{ duration: 0.2 }}
       >
-      <Card className="p-4 mb-3 hover:shadow-md transition-shadow bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-l-4 border-l-blue-500">
+      <Card className={`p-4 mb-3 hover:shadow-md transition-shadow bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800 border-l-4 ${
+        isBlocked ? "border-l-red-500 opacity-75" : "border-l-blue-500"
+      }`}>
         <div className="space-y-3">
           {/* Encabezado con título y prioridad */}
           <div className="flex items-start justify-between gap-2">
-            <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex-1 line-clamp-2">
-              {title}
-            </h3>
+            <div className="flex items-start gap-2 flex-1">
+              {isBlocked && (
+                <TooltipProvider>
+                  <Tooltip>
+                    <TooltipTrigger asChild>
+                      <Lock className="w-4 h-4 text-red-500 flex-shrink-0 mt-0.5" />
+                    </TooltipTrigger>
+                    <TooltipContent>
+                      <p>Bloqueada por: {blockingTaskTitles.join(", ")}</p>
+                    </TooltipContent>
+                  </Tooltip>
+                </TooltipProvider>
+              )}
+              <h3 className="font-semibold text-sm text-slate-900 dark:text-slate-100 flex-1 line-clamp-2">
+                {title}
+              </h3>
+            </div>
             <Badge className={`flex-shrink-0 ${priorityColors[priority]}`}>
               {priority}
             </Badge>
