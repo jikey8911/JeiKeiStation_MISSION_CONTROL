@@ -1,6 +1,5 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink, wsLink, splitLink } from "@trpc/client";
-import { createWSClient } from "@trpc/client/links/ws";
+import { httpBatchLink, wsLink, splitLink, createWSClient } from "@trpc/client";
 import type { AppRouter } from "../../../server/routers";
 import superjson from "superjson";
 
