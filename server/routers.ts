@@ -89,6 +89,48 @@ export const appRouter = router({
         await db.updateSprintStatus(input.sprintId, input.status);
         return { success: true };
       }),
+
+    getDependencyGraph: publicProcedure
+      .input(z.object({ sprintId: z.number() }))
+      .query(async ({ input }) => {
+        const tasksInSprint = await db.getTasks(input.sprintId);
+        const allDeps = await db.getAllDependencies();
+        
+        // Filtrar dependencias que pertenecen a tareas del sprint
+        const taskIds = new Set(tasksInSprint.map(t => t.id));
+        const dependenciesInSprint = allDeps.filter(
+          dep => taskIds.has(dep.taskId) && taskIds.has(dep.dependsOnTaskId)
+        );
+
+        return {
+          tasks: tasksInSprint,
+          dependencies: dependenciesInSprint,
+        };
+      }),
+
+    getHealthMetrics: publicProcedure
+      .input(z.object({ sprintId: z.number() }))
+      .query(async ({ input }) => {
+        const tasksInSprint = await db.getTasks(input.sprintId);
+        const totalTasks = tasksInSprint.length;
+        const completedTasks = tasksInSprint.filter(t => t.status === "done").length;
+        const completionPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+
+        // Distribución por requiredSkills
+        const skillDistribution: Record<string, number> = {};
+        tasksInSprint.forEach(task => {
+          task.requiredSkills.forEach(skill => {
+            skillDistribution[skill] = (skillDistribution[skill] || 0) + 1;
+          });
+        });
+
+        return {
+          completionPercentage,
+          totalTasks,
+          completedTasks,
+          skillDistribution: Object.entries(skillDistribution).map(([skill, count]) => ({ skill, count })),
+        };
+      }),
   }),
 
   // ==================== TAREAS ====================
@@ -201,19 +243,6 @@ export const appRouter = router({
     serviceAutoAssign: serviceProcedure
       .input(z.object({ taskId: z.number() }))
       .mutation(async ({ input }) => {
-
-    onUpdate: publicProcedure.subscription(() => {
-      return observable<any>(emit => {
-        const onTaskUpdate = (task: any) => {
-          emit.next(task);
-        };
-        eventEmitter.on("taskUpdated", onTaskUpdate);
-        return () => {
-          eventEmitter.off("taskUpdated", onTaskUpdate);
-        };
-      });
-    }),
-
         const task = await db.getTaskById(input.taskId);
         if (!task) throw new Error("Task not found");
 
@@ -239,6 +268,18 @@ export const appRouter = router({
         eventEmitter.emit("taskUpdated", assignedTask);
         return { agentId: bestAgent.id, agentName: bestAgent.name };
       }),
+
+    onUpdate: publicProcedure.subscription(() => {
+      return observable<any>(emit => {
+        const onTaskUpdate = (task: any) => {
+          emit.next(task);
+        };
+        eventEmitter.on("taskUpdated", onTaskUpdate);
+        return () => {
+          eventEmitter.off("taskUpdated", onTaskUpdate);
+        };
+      });
+    }),
   }),
 
   // ==================== DEPENDENCIAS ====================
@@ -258,13 +299,19 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({ taskId: z.number(), dependsOnTaskId: z.number() }))
       .mutation(async ({ input }) => {
-        // Verificar ciclos
-        const allDeps = await db.getTaskDependencies(input.taskId);
+        // Verificar ciclos usando TODAS las dependencias existentes
+        const allDeps = await db.getAllDependencies();
         if (hasCyclicDependency(allDeps, input.taskId, input.dependsOnTaskId)) {
-          throw new Error("Adding this dependency would create a cycle");
+          throw new Error("Ciclo circular detectado. No se puede agregar la dependencia.");
         }
 
         return await db.createTaskDependency(input.taskId, input.dependsOnTaskId);
+      }),
+
+    delete: protectedProcedure
+      .input(z.object({ taskId: z.number(), dependsOnTaskId: z.number() }))
+      .mutation(async ({ input }) => {
+        return await db.deleteDependency(input.taskId, input.dependsOnTaskId);
       }),
   }),
 

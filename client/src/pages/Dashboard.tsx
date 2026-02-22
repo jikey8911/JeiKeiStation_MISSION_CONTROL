@@ -9,6 +9,9 @@ import { TaskBoard } from "@/components/TaskBoard";
 import { VirtualOffice } from "@/components/VirtualOffice";
 import { ControlPanel } from "@/components/ControlPanel";
 import { NotificationBell } from "@/components/NotificationBell";
+import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
+import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
+import { SprintManager } from "@/components/SprintManager";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
@@ -225,9 +228,10 @@ export default function Dashboard() {
 
         {/* Tabs principales */}
         <Tabs defaultValue="kanban" className="w-full">
-          <TabsList className="grid w-full grid-cols-3">
+          <TabsList className="grid w-full grid-cols-4">
             <TabsTrigger value="kanban">Tablero Kanban</TabsTrigger>
             <TabsTrigger value="office">Oficina Virtual</TabsTrigger>
+            <TabsTrigger value="topology">Topología y Salud</TabsTrigger>
             <TabsTrigger value="control">Panel de Control</TabsTrigger>
           </TabsList>
 
@@ -260,16 +264,39 @@ export default function Dashboard() {
             )}
           </TabsContent>
 
+          {/* Tab: Topología y Salud */}
+          <TabsContent value="topology" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                {currentSprint && <TaskDependencyGraph sprintId={currentSprint.id} />}
+              </div>
+              <div className="lg:col-span-1">
+                {currentSprint && <SprintHealthIndicator sprintId={currentSprint.id} />}
+              </div>
+            </div>
+          </TabsContent>
+
           {/* Tab: Panel de Control */}
-          <TabsContent value="control" className="space-y-4">
-            <ControlPanel
-              totalTasks={tasks.length}
-              completedTasks={completedTasks}
-              inProgressTasks={inProgressTasks}
-              blockedTasks={blockedTasks}
-              velocity={velocity}
-              agentCount={agents.length}
-            />
+          <TabsContent value="control" className="space-y-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
+              <div className="lg:col-span-2">
+                <SprintManager 
+                  sprints={sprintsQuery.data || []} 
+                  onCreateSprint={async (data) => { await trpc.sprints.create.mutateAsync(data); sprintsQuery.refetch(); }}
+                  onUpdateSprintStatus={async (id, status) => { await trpc.sprints.updateStatus.mutateAsync({ sprintId: id, status }); sprintsQuery.refetch(); }}
+                />
+              </div>
+              <div className="lg:col-span-1">
+                <ControlPanel
+                  totalTasks={tasks.length}
+                  completedTasks={completedTasks}
+                  inProgressTasks={inProgressTasks}
+                  blockedTasks={blockedTasks}
+                  velocity={velocity}
+                  agentCount={agents.length}
+                />
+              </div>
+            </div>
           </TabsContent>
         </Tabs>
       </div>
