@@ -66,6 +66,8 @@ export default function Dashboard() {
   const updateTaskStatusMutation = trpc.tasks.updateStatus.useMutation();
   const importMarkdownMutation = trpc.tasks.importFromMarkdown.useMutation();
   const autoAssignMutation = trpc.tasks.autoAssign.useMutation();
+  const createSprintMutation = trpc.sprints.create.useMutation();
+  const updateSprintStatusMutation = trpc.sprints.updateStatus.useMutation();
 
   // Cargar datos
   useEffect(() => {
@@ -282,8 +284,8 @@ export default function Dashboard() {
               <div className="lg:col-span-2">
                 <SprintManager 
                   sprints={sprintsQuery.data || []} 
-                  onCreateSprint={async (data) => { await trpc.sprints.create.mutateAsync(data); sprintsQuery.refetch(); }}
-                  onUpdateSprintStatus={async (id, status) => { await trpc.sprints.updateStatus.mutateAsync({ sprintId: id, status }); sprintsQuery.refetch(); }}
+                  onCreateSprint={async (data) => { await createSprintMutation.mutateAsync(data); sprintsQuery.refetch(); }}
+                  onUpdateSprintStatus={async (id, status) => { await updateSprintStatusMutation.mutateAsync({ sprintId: id, status }); sprintsQuery.refetch(); }}
                 />
               </div>
               <div className="lg:col-span-1">
