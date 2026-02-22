@@ -3,6 +3,7 @@ import { Badge } from "@/components/ui/badge";
 import { AlertCircle, CheckCircle2, Clock, Lock } from "lucide-react";
 import { motion } from "framer-motion";
 import { Tooltip, TooltipContent, TooltipProvider, TooltipTrigger } from "@/components/ui/tooltip";
+import { DependencyEditorModal } from "./DependencyEditorModal";
 
 interface TaskCardProps {
   id: number;
@@ -121,7 +122,8 @@ export function TaskCard({
               )}
             </div>
 
-            <div className="flex items-center gap-1">
+            <div className="flex items-center gap-2">
+              <DependencyEditorModal taskId={id} />
               {assignedAgentId ? (
                 <CheckCircle2 className="w-4 h-4 text-green-600" />
               ) : (

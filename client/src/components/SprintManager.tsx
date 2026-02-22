@@ -1,14 +1,15 @@
 import { useState } from "react";
 import { motion } from "framer-motion";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
 import { Input } from "@/components/ui/input";
 import { Textarea } from "@/components/ui/textarea";
-import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
-import { Plus, Play, CheckCircle2, RotateCcw } from "lucide-react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Plus, Play, CheckCircle2, RotateCcw, Users, History, ClipboardList } from "lucide-react";
 import { toast } from "sonner";
+import { trpc as api } from "@/lib/trpc";
 
 interface Sprint {
   id: number;
@@ -52,6 +53,9 @@ export function SprintManager({ sprints, onCreateSprint, onUpdateSprintStatus }:
     description: "",
     plannedVelocity: 0,
   });
+  const [activeSprintId, setActiveSprintId] = useState<number | null>(sprints.find(s => s.status === 'active')?.id || sprints[0]?.id || null);
+
+  const { data: tasks } = api.tasks.list.useQuery({ sprintId: activeSprintId || undefined }, { enabled: !!activeSprintId });
 
   const handleCreateSprint = async () => {
     if (!formData.name.trim()) {
@@ -89,133 +93,163 @@ export function SprintManager({ sprints, onCreateSprint, onUpdateSprintStatus }:
     return statusFlow[currentStatus] || null;
   };
 
+  const tasksInProgress = tasks?.filter(t => t.status === 'in_progress' || t.status === 'review') ?? [];
+  const tasksDone = tasks?.filter(t => t.status === 'done') ?? [];
+
   return (
     <div className="w-full space-y-6">
-      {/* Encabezado y botón */}
-      <div className="flex items-center justify-between">
-        <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Sprints</h2>
-        <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
-          <Plus className="w-4 h-4" />
-          Nuevo Sprint
-        </Button>
-      </div>
+      <Tabs defaultValue="sprints" className="w-full">
+        <TabsList className="grid w-full grid-cols-3 mb-4">
+          <TabsTrigger value="sprints" className="flex items-center gap-2">
+            <ClipboardList className="w-4 h-4" />
+            Sprints
+          </TabsTrigger>
+          <TabsTrigger value="daily" className="flex items-center gap-2">
+            <Users className="w-4 h-4" />
+            Daily Standup
+          </TabsTrigger>
+          <TabsTrigger value="retro" className="flex items-center gap-2">
+            <History className="w-4 h-4" />
+            Retrospectiva
+          </TabsTrigger>
+        </TabsList>
 
-      {/* Lista de sprints */}
-      <div className="space-y-4">
-        {sprints.map((sprint, idx) => {
-          const nextStatus = getNextStatus(sprint.status);
+        {/* Pestaña de Sprints (Original) */}
+        <TabsContent value="sprints" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <h2 className="text-2xl font-bold text-slate-900 dark:text-white">Gestión de Sprints</h2>
+            <Button onClick={() => setIsDialogOpen(true)} className="gap-2">
+              <Plus className="w-4 h-4" />
+              Nuevo Sprint
+            </Button>
+          </div>
 
-          return (
-            <motion.div
-              key={sprint.id}
-              initial={{ opacity: 0, x: -20 }}
-              animate={{ opacity: 1, x: 0 }}
-              transition={{ delay: idx * 0.1 }}
-            >
-              <Card className="p-6 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+          <div className="space-y-4">
+            {sprints.map((sprint, idx) => {
+              const nextStatus = getNextStatus(sprint.status);
+              return (
+                <motion.div
+                  key={sprint.id}
+                  initial={{ opacity: 0, x: -20 }}
+                  animate={{ opacity: 1, x: 0 }}
+                  transition={{ delay: idx * 0.1 }}
+                  onClick={() => setActiveSprintId(sprint.id)}
+                  className={`cursor-pointer transition-all ${activeSprintId === sprint.id ? 'ring-2 ring-blue-500 rounded-lg' : ''}`}
+                >
+                  <Card className="p-6 bg-gradient-to-r from-slate-50 to-slate-100 dark:from-slate-900 dark:to-slate-800">
+                    <div className="space-y-4">
+                      <div className="flex items-start justify-between">
+                        <div className="flex-1">
+                          <div className="flex items-center gap-3 mb-2">
+                            <h3 className="text-lg font-bold text-slate-900 dark:text-white">
+                              {sprint.name}
+                            </h3>
+                            <Badge className={statusColors[sprint.status]}>
+                              {statusLabels[sprint.status]}
+                            </Badge>
+                          </div>
+                          {sprint.description && (
+                            <p className="text-sm text-slate-600 dark:text-slate-400">
+                              {sprint.description}
+                            </p>
+                          )}
+                        </div>
+                        {nextStatus && (
+                          <Button
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleStatusChange(sprint.id, nextStatus);
+                            }}
+                            size="sm"
+                            className="gap-2"
+                          >
+                            {sprint.status === "planning" && <Play className="w-4 h-4" />}
+                            {sprint.status === "active" && <CheckCircle2 className="w-4 h-4" />}
+                            {sprint.status === "review" && <RotateCcw className="w-4 h-4" />}
+                            {sprint.status === "retrospective" && <CheckCircle2 className="w-4 h-4" />}
+                            {statusLabels[nextStatus]}
+                          </Button>
+                        )}
+                      </div>
+                    </div>
+                  </Card>
+                </motion.div>
+              );
+            })}
+          </div>
+        </TabsContent>
+
+        {/* Pestaña de Daily Standup */}
+        <TabsContent value="daily">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <Users className="w-5 h-5 text-blue-500" />
+                Daily Standup - {sprints.find(s => s.id === activeSprintId)?.name || 'Sprint Seleccionado'}
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                 <div className="space-y-4">
-                  {/* Encabezado */}
-                  <div className="flex items-start justify-between">
-                    <div className="flex-1">
-                      <div className="flex items-center gap-3 mb-2">
-                        <h3 className="text-lg font-bold text-slate-900 dark:text-white">
-                          {sprint.name}
-                        </h3>
-                        <Badge className={statusColors[sprint.status]}>
-                          {statusLabels[sprint.status]}
-                        </Badge>
-                      </div>
-                      {sprint.description && (
-                        <p className="text-sm text-slate-600 dark:text-slate-400">
-                          {sprint.description}
-                        </p>
-                      )}
+                  <h4 className="font-bold text-sm text-slate-500 uppercase tracking-wider">En Progreso / Revisión</h4>
+                  {tasksInProgress.length > 0 ? (
+                    <div className="space-y-2">
+                      {tasksInProgress.map(task => (
+                        <div key={task.id} className="p-3 bg-white dark:bg-slate-800 border rounded-lg shadow-sm flex justify-between items-center">
+                          <div>
+                            <p className="text-sm font-bold text-slate-900 dark:text-white">{task.title}</p>
+                            <p className="text-xs text-slate-500">Agente: {task.assignedAgentId || 'Sin asignar'}</p>
+                          </div>
+                          <Badge variant="outline" className="text-[10px] uppercase">{task.status}</Badge>
+                        </div>
+                      ))}
                     </div>
-                    {nextStatus && (
-                      <Button
-                        onClick={() => handleStatusChange(sprint.id, nextStatus)}
-                        size="sm"
-                        className="gap-2"
-                      >
-                        {sprint.status === "planning" && <Play className="w-4 h-4" />}
-                        {sprint.status === "active" && <CheckCircle2 className="w-4 h-4" />}
-                        {sprint.status === "review" && <RotateCcw className="w-4 h-4" />}
-                        {sprint.status === "retrospective" && <CheckCircle2 className="w-4 h-4" />}
-                        {statusLabels[nextStatus]}
-                      </Button>
-                    )}
-                  </div>
-
-                  {/* Métricas */}
-                  <div className="grid grid-cols-2 md:grid-cols-4 gap-4 pt-4 border-t border-slate-200 dark:border-slate-700">
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        Velocidad Planeada
-                      </p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">
-                        {sprint.plannedVelocity}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        Velocidad Real
-                      </p>
-                      <p className="text-lg font-bold text-slate-900 dark:text-white">
-                        {sprint.actualVelocity}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        Inicio
-                      </p>
-                      <p className="text-sm text-slate-900 dark:text-white">
-                        {sprint.startDate
-                          ? new Date(sprint.startDate).toLocaleDateString()
-                          : "No iniciado"}
-                      </p>
-                    </div>
-                    <div>
-                      <p className="text-xs text-slate-600 dark:text-slate-400 mb-1">
-                        Fin
-                      </p>
-                      <p className="text-sm text-slate-900 dark:text-white">
-                        {sprint.endDate
-                          ? new Date(sprint.endDate).toLocaleDateString()
-                          : "No definido"}
-                      </p>
-                    </div>
-                  </div>
-
-                  {/* Barra de progreso */}
-                  {sprint.plannedVelocity > 0 && (
-                    <div className="pt-2">
-                      <div className="flex items-center justify-between mb-2">
-                        <span className="text-xs font-semibold text-slate-700 dark:text-slate-300">
-                          Progreso
-                        </span>
-                        <span className="text-xs text-slate-600 dark:text-slate-400">
-                          {((sprint.actualVelocity / sprint.plannedVelocity) * 100).toFixed(1)}%
-                        </span>
-                      </div>
-                      <div className="w-full bg-slate-300 dark:bg-slate-700 rounded-full h-2">
-                        <div
-                          className="bg-green-500 h-2 rounded-full transition-all"
-                          style={{
-                            width: `${Math.min(
-                              (sprint.actualVelocity / sprint.plannedVelocity) * 100,
-                              100
-                            )}%`,
-                          }}
-                        />
-                      </div>
-                    </div>
+                  ) : (
+                    <p className="text-sm text-slate-400 italic">No hay tareas activas actualmente.</p>
                   )}
                 </div>
-              </Card>
-            </motion.div>
-          );
-        })}
-      </div>
+                <div className="space-y-4">
+                  <h4 className="font-bold text-sm text-slate-500 uppercase tracking-wider">Bloqueos Activos</h4>
+                  <p className="text-sm text-slate-400 italic">Consulta el Grafo de Dependencias para ver bloqueos topológicos.</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+
+        {/* Pestaña de Retrospectiva */}
+        <TabsContent value="retro">
+          <Card>
+            <CardHeader>
+              <CardTitle className="flex items-center gap-2">
+                <History className="w-5 h-5 text-purple-500" />
+                Retrospectiva del Sprint
+              </CardTitle>
+            </CardHeader>
+            <CardContent className="space-y-6">
+              <div className="space-y-4">
+                <h4 className="font-bold text-sm text-slate-500 uppercase tracking-wider">Tareas Completadas ("Done")</h4>
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                  {tasksDone.map(task => (
+                    <div key={task.id} className="p-2 bg-green-50 dark:bg-green-900/20 border border-green-100 dark:border-green-900/30 rounded flex items-center gap-2">
+                      <CheckCircle2 className="w-4 h-4 text-green-500" />
+                      <span className="text-xs font-medium text-slate-700 dark:text-slate-300">{task.title}</span>
+                    </div>
+                  ))}
+                </div>
+              </div>
+              <div className="space-y-4 pt-4 border-t">
+                <h4 className="font-bold text-sm text-slate-500 uppercase tracking-wider">Notas de la Sesión</h4>
+                <Textarea 
+                  placeholder="¿Qué salió bien? ¿Qué podemos mejorar? ¿Acciones para el próximo sprint?..." 
+                  className="min-h-[150px]"
+                />
+                <Button className="w-full">Guardar Notas de Retrospectiva</Button>
+              </div>
+            </CardContent>
+          </Card>
+        </TabsContent>
+      </Tabs>
 
       {/* Dialog para crear sprint */}
       <Dialog open={isDialogOpen} onOpenChange={setIsDialogOpen}>

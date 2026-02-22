@@ -297,6 +297,25 @@ export async function getTaskDependencies(taskId: number) {
   return await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
 }
 
+export async function getAllDependencies() {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.select().from(taskDependencies);
+}
+
+export async function deleteDependency(taskId: number, dependsOnTaskId: number) {
+  const db = await getDb();
+  if (!db) throw new Error("Database not available");
+
+  return await db.delete(taskDependencies).where(
+    and(
+      eq(taskDependencies.taskId, taskId),
+      eq(taskDependencies.dependsOnTaskId, dependsOnTaskId)
+    )
+  );
+}
+
 export async function getBlockingTasks(taskId: number) {
   const db = await getDb();
   if (!db) throw new Error("Database not available");
