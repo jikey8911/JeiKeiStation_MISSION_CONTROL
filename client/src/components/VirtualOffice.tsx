@@ -1,8 +1,10 @@
 import { useState, useEffect } from "react";
-import { motion } from "framer-motion";
+import { motion, AnimatePresence, LayoutGroup } from "framer-motion";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Activity, Users, Zap } from "lucide-react";
+import { useTaskAssignmentChanges } from "@/hooks/useTaskAssignmentChanges";
+import { trpc } from "@/lib/trpc";
 
 interface Agent {
   id: number;
@@ -17,13 +19,8 @@ interface Agent {
 interface Task {
   id: number;
   title: string;
-  assignedAgentId?: number;
+  assignedAgentId?: number | null;
   status: "backlog" | "in_progress" | "review" | "qa" | "done";
-}
-
-interface VirtualOfficeProps {
-  agents: Agent[];
-  tasks: Task[];
 }
 
 const STATIONS = [
@@ -42,20 +39,29 @@ const skillIcons: Record<string, string> = {
   DB: "🗄️",
 };
 
-export function VirtualOffice({ agents, tasks }: VirtualOfficeProps) {
+export function VirtualOffice() {
+  const { data: agentsData, isLoading: agentsLoading } = trpc.agents.list.useQuery();
+  const { tasks, isLoading: tasksLoading, lastChangedTask } = useTaskAssignmentChanges();
   const [activeAgents, setActiveAgents] = useState<Agent[]>([]);
 
   useEffect(() => {
-    setActiveAgents(agents.filter(a => a.status !== "offline"));
-  }, [agents]);
-
-  const getAgentTaskCount = (agentId: number) => {
-    return tasks.filter(t => t.assignedAgentId === agentId).length;
-  };
+    if (agentsData) {
+      setActiveAgents(agentsData.filter((a: any) => a.status !== "offline") as Agent[]);
+    }
+  }, [agentsData]);
 
   const getAgentTasks = (agentId: number) => {
-    return tasks.filter(t => t.assignedAgentId === agentId);
+    return (tasks || []).filter(t => t.assignedAgentId === agentId);
   };
+
+  if (agentsLoading || tasksLoading) {
+    return (
+      <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
+        <Activity className="w-8 h-8 animate-spin text-blue-500 mr-3" />
+        <span>Cargando Mission Control...</span>
+      </div>
+    );
+  }
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-lg p-8 overflow-hidden relative">
@@ -71,82 +77,95 @@ export function VirtualOffice({ agents, tasks }: VirtualOfficeProps) {
         </svg>
       </div>
 
-      {/* Estaciones de trabajo */}
-      <div className="relative h-full">
-        {STATIONS.map((station, idx) => (
-          <motion.div
-            key={station.id}
-            className="absolute"
-            style={{ left: `${station.x}px`, top: `${station.y}px` }}
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            transition={{ delay: idx * 0.1 }}
-          >
-            <Card className={`w-64 bg-gradient-to-br ${station.color} border-0 shadow-2xl`}>
-              <div className="p-4 text-white">
-                <div className="flex items-center justify-between mb-3">
-                  <h3 className="font-bold text-lg">{station.label}</h3>
-                  <Activity className="w-4 h-4 animate-pulse" />
-                </div>
+      <LayoutGroup>
+        {/* Estaciones de trabajo */}
+        <div className="relative h-full">
+          {STATIONS.map((station, idx) => (
+            <motion.div
+              key={station.id}
+              className="absolute"
+              style={{ left: `${station.x}px`, top: `${station.y}px` }}
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ delay: idx * 0.1 }}
+            >
+              <Card className={`w-64 bg-gradient-to-br ${station.color} border-0 shadow-2xl`}>
+                <div className="p-4 text-white">
+                  <div className="flex items-center justify-between mb-3">
+                    <h3 className="font-bold text-lg">{station.label}</h3>
+                    <Activity className="w-4 h-4 animate-pulse" />
+                  </div>
 
-                {/* Agentes en esta estación */}
-                <div className="space-y-2 mb-4">
-                  {activeAgents.map((agent) => {
-                    const agentTasks = getAgentTasks(agent.id);
-                    const inThisStation = agentTasks.some(t => t.status === station.id);
+                  {/* Agentes en esta estación */}
+                  <div className="space-y-2 mb-4">
+                    {activeAgents.map((agent) => {
+                      const agentTasks = getAgentTasks(agent.id);
+                      const inThisStation = agentTasks.some(t => t.status === station.id);
+                      const isHighlighted = lastChangedTask?.newAgentId === agent.id;
 
-                    if (!inThisStation) return null;
+                      if (!inThisStation) return null;
 
-                    return (
-                      <motion.div
-                        key={agent.id}
-                        className="bg-white/10 backdrop-blur-sm rounded p-2 flex items-center gap-2"
-                        initial={{ opacity: 0, x: -10 }}
-                        animate={{ opacity: 1, x: 0 }}
-                      >
-                        <div className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold">
-                          {agent.name.charAt(0)}
-                        </div>
-                        <div className="flex-1 min-w-0">
-                          <p className="text-xs font-semibold truncate">{agent.name}</p>
-                          <div className="flex gap-1 flex-wrap">
-                            {agent.skills.slice(0, 2).map((skill) => (
-                              <span key={skill} className="text-xs">
-                                {skillIcons[skill] || "•"}
-                              </span>
-                            ))}
+                      return (
+                        <motion.div
+                          key={agent.id}
+                          className={`bg-white/10 backdrop-blur-sm rounded p-2 flex items-center gap-2 transition-all duration-300 ${
+                            isHighlighted ? 'ring-2 ring-white ring-offset-2 ring-offset-blue-500 scale-105' : ''
+                          }`}
+                          initial={{ opacity: 0, x: -10 }}
+                          animate={{ opacity: 1, x: 0 }}
+                        >
+                          <motion.div 
+                            className="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center text-sm font-bold"
+                            animate={isHighlighted ? { scale: [1, 1.2, 1] } : {}}
+                          >
+                            {agent.name.charAt(0)}
+                          </motion.div>
+                          <div className="flex-1 min-w-0">
+                            <p className="text-xs font-semibold truncate">{agent.name}</p>
                           </div>
-                        </div>
-                        <Badge variant="secondary" className="text-xs">
-                          {agentTasks.length}
-                        </Badge>
-                      </motion.div>
-                    );
-                  })}
-                </div>
+                          <Badge variant="secondary" className="text-xs">
+                            {agentTasks.filter(t => t.status === station.id).length}
+                          </Badge>
+                        </motion.div>
+                      );
+                    })}
+                  </div>
 
-                {/* Tareas en esta estación */}
-                <div className="space-y-1 pt-2 border-t border-white/20">
-                  {tasks
-                    .filter(t => t.status === station.id)
-                    .slice(0, 3)
-                    .map((task) => (
-                      <motion.div
-                        key={task.id}
-                        className="text-xs bg-white/10 rounded px-2 py-1 truncate"
-                        initial={{ opacity: 0 }}
-                        animate={{ opacity: 1 }}
-                        transition={{ delay: 0.2 }}
-                      >
-                        {task.title}
-                      </motion.div>
-                    ))}
+                  {/* Tareas en esta estación (animadas con layoutId) */}
+                  <div className="space-y-1 pt-2 border-t border-white/20 min-h-[40px]">
+                    <AnimatePresence>
+                      {tasks
+                        ?.filter(t => t.status === station.id)
+                        .map((task) => (
+                          <motion.div
+                            key={task.id}
+                            layoutId={`task-${task.id}`}
+                            className={`text-xs rounded px-2 py-1 truncate cursor-default ${
+                              lastChangedTask?.taskId === task.id 
+                                ? 'bg-yellow-400 text-slate-900 font-bold' 
+                                : 'bg-white/10 text-white'
+                            }`}
+                            initial={{ opacity: 0, y: 10 }}
+                            animate={{ opacity: 1, y: 0 }}
+                            exit={{ opacity: 0, scale: 0.95 }}
+                            transition={{ 
+                              type: "spring", 
+                              stiffness: 300, 
+                              damping: 25,
+                              layout: { duration: 0.5 } 
+                            }}
+                          >
+                            {task.title}
+                          </motion.div>
+                        ))}
+                    </AnimatePresence>
+                  </div>
                 </div>
-              </div>
-            </Card>
-          </motion.div>
-        ))}
-      </div>
+              </Card>
+            </motion.div>
+          ))}
+        </div>
+      </LayoutGroup>
 
       {/* Panel de resumen en la esquina inferior derecha */}
       <motion.div
@@ -162,11 +181,11 @@ export function VirtualOffice({ agents, tasks }: VirtualOfficeProps) {
           </div>
           <div className="flex items-center gap-2">
             <Zap className="w-4 h-4 text-yellow-400" />
-            <span>Tareas en progreso: {tasks.filter(t => t.status === "in_progress").length}</span>
+            <span>Tareas en progreso: {tasks?.filter(t => t.status === "in_progress").length || 0}</span>
           </div>
           <div className="flex items-center gap-2">
             <Activity className="w-4 h-4 text-green-400" />
-            <span>Completadas: {tasks.filter(t => t.status === "done").length}</span>
+            <span>Completadas: {tasks?.filter(t => t.status === "done").length || 0}</span>
           </div>
         </div>
       </motion.div>
