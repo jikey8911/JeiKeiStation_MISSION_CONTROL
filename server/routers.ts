@@ -2,13 +2,16 @@ import { COOKIE_NAME } from "@shared/const";
 import { getSessionCookieOptions } from "./_core/cookies";
 import { systemRouter } from "./_core/systemRouter";
 import { publicProcedure, protectedProcedure, router } from "./_core/trpc";
+import { serviceProcedure } from "./serviceAuth";
 import { z } from "zod";
 import * as db from "./db";
 import { parseMarkdownTasks, findBestAgent, hasCyclicDependency } from "./utils";
 import { notificationsRouter } from "./notificationsRouter";
+import { webhooksRouter } from "./webhooksRouter";
 
 export const appRouter = router({
   system: systemRouter,
+  webhooks: webhooksRouter,
   auth: router({
     me: publicProcedure.query(opts => opts.ctx.user),
     logout: publicProcedure.mutation(({ ctx }) => {
@@ -174,6 +177,36 @@ export const appRouter = router({
             id: a.id,
             name: a.name,
             skills: typeof a.skills === 'string' ? JSON.parse(a.skills) : a.skills,
+            currentWorkload: a.currentWorkload,
+            maxCapacity: a.maxCapacity,
+            status: a.status as "available" | "busy" | "offline",
+          })),
+          task.requiredSkills
+        );
+
+        if (!bestAgent) {
+          throw new Error("No available agent with required skills");
+        }
+
+        await db.assignTaskToAgent(input.taskId, bestAgent.id);
+        await db.updateAgentWorkload(bestAgent.id, bestAgent.currentWorkload + 1);
+
+        return { agentId: bestAgent.id, agentName: bestAgent.name };
+      }),
+
+    // Endpoint para OpenClaw (Protegido por API Key)
+    serviceAutoAssign: serviceProcedure
+      .input(z.object({ taskId: z.number() }))
+      .mutation(async ({ input }) => {
+        const task = await db.getTaskById(input.taskId);
+        if (!task) throw new Error("Task not found");
+
+        const agents = await db.getAgents();
+        const bestAgent = findBestAgent(
+          agents.map(a => ({
+            id: a.id,
+            name: a.name,
+            skills: a.skills,
             currentWorkload: a.currentWorkload,
             maxCapacity: a.maxCapacity,
             status: a.status as "available" | "busy" | "offline",
