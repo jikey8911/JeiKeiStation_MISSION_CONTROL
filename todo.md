@@ -94,3 +94,14 @@
 - [ ] Crear repositorio GitHub privado
 - [ ] Subir código a GitHub
 - [ ] Configurar CI/CD básico
+
+## Centro de Notificaciones Avanzado (Nueva Solicitud)
+- [x] Procedimientos tRPC para marcar notificaciones como leídas
+- [x] Procedimientos tRPC para archivar notificaciones
+- [x] Procedimientos tRPC para filtrar notificaciones por tipo
+- [x] Componente NotificationCenter con interfaz elegante
+- [x] Filtros por tipo de alerta (aprobaciones, bloqueos, QA, sprints)
+- [x] Opciones de marcar como leído/archivar en lote
+- [x] Componente NotificationBell en la barra de navegación
+- [x] Integración en el Dashboard principal
+- [ ] Tests unitarios para notificaciones
