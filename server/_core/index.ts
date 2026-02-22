@@ -2,6 +2,8 @@ import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
 import net from "net";
+import { WebSocketServer } from "ws";
+import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
 import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
@@ -30,6 +32,19 @@ async function findAvailablePort(startPort: number = 3000): Promise<number> {
 async function startServer() {
   const app = express();
   const server = createServer(app);
+
+  // WebSocket Server
+  const wss = new WebSocketServer({
+    server,
+    path: "/api/trpc",
+  });
+
+  const handler = applyWSSHandler({
+    wss,
+    router: appRouter,
+    createContext: (opts) => createContext({ ...opts, req: opts.req as any, res: {} as any }),
+  });
+
   // Configure body parser with larger size limit for file uploads
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
@@ -57,8 +72,16 @@ async function startServer() {
     console.log(`Port ${preferredPort} is busy, using port ${port} instead`);
   }
 
+  process.on("SIGTERM", () => {
+    console.log("SIGTERM received");
+    handler.broadcastStatus();
+    wss.close();
+    server.close();
+  });
+
   server.listen(port, () => {
     console.log(`Server running on http://localhost:${port}/`);
+    console.log(`WebSocket Server running on ws://localhost:${port}/api/trpc`);
   });
 }
 
