@@ -11,6 +11,7 @@ import { ControlPanel } from "@/components/ControlPanel";
 import { NotificationBell } from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
+import { useTaskSubscription } from "@/hooks/useTaskSubscription";
 import { Loader2, Plus, Upload } from "lucide-react";
 import { toast } from "sonner";
 
@@ -36,6 +37,7 @@ interface Agent {
 }
 
 export default function Dashboard() {
+  useTaskSubscription();
   const { user, isAuthenticated } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
