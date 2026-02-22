@@ -126,6 +126,7 @@ export const notifications = mysqlTable("notifications", {
   taskId: int("taskId"),
   sprintId: int("sprintId"),
   read: boolean("read").default(false).notNull(),
+  archived: boolean("archived").default(false).notNull(),
   createdAt: timestamp("createdAt").defaultNow().notNull(),
 });
 

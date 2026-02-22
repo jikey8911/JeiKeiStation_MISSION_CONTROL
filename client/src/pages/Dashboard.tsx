@@ -8,6 +8,7 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { TaskBoard } from "@/components/TaskBoard";
 import { VirtualOffice } from "@/components/VirtualOffice";
 import { ControlPanel } from "@/components/ControlPanel";
+import { NotificationBell } from "@/components/NotificationBell";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { Loader2, Plus, Upload } from "lucide-react";
@@ -197,12 +198,15 @@ export default function Dashboard() {
             <h1 className="text-4xl font-bold text-slate-900 dark:text-white">JeiKeiStation</h1>
             <p className="text-slate-600 dark:text-slate-400">Centro de Control de Misiones - Orquestación de Agentes AI</p>
           </div>
-          {currentSprint && (
-            <div className="text-right">
-              <p className="text-sm text-slate-600 dark:text-slate-400">Sprint Actual</p>
-              <p className="text-lg font-semibold text-slate-900 dark:text-white">{currentSprint.name}</p>
-            </div>
-          )}
+          <div className="flex items-center gap-4">
+            <NotificationBell />
+            {currentSprint && (
+              <div className="text-right">
+                <p className="text-sm text-slate-600 dark:text-slate-400">Sprint Actual</p>
+                <p className="text-lg font-semibold text-slate-900 dark:text-white">{currentSprint.name}</p>
+              </div>
+            )}
+          </div>
         </div>
 
         {/* Controles principales */}
