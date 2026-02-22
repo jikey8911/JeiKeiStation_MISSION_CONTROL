@@ -12,6 +12,7 @@ import { NotificationBell } from "@/components/NotificationBell";
 import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
 import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
 import { SprintManager } from "@/components/SprintManager";
+import { OpenClawDeployer } from "@/components/OpenClawDeployer";
 import { useAuth } from "@/_core/hooks/useAuth";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
@@ -228,11 +229,12 @@ export default function Dashboard() {
 
         {/* Tabs principales */}
         <Tabs defaultValue="kanban" className="w-full">
-          <TabsList className="grid w-full grid-cols-4">
+          <TabsList className="grid w-full grid-cols-5">
             <TabsTrigger value="kanban">Tablero Kanban</TabsTrigger>
             <TabsTrigger value="office">Oficina Virtual</TabsTrigger>
             <TabsTrigger value="topology">Topología y Salud</TabsTrigger>
             <TabsTrigger value="control">Panel de Control</TabsTrigger>
+            <TabsTrigger value="deployer">Despliegue OpenClaw</TabsTrigger>
           </TabsList>
 
           {/* Tab: Tablero Kanban */}
@@ -274,6 +276,11 @@ export default function Dashboard() {
                 {currentSprint && <SprintHealthIndicator sprintId={currentSprint.id} />}
               </div>
             </div>
+          </TabsContent>
+
+          {/* Tab: Despliegue OpenClaw */}
+          <TabsContent value="deployer" className="space-y-6">
+            <OpenClawDeployer />
           </TabsContent>
 
           {/* Tab: Panel de Control */}
