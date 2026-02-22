@@ -3,8 +3,10 @@ import { motion, AnimatePresence } from "framer-motion";
 import { TaskCard } from "./TaskCard";
 import { Card } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
-import { Plus } from "lucide-react";
+import { Plus, Lock } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { trpc } from "@/lib/trpc";
+import { toast } from "sonner";
 
 interface Task {
   id: number;
@@ -45,8 +47,29 @@ export function TaskBoard({ tasks, onTaskStatusChange, onAddTask }: TaskBoardPro
     e.dataTransfer.dropEffect = "move";
   };
 
-  const handleDrop = (columnId: string) => {
+  const utils = trpc.useUtils();
+
+  const handleDrop = async (columnId: string) => {
     if (draggedTask && draggedFromColumn !== columnId) {
+      // Validación SCRUM: Si se mueve a 'in_progress', verificar bloqueos
+      if (columnId === "in_progress") {
+        try {
+          const blockingTasks = await utils.dependencies.getBlocking.fetch({ taskId: draggedTask.id });
+          if (blockingTasks && blockingTasks.length > 0) {
+            const blockingTitles = blockingTasks.map(t => t.title).join(", ");
+            toast.error(`Tarea bloqueada`, {
+              description: `No puedes iniciar esta tarea porque depende de: ${blockingTitles}`,
+              icon: <Lock className="w-4 h-4 text-red-500" />
+            });
+            setDraggedTask(null);
+            setDraggedFromColumn(null);
+            return;
+          }
+        } catch (error) {
+          console.error("Error al verificar bloqueos:", error);
+        }
+      }
+      
       onTaskStatusChange?.(draggedTask.id, columnId);
     }
     setDraggedTask(null);
