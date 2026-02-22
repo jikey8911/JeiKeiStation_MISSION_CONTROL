@@ -13,8 +13,9 @@ const getEndingLink = () => {
     });
   }
 
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const client = createWSClient({
-    url: `ws://localhost:3000/api/trpc`,
+    url: `${protocol}//${window.location.host}/api/trpc`,
   });
 
   return splitLink({
