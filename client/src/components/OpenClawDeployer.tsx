@@ -57,7 +57,13 @@ export function OpenClawDeployer() {
     }
   };
 
-  const generatedCommand = `export JEIKEI_AGENT_TOKEN="${jwt || '{TU_TOKEN_JWT}'}"\ncurl -sL https://jeikei.ai/install.sh | bash -s -- --llm-provider=${provider} --llm-key=${apiKey || '{TU_API_KEY}'}`;
+  const generatedCommand = `docker run -d \
+  --name openclaw_agent \
+  -e JEIKEI_AGENT_TOKEN="${jwt || '{TU_TOKEN_JWT}'}" \
+  -e LLM_PROVIDER="${provider}" \
+  -e LLM_API_KEY="${apiKey || '{TU_API_KEY}'}" \
+  -e JEIKEI_API_URL="${window.location.origin}/api/trpc" \
+  jeikei/openclaw-worker:latest`
 
   const handleCopyToClipboard = () => {
     navigator.clipboard.writeText(generatedCommand);
