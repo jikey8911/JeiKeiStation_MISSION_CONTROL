@@ -7,8 +7,9 @@ WORKDIR /app
 # Instalar pnpm (el gestor de paquetes que usas en el proyecto)
 RUN npm install -g pnpm
 
-# Copiar archivos de dependencias
+# Copiar archivos de dependencias y patches
 COPY package.json pnpm-lock.yaml ./
+COPY patches ./patches
 
 # Instalar dependencias
 RUN pnpm install
