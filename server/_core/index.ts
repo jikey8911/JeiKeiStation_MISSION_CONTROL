@@ -74,9 +74,12 @@ async function startServer() {
 
   process.on("SIGTERM", () => {
     console.log("SIGTERM received");
-    handler.broadcastStatus();
     wss.close();
-    server.close();
+    server.close(() => {
+      process.exit(0);
+    });
+    // Fallback exit if server.close hangs
+    setTimeout(() => process.exit(0), 1000);
   });
 
   server.listen(port, () => {
