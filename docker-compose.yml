@@ -1,0 +1,54 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  mysql:
+    image: mysql:8.0
+    container_name: jeikei_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: jeikei_user
+      MYSQL_PASSWORD: jeikei_password
+      MYSQL_DATABASE: jeikei_station
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
+  jeikei_platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeikei_node_platform
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    # El volumen sincroniza tu código local con el contenedor para ver cambios en tiempo real
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      - mysql
+    restart: unless-stopped
+
+  openclaw_agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw_python_worker
+    env_file:
+      - .env
+    # Asegura que la plataforma levante antes que el agente
+    depends_on:
+      - jeikei_platform
+    # Le pasamos la URL interna de la plataforma al agente
+    environment:
+      - JEIKEI_API_URL=http://jeikei_platform:3000/api/trpc
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  mysql_data:
