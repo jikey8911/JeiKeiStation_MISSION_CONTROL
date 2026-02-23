@@ -2,6 +2,20 @@
 version: '3.8'
 
 services:
+  mysql:
+    image: mysql:8.0
+    container_name: jeikei_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: jeikei_user
+      MYSQL_PASSWORD: jeikei_password
+      MYSQL_DATABASE: jeikei_station
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    restart: unless-stopped
+
   jeikei_platform:
     build:
       context: .
@@ -15,6 +29,8 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+    depends_on:
+      - mysql
     restart: unless-stopped
 
   openclaw_agent:
@@ -33,3 +49,6 @@ services:
     volumes:
       - .:/app
     restart: unless-stopped
+
+volumes:
+  mysql_data:
