@@ -1,0 +1,35 @@
+# docker-compose.yml
+version: '3.8'
+
+services:
+  jeikei_platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeikei_node_platform
+    ports:
+      - "3000:3000"
+    env_file:
+      - .env
+    # El volumen sincroniza tu código local con el contenedor para ver cambios en tiempo real
+    volumes:
+      - .:/app
+      - /app/node_modules
+    restart: unless-stopped
+
+  openclaw_agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw_python_worker
+    env_file:
+      - .env
+    # Asegura que la plataforma levante antes que el agente
+    depends_on:
+      - jeikei_platform
+    # Le pasamos la URL interna de la plataforma al agente
+    environment:
+      - JEIKEI_API_URL=http://jeikei_platform:3000/api/trpc
+    volumes:
+      - .:/app
+    restart: unless-stopped
