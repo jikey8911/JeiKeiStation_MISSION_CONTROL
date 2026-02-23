@@ -13,7 +13,7 @@ import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
 import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
 import { SprintManager } from "@/components/SprintManager";
 import { OpenClawDeployer } from "@/components/OpenClawDeployer";
-import { useAuth } from "@/_core/hooks/useAuth";
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
 import { Loader2, Plus, Upload } from "lucide-react";
@@ -42,7 +42,6 @@ interface Agent {
 
 export default function Dashboard() {
   useTaskSubscription();
-  const { user, isAuthenticated } = useAuth();
   const [tasks, setTasks] = useState<Task[]>([]);
   const [agents, setAgents] = useState<Agent[]>([]);
   const [currentSprint, setCurrentSprint] = useState<any>(null);
@@ -186,19 +185,10 @@ export default function Dashboard() {
   const blockedTasks = tasks.filter(t => t.status === "backlog" && !t.assignedAgentId).length;
   const velocity = tasks.length > 0 ? (completedTasks / tasks.length) * 100 : 0;
 
-  if (!isAuthenticated) {
-    return (
-      <div className="min-h-screen flex items-center justify-center">
-        <div className="text-center">
-          <h1 className="text-2xl font-bold mb-4">Por favor inicia sesión</h1>
-          <p className="text-slate-600">Necesitas estar autenticado para acceder a JeiKeiStation</p>
-        </div>
-      </div>
-    );
-  }
-
   return (
-    <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6">
+    <>
+      <SignedIn>
+        <div className="min-h-screen bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6">
       <div className="max-w-7xl mx-auto space-y-6">
         {/* Encabezado */}
         <div className="flex items-center justify-between">
@@ -372,6 +362,11 @@ export default function Dashboard() {
           </div>
         </DialogContent>
       </Dialog>
-    </div>
+        </div>
+      </SignedIn>
+      <SignedOut>
+        <RedirectToSignIn />
+      </SignedOut>
+    </>
   );
 }
