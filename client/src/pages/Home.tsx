@@ -1,31 +1,10 @@
 import { useState, useEffect } from "react";
-import { useSignIn, useUser } from "@clerk/clerk-react";
+import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
-import { toast } from "sonner";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
   const [timeString, setTimeString] = useState("00:00:00");
-  const [isDark, setIsDark] = useState(true);
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-  const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn } = useUser();
   const [, setLocation] = useLocation();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn) {
-      setLocation("/dashboard");
-    }
-  }, [isSignedIn, setLocation]);
 
   useEffect(() => {
     const updateClock = () => {
@@ -37,52 +16,13 @@ export default function Home() {
     return () => clearInterval(timer);
   }, []);
 
-  const toggleTheme = () => setIsDark(!isDark);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoaded) return;
-
-    if (!email || !password) {
-      toast.error("Por favor ingresa usuario y contraseña");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        toast.success("Acceso concedido. Bienvenido a Mission Control.");
-        setLocation("/dashboard");
-      } else {
-        console.log(result);
-        toast.info("Se requiere verificación adicional.");
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      const msg = err.errors?.[0]?.longMessage || "Error de autenticación";
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
-
   return (
     <div
-      className={`${
-        isDark ? "dark" : ""
-      } bg-black dark:bg-[#050505] font-['Rajdhani',sans-serif] min-h-screen flex items-center justify-center relative transition-colors duration-300 overflow-hidden`}
+      className="dark bg-black dark:bg-[#050505] font-['Rajdhani',sans-serif] min-h-screen flex items-center justify-center relative transition-colors duration-300 overflow-hidden"
     >
-      {/* Estilos inyectados para las animaciones y tipografías personalizadas */}
       <style>{`
         @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap');
         @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
-
         .glass-panel {
             backdrop-filter: blur(8px);
             -webkit-backdrop-filter: blur(8px);
@@ -90,138 +30,102 @@ export default function Home() {
         .clip-corner-tl { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px); }
         .clip-corner-br { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); }
         .clip-tech { clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
-
         ::-webkit-scrollbar { width: 4px; }
         ::-webkit-scrollbar-track { background: #050505; }
         ::-webkit-scrollbar-thumb { background: #00F2FF; border-radius: 2px; }
-
         @keyframes scanline {
             0% { transform: translateY(-100%); }
             100% { transform: translateY(100%); }
         }
         .animate-scanline { animation: scanline 8s linear infinite; }
         .animate-spin-slow { animation: spin 12s linear infinite; }
+        @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
       `}</style>
 
-      {/* Background Layers */}
-      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,242,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,242,255,0.05)_1px,transparent_1px)] bg-[length:40px_40px] pointer-events-none opacity-20 dark:opacity-30 z-0"></div>
-      <div className="absolute top-10 left-10 w-64 h-64 border border-[#00F2FF]/10 rounded-full border-dashed animate-spin-slow z-0 hidden md:block"></div>
-      <div
-        className="absolute bottom-10 right-10 w-96 h-96 border border-[#00F2FF]/5 rounded-full border-dashed animate-spin-slow z-0 hidden md:block"
-        style={{ animationDirection: "reverse" }}
-      ></div>
+      <div className="absolute inset-0 pointer-events-none overflow-hidden">
+        <div className="absolute inset-0 bg-[linear-gradient(to_right,#00F2FF05_1px,transparent_1px),linear-gradient(to_bottom,#00F2FF05_1px,transparent_1px)] bg-[size:40px_40px]"></div>
+        <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,242,255,0.05),transparent_70%)]"></div>
+        <div className="absolute top-0 left-0 w-full h-1 bg-[#00F2FF]/20 animate-scanline"></div>
+      </div>
 
-      <div className="relative z-10 w-full max-w-4xl p-4 md:p-8 flex flex-col items-center">
-        
-        {/* Header Bar */}
-        <div className="w-full flex justify-between items-center mb-8 font-['JetBrains_Mono',monospace] text-xs tracking-widest text-[#00F2FF]/60 dark:text-[#00F2FF]/80">
-          <div className="flex items-center gap-2">
-            <span className="w-2 h-2 rounded-full bg-[#00FF9D] animate-pulse"></span>
-            <span>SYSTEM ONLINE</span>
+      <div className="relative z-10 w-full max-w-lg px-6 flex flex-col items-center">
+        <div className="mb-12 text-center relative group">
+          <div className="absolute -inset-8 bg-[#00F2FF]/5 blur-3xl rounded-full opacity-0 group-hover:opacity-100 transition-opacity duration-1000"></div>
+          <div className="flex items-center justify-center gap-4 mb-2">
+            <div className="h-[2px] w-12 bg-gradient-to-r from-transparent to-[#00F2FF]"></div>
+            <span className="text-[#00F2FF] text-xs tracking-[0.5em] font-bold uppercase">Mission Control</span>
+            <div className="h-[2px] w-12 bg-gradient-to-l from-transparent to-[#00F2FF]"></div>
           </div>
-          <div className="hidden md:flex gap-4">
-            <span>SECURE CONNECTION</span>
-            <span>V.4.2.0</span>
-          </div>
-          <div className="text-right">
-            <span>{timeString}</span>
+          <h1 className="text-5xl md:text-7xl font-bold text-white tracking-tighter relative">
+            JEIKEI<span className="text-[#00F2FF]">STATION</span>
+            <span className="absolute -top-4 -right-4 text-[10px] text-[#00F2FF] font-['JetBrains_Mono',monospace] animate-pulse">V3.0.4_BETA</span>
+          </h1>
+          <div className="mt-4 flex items-center justify-center gap-6 text-[10px] font-['JetBrains_Mono',monospace] text-[#00F2FF]/60 uppercase tracking-widest">
+            <div className="flex items-center gap-2">
+              <span className="h-1.5 w-1.5 rounded-full bg-[#00FF9D] animate-ping"></span>
+              CORE STATUS: ONLINE
+            </div>
+            <div className="flex items-center gap-2">
+              <span className="material-icons-round text-xs">schedule</span>
+              {timeString}
+            </div>
           </div>
         </div>
 
-        {/* Main Interface Panel */}
-        <div className="relative w-full max-w-lg glass-panel bg-[rgba(10,20,30,0.8)] border border-[#00F2FF]/50 shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] rounded-lg overflow-hidden clip-tech transform transition-all hover:scale-[1.01] duration-500">
-          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F2FF]/5 to-transparent h-full w-full pointer-events-none animate-scanline z-20"></div>
+        <div className="w-full glass-panel bg-white/5 dark:bg-black/40 border border-[#00F2FF]/20 p-1 relative clip-tech shadow-[0_0_30px_rgba(0,242,255,0.05)]">
+          <div className="absolute top-0 left-0 h-4 w-4 border-t-2 border-l-2 border-[#00F2FF]"></div>
+          <div className="absolute bottom-0 right-0 h-4 w-4 border-b-2 border-r-2 border-[#00F2FF]"></div>
           
-          {/* Neon Corner Accents */}
-          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#00F2FF]"></div>
-          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#00F2FF]"></div>
-          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#00F2FF]"></div>
-          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#00F2FF]"></div>
-
-          <div className="p-10 md:p-14 flex flex-col items-center relative z-30">
-            
-            {/* Logo */}
-            <div className="mb-6 relative group">
-              <div className="absolute inset-0 bg-[#00F2FF] rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
-              <img
-                alt="JeiKei Station Logo"
-                className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]"
-                src="/jk_logo_copy_nobg.png"
-              />
+          <div className="bg-black/60 p-8 md:p-10">
+            <div className="flex justify-between items-center mb-8 border-b border-[#00F2FF]/10 pb-4">
+              <div>
+                <h2 className="text-white text-xl font-bold tracking-wider uppercase">Autenticación</h2>
+                <p className="text-[#00F2FF]/50 text-[10px] font-['JetBrains_Mono',monospace]">SECURITY CLEARANCE REQUIRED</p>
+              </div>
+              <div className="h-10 w-10 border border-[#00F2FF]/30 flex items-center justify-center text-[#00F2FF]">
+                <span className="material-icons-round animate-spin-slow">settings</span>
+              </div>
             </div>
 
-            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-wide uppercase flex items-center gap-3">
-              <span className="text-[#00F2FF] text-4xl material-icons-round">hexagon</span>
-              JeiKeiStation
-            </h1>
-            <p className="text-[#00F2FF]/60 font-['JetBrains_Mono',monospace] text-sm tracking-[0.2em] mb-10">
-              MISSION CONTROL ACCESS
-            </p>
+            <SignedOut>
+              <div className="space-y-6">
+                <p className="text-[#00F2FF]/70 text-sm font-['JetBrains_Mono',monospace] leading-relaxed">
+                  Bienvenido al centro de comando. Inicia sesión para acceder a la gestión de agentes y misiones.
+                </p>
+                <SignInButton mode="modal">
+                  <button className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4">
+                    <span className="relative z-10 flex items-center justify-center gap-2 tracking-[0.2em] font-['Rajdhani',sans-serif] text-lg group-hover:text-white transition-colors uppercase">
+                      Iniciar Sesión
+                      <span className="material-icons-round text-sm animate-pulse">chevron_right</span>
+                    </span>
+                    <div className="absolute inset-0 bg-[#00F2FF] w-0 group-hover:w-full transition-all duration-300 ease-out -z-0 opacity-20"></div>
+                  </button>
+                </SignInButton>
+              </div>
+            </SignedOut>
 
-            <form className="w-full space-y-6" onSubmit={handleLogin}>
-              
-              <div className="relative group">
-                <label className="absolute -top-3 left-4 bg-transparent px-1 text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF] font-bold" htmlFor="username">USUARIO // ID</label>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-icons-round text-[#00F2FF]/50 group-focus-within:text-[#00F2FF] transition-colors">person</span>
+            <SignedIn>
+              <div className="space-y-6 text-center">
+                <div className="flex justify-center mb-4">
+                  <UserButton afterSignOutUrl="/" />
                 </div>
-                <input
-                  className="w-full bg-black/40 border border-[#00F2FF]/30 text-[#00F2FF] text-sm font-['JetBrains_Mono',monospace] rounded-none focus:ring-1 focus:ring-[#00F2FF] focus:border-[#00F2FF] block pl-10 p-3 placeholder-[#00F2FF]/20 backdrop-blur-sm transition-all outline-none"
-                  id="username"
-                  placeholder="ENTER ID"
-                  type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
-                />
-                <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
-                <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
+                <p className="text-white font-['JetBrains_Mono',monospace] text-sm uppercase">
+                  Sesión Activa // Acceso Concedido
+                </p>
+                <button 
+                  onClick={() => setLocation("/dashboard")}
+                  className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4"
+                >
+                  <span className="relative z-10 flex items-center justify-center gap-2 tracking-[0.2em] font-['Rajdhani',sans-serif] text-lg group-hover:text-white transition-colors uppercase">
+                    Ir al Dashboard
+                    <span className="material-icons-round text-sm">dashboard</span>
+                  </span>
+                  <div className="absolute inset-0 bg-[#00F2FF] w-0 group-hover:w-full transition-all duration-300 ease-out -z-0 opacity-20"></div>
+                </button>
               </div>
-
-              <div className="relative group">
-                <label className="absolute -top-3 left-4 bg-transparent px-1 text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF] font-bold" htmlFor="password">CONTRASEÑA // KEY</label>
-                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
-                  <span className="material-icons-round text-[#00F2FF]/50 group-focus-within:text-[#00F2FF] transition-colors">lock</span>
-                </div>
-                <input
-                  className="w-full bg-black/40 border border-[#00F2FF]/30 text-[#00F2FF] text-sm font-['JetBrains_Mono',monospace] rounded-none focus:ring-1 focus:ring-[#00F2FF] focus:border-[#00F2FF] block pl-10 p-3 placeholder-[#00F2FF]/20 backdrop-blur-sm transition-all outline-none"
-                  id="password"
-                  placeholder="••••••••"
-                  type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
-                />
-                <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
-                <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
-              </div>
-
-              <div className="flex items-center justify-between text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF]/60">
-                <label className="flex items-center space-x-2 cursor-pointer hover:text-[#00F2FF] transition-colors">
-                  <input
-                    className="form-checkbox bg-transparent border-[#00F2FF]/50 text-[#00F2FF] rounded-none focus:ring-0 focus:ring-offset-0 h-3 w-3"
-                    type="checkbox"
-                  />
-                  <span>REMEMBER SESSION</span>
-                </label>
-                <a className="hover:text-white hover:underline decoration-[#00F2FF] decoration-2 underline-offset-4 transition-all" href="#">
-                  FORGOT KEY?
-                </a>
-              </div>
-
-              <button
-                className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                type="submit"
-                disabled={isLoading}
-              >
-                <span className="relative z-10 flex items-center justify-center gap-2 tracking-[0.2em] font-['Rajdhani',sans-serif] text-lg group-hover:text-white transition-colors">
-                  {isLoading ? "AUTHENTICATING..." : "ACCEDER"}
-                  {!isLoading && <span className="material-icons-round text-sm animate-pulse">chevron_right</span>}
-                </span>
-                <div className="absolute inset-0 bg-[#00F2FF] w-0 group-hover:w-full transition-all duration-300 ease-out -z-0 opacity-20"></div>
-              </button>
-            </form>
+            </SignedIn>
           </div>
-
-          {/* Bottom Bar */}
+          
           <div className="h-2 w-full bg-black/40 flex items-center justify-center gap-1 border-t border-[#00F2FF]/20">
             <div className="h-1 w-10 bg-[#00F2FF]/40"></div>
             <div className="h-1 w-1 bg-[#00F2FF]/40"></div>
@@ -230,32 +134,14 @@ export default function Home() {
           </div>
         </div>
 
-        {/* HUD Bottom Graphics */}
-        <div
-          className="mt-8 md:mt-12 w-full max-w-2xl h-16 relative hidden md:block"
-          style={{ perspective: "1000px" }}
-        >
-          <div
-            className="absolute inset-0 bg-gradient-to-t from-[#00F2FF]/5 to-transparent border border-[#00F2FF]/20 rounded-xl shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] opacity-50"
-            style={{ transform: "rotateX(60deg)" }}
-          >
+        <div className="mt-8 md:mt-12 w-full max-w-2xl h-16 relative hidden md:block" style={{ perspective: "1000px" }}>
+          <div className="absolute inset-0 bg-gradient-to-t from-[#00F2FF]/5 to-transparent border border-[#00F2FF]/20 rounded-xl shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] opacity-50" style={{ transform: "rotateX(60deg)" }}>
             <div className="w-full h-full bg-[linear-gradient(to_right,#00F2FF10_1px,transparent_1px),linear-gradient(to_bottom,#00F2FF10_1px,transparent_1px)] bg-[size:20px_20px]"></div>
           </div>
-          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-[10px] font-['JetBrains_Mono',monospace] text-[#00F2FF]/40 whitespace-nowrap">
-            SYSTEM INTEGRITY CHECK: PASS // CONNECTION SECURE
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-[10px] font-['JetBrains_Mono',monospace] text-[#00F2FF]/40 whitespace-nowrap uppercase">
+            System Integrity Check: Pass // Connection Secure
           </div>
         </div>
-      </div>
-
-      {/* Theme Toggle Button */}
-      <div className="fixed bottom-6 right-6 z-50">
-        <button
-          onClick={toggleTheme}
-          className="bg-[rgba(10,20,30,0.8)] border border-[#00F2FF]/30 text-[#00F2FF] p-3 rounded-full hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] transition-all duration-300 flex items-center justify-center group"
-          id="theme-toggle"
-        >
-          <span className="material-icons-round group-hover:rotate-180 transition-transform">brightness_4</span>
-        </button>
       </div>
     </div>
   );
