@@ -70,9 +70,6 @@ function writeToLogFile(source: LogSource, entries: unknown[]) {
 
 /**
  * Vite plugin to collect browser debug logs
- * - POST /__manus__/logs: Browser sends logs, written directly to files
- * - Files: browserConsole.log, networkRequests.log, sessionReplay.log
- * - Auto-trimmed when exceeding 1MB (keeps newest entries)
  */
 function vitePluginManusDebugCollector(): Plugin {
   return {
@@ -98,14 +95,12 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
-      // POST /__manus__/logs: Browser sends logs (written directly to files)
       server.middlewares.use("/__manus__/logs", (req, res, next) => {
         if (req.method !== "POST") {
           return next();
         }
 
         const handlePayload = (payload: any) => {
-          // Write logs directly to files
           if (payload.consoleLogs?.length > 0) {
             writeToLogFile("browserConsole", payload.consoleLogs);
           }
@@ -152,6 +147,9 @@ function vitePluginManusDebugCollector(): Plugin {
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
+// Detectar si estamos en GitHub Codespaces
+const isCodespace = !!process.env.CODESPACES;
+
 export default defineConfig({
   plugins,
   resolve: {
@@ -170,32 +168,26 @@ export default defineConfig({
   },
   server: {
     host: "0.0.0.0",
-    port: 3000, // Nos aseguramos de que corra internamente en el 3000
+    port: 3000,
     strictPort: true,
     hmr: {
-      // Esta es la configuración clave para GitHub Codespaces:
-      // Al configurar clientPort a 443, forzamos que las peticiones HMR usen el proxy HTTPS.
-      clientPort: 443,
-      protocol: "wss",
-      // Si el navegador falla al inferir la URL en Codespaces, a veces es necesario pasar un host específico.
-      // Como Codespaces cambia la URL a menudo, usar "0.0.0.0" aquí no funciona; es mejor dejarlo en blanco o 
-      // usar el nombre generado si estuviera fijo.
-      // Al no poner 'host', le decimos a Vite que el Web Socket use `location.hostname` (lo cual es correcto).
+      // Configuración robusta para HMR en Codespaces
+      // En Codespaces, el cliente (navegador) debe conectar vía puerto 443 (HTTPS/WSS)
+      // del proxy de GitHub, no directamente al puerto 3000 o 5173 del contenedor.
+      clientPort: isCodespace ? 443 : 3000,
+      protocol: isCodespace ? "wss" : "ws",
     },
-    // Este arreglo es fundamental para que el servidor de Vite no bloquee
-    // las peticiones que llegan desde el proxy de Codespaces.
     allowedHosts: [
-      "all", // La forma más robusta en entornos de dev cloud es permitir todo
+      "all",
       ".github.dev",
       ".app.github.dev"
     ],
-    // También asegúrate de que el proxy local apunte correctamente si lo estás usando
-    // para las llamadas a tu API local (aunque tu .env dice que VITE_API_URL es la pública)
     proxy: {
       "/api": {
         target: "http://localhost:3000",
         changeOrigin: true,
         secure: false,
+        ws: true, // Habilitar proxy para WebSockets en la ruta /api si se usa tRPC con WS
       },
     },
     fs: {
@@ -203,7 +195,7 @@ export default defineConfig({
       deny: ["**/.*"],
     },
     watch: {
-      usePolling: true, // Esto es crítico en Docker en Windows/Mac o en algunos entornos de Codespaces para detectar cambios
+      usePolling: true,
     }
   },
 });
