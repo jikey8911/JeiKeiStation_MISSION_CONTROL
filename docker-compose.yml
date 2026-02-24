@@ -1,6 +1,6 @@
-version: '3.8'
 
 services:
+  # Base de Datos MySQL
   mysql:
     image: mysql:8.0
     container_name: jeikei_mysql
@@ -13,44 +13,45 @@ services:
       - "3306:3306"
     volumes:
       - mysql_data:/var/lib/mysql
-    healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-uroot", "-proot_password"]
-      interval: 10s
-      timeout: 5s
-      retries: 5
     restart: unless-stopped
 
+  # Plataforma Node.js (Backend tRPC + Frontend Vite)
   jeikei_platform:
     build:
       context: .
       dockerfile: Dockerfile
     container_name: jeikei_node_platform
     ports:
-      - "3000:3000"
-    environment:
-      - NODE_ENV=development
-      - DATABASE_URL=mysql://jeikei_user:jeikei_password@mysql:3306/jeikei_station
-      - PORT=3000
+      - "3000:3000"  # API y WebSocket de tRPC
+      - "5173:5173"  # Interfaz de Usuario (Vite) y HMR
+    env_file:
+      - .env
     volumes:
       - .:/app
       - /app/node_modules
     depends_on:
-      mysql:
-        condition: service_healthy
+      - mysql
     restart: unless-stopped
 
+  # Agente DevOps de IA (Python)
   openclaw_agent:
     build:
       context: .
       dockerfile: Dockerfile.agent
     container_name: openclaw_python_worker
+    ports:
+      - "8000:8000" # Puerto del Agente expuesto para comunicación interna/externa
+    env_file:
+      - .env
     depends_on:
       - jeikei_platform
     environment:
-      - BASE_URL=http://jeikei_platform:3000/api/trpc
-      - API_KEY=jk_secret_agent_key_2026
+      # URL interna para que el agente le hable a la API de Node
+      - JEIKEI_API_URL=http://jeikei_platform:3000/api/trpc
+      # Pasamos el token de GitHub desde el .env para las operaciones de Git
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
     volumes:
-      - .:/app
+      - .:/app # Permite al agente leer y editar el código fuente directamente
     restart: unless-stopped
 
 volumes:
