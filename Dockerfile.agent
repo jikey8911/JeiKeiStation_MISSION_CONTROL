@@ -1,20 +1,21 @@
-# Dockerfile.agent
 FROM python:3.10-slim
 
 WORKDIR /app
 
-# Instalar dependencias del sistema requeridas por GitPython u otras librerías
-RUN apt-get update && apt-get install -y git && rm -rf /var/lib/apt/lists/*
+# Instalar dependencias del sistema requeridas
+RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 
-# Copiar los requirements del agente si existen (asumiendo que los pusiste en agent_backend o la raíz)
-# Si no tienes un requirements.txt global, instala las librerías base de OpenClaw manualmente
+# Copiar los requirements del agente
 COPY server/agent_backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install requests GitPython PyGithub colorama
+RUN pip install --no-cache-dir requests GitPython PyGithub colorama
 
-# Copiar todo el repositorio para que el agente tenga contexto del código
+# Copiar todo el repositorio para contexto
 COPY . .
 
-# Comando por defecto: Ejecutar el heartbeat o el agente de monitoreo
-# Puedes cambiar esto a cli_agent.py si quieres interactuar por consola
+# Variables de entorno por defecto
+ENV BASE_URL=http://jeikei_platform:3000/api/trpc
+ENV API_KEY=jk_secret_agent_key_2026
+
+# Comando por defecto: Ejecutar el heartbeat
 CMD ["python", "openclaw/skills/jeikei_mission_control/heartbeat.py"]
