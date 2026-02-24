@@ -169,16 +169,12 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: true,
-    allowedHosts: [
-      ".manuspre.computer",
-      ".manus.computer",
-      ".manus-asia.computer",
-      ".manuscomputer.ai",
-      ".manusvm.computer",
-      "localhost",
-      "127.0.0.1",
-    ],
+    host: "0.0.0.0", // Necesario para que sea accesible fuera del contenedor Docker
+    hmr: {
+      clientPort: 443, // Usar puerto HTTPS estándar para WebSockets en la nube
+      protocol: "wss", // Forzar WebSockets seguros (wss)
+    },
+    allowedHosts: true,
     fs: {
       strict: true,
       deny: ["**/.*"],
