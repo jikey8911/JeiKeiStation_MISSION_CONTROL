@@ -1,38 +1,58 @@
 import os
 import time
-import requests
 import json
-from jeikei_skill import JeiKeiClient
+import urllib.parse
+import requests
+from requests.exceptions import ConnectionError
+
+# Obtenemos las variables de entorno inyectadas por Docker
+API_URL = os.getenv("JEIKEI_API_URL", "http://jeikei_platform:3000/api/trpc")
+API_KEY = os.getenv("SERVICE_API_KEY", "jk_secret_agent_key_2026")
 
 def run_heartbeat():
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Iniciando Heartbeat de Monitoreo...")
-    client = JeiKeiClient()
+    
+    # 1. Formato estricto para tRPC (Batching)
+    # tRPC requiere que el input esté indexado cuando se usa batch=1
+    input_payload = json.dumps({"0": {}}) 
+    encoded_input = urllib.parse.quote(input_payload)
+    url = f"{API_URL}/tasks.list?batch=1&input={encoded_input}"
+    
+    # 2. Cabeceras de Autenticación de Máquina a Máquina
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {API_KEY}"
+    }
     
     try:
-        # 1. Obtener todas las tareas
-        tasks = client.list_tasks()
+        response = requests.get(url, headers=headers)
         
-        # 2. Identificar 'Tareas Huérfanas' (sin agente asignado)
-        orphan_tasks = [t for t in tasks if t.get('assignedAgentId') is None and t.get('status') != 'done']
-        
-        if not orphan_tasks:
-            print("No se encontraron tareas huérfanas.")
+        # Manejo de error 400 explícito para depuración
+        if response.status_code == 400:
+            print(f"❌ Error 400 (Bad Request): El servidor rechazó el formato. Detalle: {response.text}")
             return
-
-        print(f"Se encontraron {len(orphan_tasks)} tareas huérfanas. Intentando auto-asignación...")
+            
+        response.raise_for_status()
         
-        # 3. Llamar a autoAssign para cada tarea huérfana
-        for task in orphan_tasks:
-            try:
-                result = client.auto_assign(task['id'])
-                print(f"✓ Tarea '{task['title']}' (ID: {task['id']}) asignada a {result['agentName']}")
-            except Exception as e:
-                print(f"✗ Error al asignar tarea {task['id']}: {str(e)}")
-                
+        # 3. Procesar las tareas
+        data = response.json()
+        
+        # En tRPC batch=1, la respuesta viene en un array
+        tasks = data[0].get("result", {}).get("data", [])
+        print(f"✅ Conexión exitosa. Tareas encontradas: {len(tasks)}")
+        
+        # TODO: Aquí inyectaremos el llamado al devops_agent.py cuando haya tareas nuevas
+        
+    except ConnectionError:
+        print("⏳ Esperando a que la plataforma Node.js esté lista (Conexión rechazada por ahora)...")
     except Exception as e:
-        print(f"Error crítico en el heartbeat: {str(e)}")
+        print(f"⚠️ Error en el heartbeat: {e}")
 
 if __name__ == "__main__":
-    # En una implementación real, esto se ejecutaría mediante un cron real
-    # o un loop con sleep si es un proceso daemon.
-    run_heartbeat()
+    print("🤖 Agente OpenClaw inicializado.")
+    print("Esperando 10 segundos para dar tiempo a que Node.js compile la plataforma...")
+    time.sleep(10) # Le damos ventaja a Node.js al arrancar los Dockers
+    
+    while True:
+        run_heartbeat()
+        time.sleep(15)  # Escanear el tablero cada 15 segundos
