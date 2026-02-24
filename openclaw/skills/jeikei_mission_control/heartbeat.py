@@ -9,6 +9,7 @@ from requests.exceptions import ConnectionError
 API_URL = os.getenv("JEIKEI_API_URL", "http://jeikei_platform:3000/api/trpc")
 API_KEY = os.getenv("SERVICE_API_KEY", "jk_secret_agent_key_2026")
 
+
 def run_heartbeat():
     print(f"[{time.strftime('%Y-%m-%d %H:%M:%S')}] Iniciando Heartbeat de Monitoreo...")
     
