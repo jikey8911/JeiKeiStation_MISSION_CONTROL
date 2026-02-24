@@ -1,31 +1,8 @@
 import { useState, useEffect } from "react";
-import { useSignIn, useUser } from "@clerk/clerk-react";
-import { useLocation } from "wouter";
-import { toast } from "sonner";
 
-/**
- * All content in this page are only for example, replace with your own feature implementation
- * When building pages, remember your instructions in Frontend Workflow, Frontend Best Practices, Design Guide and Common Pitfalls
- */
 export default function Home() {
   const [timeString, setTimeString] = useState("00:00:00");
   const [isDark, setIsDark] = useState(true);
-
-  // If theme is switchable in App.tsx, we can implement theme toggling like this:
-  // const { theme, toggleTheme } = useTheme();
-  const { isLoaded, signIn, setActive } = useSignIn();
-  const { isSignedIn } = useUser();
-  const [, setLocation] = useLocation();
-
-  const [email, setEmail] = useState("");
-  const [password, setPassword] = useState("");
-  const [isLoading, setIsLoading] = useState(false);
-
-  useEffect(() => {
-    if (isSignedIn) {
-      setLocation("/dashboard");
-    }
-  }, [isSignedIn, setLocation]);
 
   useEffect(() => {
     const updateClock = () => {
@@ -38,39 +15,6 @@ export default function Home() {
   }, []);
 
   const toggleTheme = () => setIsDark(!isDark);
-
-  const handleLogin = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!isLoaded) return;
-
-    if (!email || !password) {
-      toast.error("Por favor ingresa usuario y contraseña");
-      return;
-    }
-
-    setIsLoading(true);
-    try {
-      const result = await signIn.create({
-        identifier: email,
-        password,
-      });
-
-      if (result.status === "complete") {
-        await setActive({ session: result.createdSessionId });
-        toast.success("Acceso concedido. Bienvenido a Mission Control.");
-        setLocation("/dashboard");
-      } else {
-        console.log(result);
-        toast.info("Se requiere verificación adicional.");
-      }
-    } catch (err: any) {
-      console.error("Login error:", err);
-      const msg = err.errors?.[0]?.longMessage || "Error de autenticación";
-      toast.error(msg);
-    } finally {
-      setIsLoading(false);
-    }
-  };
 
   return (
     <div
@@ -146,7 +90,7 @@ export default function Home() {
               <img
                 alt="JeiKei Station Logo"
                 className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]"
-                src="/jk_logo_copy_nobg.png"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7ZzIE3ggH36RNdMb4DIEMCCRUfSR7jHu9sqcRFNMEqF_Un0UEDMnzxKPBhfRA1BF8BEn7-k1zvZgaM2VEdSZ5KAnv3Rfl3CpKLkwdeLgiBvJRLN7cRrY_DErDfkUEnqNe3I2oGAYsdjosiLVHb8ACJ8DaWZRNeKrB2GEEPhSiaZOHDc6z25T-KUz5Yf-0Cm35BrrUToEaJbI1pZ4zamG-D793QojTb8kAUEdXMURzO_HTl6FAb31sWaawDh_zyR4D7kBwBs9se8WE"
               />
             </div>
 
@@ -158,7 +102,7 @@ export default function Home() {
               MISSION CONTROL ACCESS
             </p>
 
-            <form className="w-full space-y-6" onSubmit={handleLogin}>
+            <form className="w-full space-y-6" onSubmit={(e) => e.preventDefault()}>
               
               <div className="relative group">
                 <label className="absolute -top-3 left-4 bg-transparent px-1 text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF] font-bold" htmlFor="username">USUARIO // ID</label>
@@ -170,8 +114,6 @@ export default function Home() {
                   id="username"
                   placeholder="ENTER ID"
                   type="text"
-                  value={email}
-                  onChange={(e) => setEmail(e.target.value)}
                 />
                 <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
                 <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
@@ -187,8 +129,6 @@ export default function Home() {
                   id="password"
                   placeholder="••••••••"
                   type="password"
-                  value={password}
-                  onChange={(e) => setPassword(e.target.value)}
                 />
                 <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
                 <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
@@ -207,14 +147,15 @@ export default function Home() {
                 </a>
               </div>
 
+              {/* Botón temporalmente sustituido por la falta de Clerk en el entorno interactivo */}
               <button
-                className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4 disabled:opacity-50 disabled:cursor-not-allowed"
-                type="submit"
-                disabled={isLoading}
+                className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4"
+                type="button"
+                onClick={() => console.log("Login de Clerk no disponible en este visor. Integra este código en tu entorno local.")}
               >
                 <span className="relative z-10 flex items-center justify-center gap-2 tracking-[0.2em] font-['Rajdhani',sans-serif] text-lg group-hover:text-white transition-colors">
-                  {isLoading ? "AUTHENTICATING..." : "ACCEDER"}
-                  {!isLoading && <span className="material-icons-round text-sm animate-pulse">chevron_right</span>}
+                  ACCEDER
+                  <span className="material-icons-round text-sm animate-pulse">chevron_right</span>
                 </span>
                 <div className="absolute inset-0 bg-[#00F2FF] w-0 group-hover:w-full transition-all duration-300 ease-out -z-0 opacity-20"></div>
               </button>
