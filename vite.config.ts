@@ -169,15 +169,41 @@ export default defineConfig({
     emptyOutDir: true,
   },
   server: {
-    host: "0.0.0.0", // Necesario para que sea accesible fuera del contenedor Docker
+    host: "0.0.0.0",
+    port: 3000, // Nos aseguramos de que corra internamente en el 3000
+    strictPort: true,
     hmr: {
-      clientPort: 443, // Usar puerto HTTPS estándar para WebSockets en la nube
-      protocol: "wss", // Forzar WebSockets seguros (wss)
+      // Esta es la configuración clave para GitHub Codespaces:
+      // Al configurar clientPort a 443, forzamos que las peticiones HMR usen el proxy HTTPS.
+      clientPort: 443,
+      protocol: "wss",
+      // Si el navegador falla al inferir la URL en Codespaces, a veces es necesario pasar un host específico.
+      // Como Codespaces cambia la URL a menudo, usar "0.0.0.0" aquí no funciona; es mejor dejarlo en blanco o 
+      // usar el nombre generado si estuviera fijo.
+      // Al no poner 'host', le decimos a Vite que el Web Socket use `location.hostname` (lo cual es correcto).
     },
-    allowedHosts: true,
+    // Este arreglo es fundamental para que el servidor de Vite no bloquee
+    // las peticiones que llegan desde el proxy de Codespaces.
+    allowedHosts: [
+      "all", // La forma más robusta en entornos de dev cloud es permitir todo
+      ".github.dev",
+      ".app.github.dev"
+    ],
+    // También asegúrate de que el proxy local apunte correctamente si lo estás usando
+    // para las llamadas a tu API local (aunque tu .env dice que VITE_API_URL es la pública)
+    proxy: {
+      "/api": {
+        target: "http://localhost:3000",
+        changeOrigin: true,
+        secure: false,
+      },
+    },
     fs: {
       strict: true,
       deny: ["**/.*"],
     },
+    watch: {
+      usePolling: true, // Esto es crítico en Docker en Windows/Mac o en algunos entornos de Codespaces para detectar cambios
+    }
   },
 });
