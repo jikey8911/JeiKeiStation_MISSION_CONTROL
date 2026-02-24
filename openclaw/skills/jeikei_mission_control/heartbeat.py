@@ -14,14 +14,15 @@ def run_heartbeat():
     
     # 1. Formato estricto para tRPC (Batching)
     # tRPC requiere que el input esté indexado cuando se usa batch=1
-    input_payload = json.dumps({"0": {}}) 
+    # Al usar SuperJSON en el backend, el input debe ir envuelto en {"json": ...}
+    input_payload = json.dumps({"0": {"json": {}}}) 
     encoded_input = urllib.parse.quote(input_payload)
     url = f"{API_URL}/tasks.list?batch=1&input={encoded_input}"
     
     # 2. Cabeceras de Autenticación de Máquina a Máquina
     headers = {
         "Content-Type": "application/json",
-        "Authorization": f"Bearer {API_KEY}"
+        "x-api-key": API_KEY
     }
     
     try:
