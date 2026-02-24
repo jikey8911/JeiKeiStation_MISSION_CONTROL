@@ -8,7 +8,7 @@ RUN apt-get update && apt-get install -y git curl && rm -rf /var/lib/apt/lists/*
 # Copiar los requirements del agente
 COPY server/agent_backend/requirements.txt ./requirements.txt
 RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir requests GitPython PyGithub colorama
+RUN pip install --no-cache-dir requests GitPython PyGithub colorama websockets
 
 # Copiar todo el repositorio para contexto
 COPY . .
