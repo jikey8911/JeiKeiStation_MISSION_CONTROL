@@ -1,5 +1,6 @@
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
+import { drizzle } from "drizzle-orm/node-postgres";
+import { Pool } from "pg";
 import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications, Agent, Task, Sprint, TaskDependency } from "../drizzle/schema";
 import { ENV } from './_core/env';
 import { mockDb } from './db.mock';
@@ -14,9 +15,12 @@ export async function getDb() {
     const dbUrl = process.env.DATABASE_URL;
     if (dbUrl && !dbUrl.includes("user:pass@localhost")) {
       try {
-        console.log("[Database] Connecting to DATABASE_URL...");
-        _db = drizzle(dbUrl);
-        console.log("[Database] Drizzle initialized.");
+        console.log("[Database] Connecting to DATABASE_URL with node-postgres...");
+        const pool = new Pool({
+          connectionString: dbUrl,
+        });
+        _db = drizzle(pool);
+        console.log("[Database] Drizzle initialized with PostgreSQL.");
       } catch (error) {
         console.warn("[Database] Failed to connect, falling back to mock:", error);
         _useMock = true;
@@ -78,7 +82,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {

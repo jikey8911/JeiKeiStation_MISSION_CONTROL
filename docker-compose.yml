@@ -1,18 +1,17 @@
 
 services:
-  # Base de Datos MySQL
-  mysql:
-    image: mysql:8.0
-    container_name: jeikei_mysql
+  # Base de Datos PostgreSQL
+  db:
+    image: postgres:16-alpine
+    container_name: jeikei_postgres
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: jeikei_user
-      MYSQL_PASSWORD: jeikei_password
-      MYSQL_DATABASE: jeikei_station
+      POSTGRES_DB: jeikei_station
+      POSTGRES_USER: jeikei_user
+      POSTGRES_PASSWORD: jeikei_password
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     restart: unless-stopped
 
   # Plataforma Node.js (Backend tRPC + Frontend Vite)

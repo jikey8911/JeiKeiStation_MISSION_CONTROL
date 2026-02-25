@@ -1,4 +1,4 @@
-import { useState, useEffect } from "react";
+7import { useState, useEffect } from "react";
 import { SignedIn, SignedOut, SignInButton, UserButton } from "@clerk/clerk-react";
 import { useLocation } from "wouter";
 
