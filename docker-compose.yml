@@ -33,8 +33,7 @@ services:
       dockerfile: Dockerfile
     container_name: jeikei_node_platform
     ports:
-      - "3000:3000"  # Backend tRPC
-      - "5173:5173"  # Frontend Vite HMR
+      - "3000:3000"  # Puerto Unificado (HTTP + WebSockets + Vite HMR)
     env_file:
       - .env
     volumes:
