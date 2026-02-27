@@ -228,9 +228,9 @@ export async function createTask(data: {
     title: data.title,
     description: data.description,
     priority: data.priority || "medium",
-    requiredSkills: JSON.stringify(data.requiredSkills),
-    estimationHours: data.estimationHours ? String(data.estimationHours) : null,
-    acceptanceCriteria: JSON.stringify(data.acceptanceCriteria || []),
+    requiredSkills: data.requiredSkills,
+    estimationHours: data.estimationHours,
+    acceptanceCriteria: data.acceptanceCriteria || [],
     status: "backlog",
   });
 
@@ -243,8 +243,8 @@ export async function getTasks(sprintId?: number) {
     const result = mockDb.tasks.list(sprintId);
     return result.map(task => ({
       ...task,
-      requiredSkills: JSON.parse(task.requiredSkills || "[]") as string[],
-      acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") as string[],
+      requiredSkills: (typeof task.requiredSkills === 'string' ? JSON.parse(task.requiredSkills) : task.requiredSkills) as string[],
+      acceptanceCriteria: (typeof task.acceptanceCriteria === 'string' ? JSON.parse(task.acceptanceCriteria) : task.acceptanceCriteria) as string[],
     }));
   }
 
@@ -256,8 +256,8 @@ export async function getTasks(sprintId?: number) {
   const result = await query.orderBy(desc(tasks.createdAt));
   return result.map(task => ({
     ...task,
-    requiredSkills: JSON.parse(task.requiredSkills || "[]") as string[],
-    acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") as string[],
+    requiredSkills: (task.requiredSkills || []) as string[],
+    acceptanceCriteria: (task.acceptanceCriteria || []) as string[],
   }));
 }
 
@@ -268,8 +268,8 @@ export async function getTaskById(id: number) {
     if (!task) return null;
     return {
       ...task,
-      requiredSkills: JSON.parse(task.requiredSkills || "[]") as string[],
-      acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") as string[],
+      requiredSkills: (typeof task.requiredSkills === 'string' ? JSON.parse(task.requiredSkills) : task.requiredSkills) as string[],
+      acceptanceCriteria: (typeof task.acceptanceCriteria === 'string' ? JSON.parse(task.acceptanceCriteria) : task.acceptanceCriteria) as string[],
     };
   }
 
@@ -278,8 +278,8 @@ export async function getTaskById(id: number) {
 
   return {
     ...result[0],
-    requiredSkills: JSON.parse(result[0].requiredSkills || "[]") as string[],
-    acceptanceCriteria: JSON.parse(result[0].acceptanceCriteria || "[]") as string[],
+    requiredSkills: (result[0].requiredSkills || []) as string[],
+    acceptanceCriteria: (result[0].acceptanceCriteria || []) as string[],
   };
 }
 
@@ -370,7 +370,12 @@ export async function getBlockingTasks(taskId: number) {
 
   if (blockingTaskIds.length === 0) return [];
 
-  return await db.select().from(tasks).where(sql`${tasks.id} IN (${blockingTaskIds.join(",")})`);
+  const result = await db.select().from(tasks).where(sql`${tasks.id} IN (${blockingTaskIds.join(",")})`);
+  return result.map(task => ({
+    ...task,
+    requiredSkills: (task.requiredSkills || []) as string[],
+    acceptanceCriteria: (task.acceptanceCriteria || []) as string[],
+  }));
 }
 
 // ==================== NOTIFICACIONES ====================
