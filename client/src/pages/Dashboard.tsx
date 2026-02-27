@@ -44,7 +44,7 @@ export default function Dashboard() {
   const utils = trpc.useUtils();
   useTaskSubscription();
 
-  const { data: tasks = [], isLoading: tasksLoading } = trpc.tasks.list.useQuery();
+  const { data: tasks = [], isLoading: tasksLoading } = trpc.tasks.list.useQuery({});
   const { data: agents = [], isLoading: agentsLoading } = trpc.agents.list.useQuery();
   const { data: sprints = [] } = trpc.sprints.list.useQuery();
   
@@ -82,6 +82,10 @@ export default function Dashboard() {
 
   const updateSprintStatusMutation = trpc.sprints.updateStatus.useMutation({
     onSuccess: () => utils.sprints.list.invalidate(),
+  });
+
+  const updateTaskStatus = trpc.tasks.updateStatus.useMutation({
+    onSuccess: () => utils.tasks.list.invalidate(),
   });
 
   const handleAddTask = () => {
@@ -182,7 +186,7 @@ export default function Dashboard() {
             <TabsContent value="overview" className="space-y-8 m-0 outline-none">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 space-y-6">
-                  <TaskBoard tasks={tasks} onTaskStatusChange={(id, status) => utils.tasks.updateStatus.mutate({ taskId: id, status })} onAddTask={() => setIsTaskOpen(true)} />
+                  <TaskBoard tasks={tasks} onTaskStatusChange={(id, status) => updateTaskStatus.mutate({ taskId: id, status })} onAddTask={() => setIsTaskOpen(true)} />
                   <div className="bg-black/40 border border-white/5 p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-2 opacity-10"><Activity className="w-24 h-24" /></div>
                     <h3 className="text-[#00f2ff] uppercase tracking-widest text-xs font-bold mb-6">Misión: Grafo de Dependencias</h3>
@@ -206,7 +210,7 @@ export default function Dashboard() {
             </TabsContent>
 
             <TabsContent value="office" className="m-0 outline-none">
-              <VirtualOffice agents={agents} tasks={tasks} />
+              <VirtualOffice />
             </TabsContent>
 
             <TabsContent value="topology" className="m-0 outline-none">
