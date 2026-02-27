@@ -148,7 +148,7 @@ function vitePluginManusDebugCollector(): Plugin {
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
 // Detectar si estamos en GitHub Codespaces
-const isCodespace = !!process.env.CODESPACES;
+const isCodespace = !!process.env.CODESPACES || !!process.env.GITHUB_CODESPACE_TOKEN || (typeof process.env.VITE_HMR_HOST === 'string' && process.env.VITE_HMR_HOST.includes('github.dev'));
 
 export default defineConfig({
   plugins,
