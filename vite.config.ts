@@ -152,6 +152,11 @@ function vitePluginManusDebugCollector(): Plugin {
 
 const plugins = [react(), tailwindcss(), jsxLocPlugin(), vitePluginManusRuntime(), vitePluginManusDebugCollector()];
 
+const isCodespace = !!process.env.CODESPACES;
+const hmrHost = process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN
+  ? `${process.env.CODESPACE_NAME}-3000.${process.env.GITHUB_CODESPACES_PORT_FORWARDING_DOMAIN}`
+  : undefined;
+
 export default defineConfig({
   plugins,
   resolve: {
@@ -170,6 +175,13 @@ export default defineConfig({
   },
   server: {
     host: true,
+    port: 3000,
+    strictPort: true,
+    hmr: {
+      host: hmrHost,
+      clientPort: isCodespace ? 443 : 3000,
+      protocol: isCodespace ? "wss" : "ws",
+    },
     allowedHosts: [
       ".manuspre.computer",
       ".manus.computer",
