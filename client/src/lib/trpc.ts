@@ -105,6 +105,16 @@ const getEndingLink = () => {
   const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const client = createWSClient({
     url: `${protocol}//${window.location.host}/api/trpc`,
+    retryDelayMs: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    onOpen: () => {
+      console.log("WebSocket connection established");
+    },
+    onClose: (cause) => {
+      console.log("WebSocket connection closed", cause);
+    },
+    onError: (error) => {
+      console.error("WebSocket error", error);
+    },
   });
 
   return splitLink({

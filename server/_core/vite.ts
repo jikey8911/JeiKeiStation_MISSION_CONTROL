@@ -11,7 +11,7 @@ export async function setupVite(app: Express, server: Server) {
 
   if (process.env.VITE_HMR_HOST) {
     hmrConfig.host = process.env.VITE_HMR_HOST;
-    hmrConfig.port = process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 443;
+    hmrConfig.clientPort = process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 443;
     hmrConfig.protocol = process.env.VITE_HMR_PROTOCOL || 'wss';
   }
 
