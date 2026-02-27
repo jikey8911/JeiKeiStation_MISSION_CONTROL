@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useState, useEffect } from "react";
 import { 
   TriangleAlert, 
   Bell, 
@@ -22,6 +22,24 @@ export default function NotFound() {
     surfaceDark: "#0a0a0a",
     surfaceBorder: "#330b14",
   };
+
+  const [logs, setLogs] = useState<Array<{ time: string; message: string; type: 'info' | 'warning' | 'error' | 'critical' | 'fatal' }>>([]);
+
+  useEffect(() => {
+    const now = new Date();
+    const formatTime = (date: Date) => `[${date.toLocaleTimeString('en-GB', { hour12: false })}]`;
+    const path = window.location.pathname;
+
+    setLogs([
+      { time: formatTime(new Date(now.getTime() - 2000)), message: "System heartbeat detected...", type: 'info' },
+      { time: formatTime(new Date(now.getTime() - 1500)), message: `Initiating request for: ${path}`, type: 'info' },
+      { time: formatTime(new Date(now.getTime() - 800)), message: "Resolving routing table...", type: 'info' },
+      { time: formatTime(new Date(now.getTime() - 400)), message: `WARNING: Route '${path}' not mapped in sector.`, type: 'warning' },
+      { time: formatTime(new Date(now.getTime() - 100)), message: `ALERT: 404_NOT_FOUND. Resource unavailable.`, type: 'error' },
+      { time: formatTime(now), message: `CRITICAL: NAVIGATION FAILURE. CLIENT: ${navigator.userAgent.substring(0, 50)}...`, type: 'critical' },
+      { time: formatTime(new Date(now.getTime() + 500)), message: "SYSTEM HALTED. MANUAL OVERRIDE REQUIRED.", type: 'fatal' },
+    ]);
+  }, []);
 
   return (
     <div className="min-h-screen flex flex-col overflow-x-hidden bg-[#050505] text-slate-100 font-sans selection:bg-[#FF003C] selection:text-white">
@@ -241,38 +259,21 @@ export default function NotFound() {
                 <RefreshCw className="w-4 h-4 text-[#FF003C] animate-spin" />
               </div>
               <div className="flex-1 overflow-y-auto p-5 font-mono text-xs flex flex-col gap-3">
-                <div className="flex gap-3 text-slate-400 opacity-60">
-                  <span className="whitespace-nowrap">[14:02:11]</span>
-                  <span>System heartbeat detected...</span>
-                </div>
-                <div className="flex gap-3 text-slate-400 opacity-60">
-                  <span className="whitespace-nowrap">[14:02:45]</span>
-                  <span>Firewall integrity check passed.</span>
-                </div>
-                <div className="flex gap-3 text-[#FF003C]/80">
-                  <span className="whitespace-nowrap">[14:03:01]</span>
-                  <span>WARNING: Unauthorized access packet received from IP 192.168.X.X</span>
-                </div>
-                <div className="flex gap-3 text-[#FF003C]">
-                  <span className="whitespace-nowrap">[14:03:05]</span>
-                  <span>ALERT: Port 8080 breached. Encryption key mismatch.</span>
-                </div>
-                <div className="flex gap-3 text-[#FF003C] font-bold bg-[#FF003C]/10 p-1 -mx-1 rounded">
-                  <span className="whitespace-nowrap">[14:03:10]</span>
-                  <span>CRITICAL: ROOT ACCESS GRANTED TO UNKNOWN USER "ZER0_DAY"</span>
-                </div>
-                <div className="flex gap-3 text-[#FF003C]">
-                  <span className="whitespace-nowrap">[14:03:12]</span>
-                  <span>Attempting to isolate subnet... FAILED.</span>
-                </div>
-                <div className="flex gap-3 text-[#FF003C]">
-                  <span className="whitespace-nowrap">[14:03:15]</span>
-                  <span>Initiating lockdown protocol...</span>
-                </div>
-                <div className="flex gap-3 text-white border-l-2 border-[#FF003C] pl-2 animate-pulse">
-                  <span className="whitespace-nowrap text-[#FF003C]">[14:03:22]</span>
-                  <span>SYSTEM COMPROMISED. MANUAL OVERRIDE REQUIRED.</span>
-                </div>
+                {logs.map((log, index) => (
+                  <div 
+                    key={index} 
+                    className={`flex gap-3 ${
+                      log.type === 'info' ? 'text-slate-400 opacity-60' :
+                      log.type === 'warning' ? 'text-[#FF003C]/80' :
+                      log.type === 'error' ? 'text-[#FF003C]' :
+                      log.type === 'critical' ? 'text-[#FF003C] font-bold bg-[#FF003C]/10 p-1 -mx-1 rounded' :
+                      'text-white border-l-2 border-[#FF003C] pl-2 animate-pulse'
+                    }`}
+                  >
+                    <span className={`whitespace-nowrap ${log.type === 'fatal' ? 'text-[#FF003C]' : ''}`}>{log.time}</span>
+                    <span className="break-all">{log.message}</span>
+                  </div>
+                ))}
               </div>
               <div className="px-3 py-2 bg-[#FF003C] text-black text-xs font-mono font-bold text-center">
                 CONNECTION UNSTABLE // RECONNECTING...
