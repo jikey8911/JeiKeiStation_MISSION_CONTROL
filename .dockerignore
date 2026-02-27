@@ -22,8 +22,6 @@ venv/
 # Entorno y Secretos locales
 .env
 .env.local
-.manus/
-.manus-logs/
 
 # Control de Versiones
 .git

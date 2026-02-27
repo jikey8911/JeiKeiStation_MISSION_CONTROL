@@ -33,10 +33,20 @@ async function startServer() {
   const app = express();
   const server = createServer(app);
 
-  // WebSocket Server
+  // WebSocket Server for tRPC
   const wss = new WebSocketServer({
-    server,
+    noServer: true,
     path: "/api/trpc",
+  });
+
+  server.on("upgrade", (request, socket, head) => {
+    const { pathname } = new URL(request.url ?? "", `http://${request.headers.host}`);
+
+    if (pathname === "/api/trpc") {
+      wss.handleUpgrade(request, socket, head, (ws) => {
+        wss.emit("connection", ws, request);
+      });
+    }
   });
 
   const handler = applyWSSHandler({
