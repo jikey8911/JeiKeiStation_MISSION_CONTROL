@@ -44,9 +44,25 @@ export default function Dashboard() {
   const utils = trpc.useUtils();
   useTaskSubscription();
 
-  const { data: tasks = [], isLoading: tasksLoading } = trpc.tasks.list.useQuery({});
-  const { data: agents = [], isLoading: agentsLoading } = trpc.agents.list.useQuery();
-  const { data: sprints = [] } = trpc.sprints.list.useQuery();
+  const { 
+    data: tasks = [], 
+    isLoading: tasksLoading,
+    isError: isTasksError,
+    error: tasksError
+  } = trpc.tasks.list.useQuery({});
+
+  const { 
+    data: agents = [], 
+    isLoading: agentsLoading,
+    isError: isAgentsError,
+    error: agentsError
+  } = trpc.agents.list.useQuery();
+
+  const { 
+    data: sprints = [],
+    isError: isSprintsError,
+    error: sprintsError
+  } = trpc.sprints.list.useQuery();
   
   const currentSprint = sprints.find(s => s.status === "active") || sprints[0];
 
@@ -109,6 +125,24 @@ export default function Dashboard() {
     return (
       <div className="min-h-screen bg-black flex items-center justify-center">
         <Loader2 className="w-12 h-12 text-[#00f2ff] animate-spin" />
+      </div>
+    );
+  }
+
+  if (isTasksError || isAgentsError || isSprintsError) {
+    return (
+      <div className="min-h-screen bg-[#050505] flex flex-col items-center justify-center text-white font-['Rajdhani',sans-serif]">
+        <Shield className="w-16 h-16 text-red-500 mb-6" />
+        <h1 className="text-2xl font-bold tracking-widest uppercase mb-2">Sistema Desconectado</h1>
+        <p className="text-white/60 mb-8 text-center max-w-md">
+          {(tasksError || agentsError || sprintsError)?.message || "Error crítico en la conexión con Mission Control."}
+        </p>
+        <Button 
+          onClick={() => window.location.reload()}
+          className="bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold rounded-none uppercase tracking-widest px-8"
+        >
+          Reiniciar Sistema
+        </Button>
       </div>
     );
   }
