@@ -1,1 +1,0 @@
-ALTER TABLE `notifications` ADD `archived` boolean DEFAULT false NOT NULL;

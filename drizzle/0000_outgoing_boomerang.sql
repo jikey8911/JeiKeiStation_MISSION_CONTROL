@@ -21,6 +21,7 @@ CREATE TABLE `notifications` (
 	`taskId` int,
 	`sprintId` int,
 	`read` boolean NOT NULL DEFAULT false,
+	`archived` boolean NOT NULL DEFAULT false,
 	`createdAt` timestamp NOT NULL DEFAULT (now()),
 	CONSTRAINT `notifications_id` PRIMARY KEY(`id`)
 );
@@ -59,19 +60,19 @@ CREATE TABLE `taskHistory` (
 );
 --> statement-breakpoint
 CREATE TABLE `tasks` (
-	`id` int AUTO_INCREMENT NOT NULL,
-	`sprintId` int,
+	`id` serial AUTO_INCREMENT NOT NULL,
+	`sprint_id` int,
 	`title` varchar(255) NOT NULL,
 	`description` text,
-	`status` enum('backlog','in_progress','review','qa','done') NOT NULL DEFAULT 'backlog',
-	`priority` enum('low','medium','high','critical') NOT NULL DEFAULT 'medium',
-	`requiredSkills` text NOT NULL,
-	`estimationHours` decimal(5,2),
-	`assignedAgentId` int,
-	`acceptanceCriteria` text NOT NULL,
-	`createdAt` timestamp NOT NULL DEFAULT (now()),
-	`updatedAt` timestamp NOT NULL DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
-	`completedAt` timestamp,
+	`status` varchar(50) DEFAULT 'todo',
+	`priority` varchar(50) DEFAULT 'medium',
+	`required_skills` json,
+	`estimation_hours` int,
+	`assigned_agent_id` int,
+	`acceptance_criteria` json,
+	`created_at` timestamp DEFAULT (now()),
+	`updated_at` timestamp DEFAULT (now()) ON UPDATE CURRENT_TIMESTAMP,
+	`completed_at` timestamp,
 	CONSTRAINT `tasks_id` PRIMARY KEY(`id`)
 );
 --> statement-breakpoint
