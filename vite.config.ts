@@ -95,51 +95,27 @@ function vitePluginManusDebugCollector(): Plugin {
     },
 
     configureServer(server: ViteDevServer) {
-      server.middlewares.use("/__manus__/logs", (req, res, next) => {
-        if (req.method !== "POST") {
-          return next();
-        }
+      server.middlewares.use("/__manus__/logs", async (req, res, next) => {
+        if (req.method !== "POST") return next();
 
-        const handlePayload = (payload: any) => {
-          if (payload.consoleLogs?.length > 0) {
-            writeToLogFile("browserConsole", payload.consoleLogs);
+        try {
+          let body = "";
+          for await (const chunk of req) {
+            body += chunk.toString();
           }
-          if (payload.networkRequests?.length > 0) {
-            writeToLogFile("networkRequests", payload.networkRequests);
-          }
-          if (payload.sessionEvents?.length > 0) {
-            writeToLogFile("sessionReplay", payload.sessionEvents);
-          }
+          const payload = JSON.parse(body);
+
+          // Procesar logs...
+          if (payload.consoleLogs) writeToLogFile("browserConsole", payload.consoleLogs);
+          if (payload.networkRequests) writeToLogFile("networkRequests", payload.networkRequests);
+          if (payload.sessionEvents) writeToLogFile("sessionReplay", payload.sessionEvents);
 
           res.writeHead(200, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ success: true }));
-        };
-
-        const reqBody = (req as { body?: unknown }).body;
-        if (reqBody && typeof reqBody === "object") {
-          try {
-            handlePayload(reqBody);
-          } catch (e) {
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ success: false, error: String(e) }));
-          }
-          return;
+        } catch (e) {
+          res.writeHead(400, { "Content-Type": "application/json" });
+          res.end(JSON.stringify({ success: false, error: "Invalid JSON" }));
         }
-
-        let body = "";
-        req.on("data", (chunk) => {
-          body += chunk.toString();
-        });
-
-        req.on("end", () => {
-          try {
-            const payload = JSON.parse(body);
-            handlePayload(payload);
-          } catch (e) {
-            res.writeHead(400, { "Content-Type": "application/json" });
-            res.end(JSON.stringify({ success: false, error: String(e) }));
-          }
-        });
       });
     },
   };
@@ -174,6 +150,7 @@ export default defineConfig({
       // Configuración robusta para HMR en Codespaces
       // En Codespaces, el cliente (navegador) debe conectar vía puerto 443 (HTTPS/WSS)
       // del proxy de GitHub, no directamente al puerto 3000 o 5173 del contenedor.
+      host: process.env.VITE_HMR_HOST || undefined,
       clientPort: isCodespace ? 443 : 3000,
       protocol: isCodespace ? "wss" : "ws",
     },

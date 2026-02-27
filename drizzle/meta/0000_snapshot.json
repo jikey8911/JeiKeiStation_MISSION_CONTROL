@@ -1,7 +1,7 @@
 {
   "version": "5",
   "dialect": "mysql",
-  "id": "52f5d72b-38a3-44c5-ac01-66ae096374c4",
+  "id": "3a684c81-c13f-469e-b083-0ebddce6c6a3",
   "prevId": "00000000-0000-0000-0000-000000000000",
   "tables": {
     "agents": {
@@ -151,6 +151,14 @@
         },
         "read": {
           "name": "read",
+          "type": "boolean",
+          "primaryKey": false,
+          "notNull": true,
+          "autoincrement": false,
+          "default": false
+        },
+        "archived": {
+          "name": "archived",
           "type": "boolean",
           "primaryKey": false,
           "notNull": true,
@@ -390,13 +398,13 @@
       "columns": {
         "id": {
           "name": "id",
-          "type": "int",
+          "type": "serial",
           "primaryKey": false,
           "notNull": true,
           "autoincrement": true
         },
-        "sprintId": {
-          "name": "sprintId",
+        "sprint_id": {
+          "name": "sprint_id",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
@@ -418,67 +426,67 @@
         },
         "status": {
           "name": "status",
-          "type": "enum('backlog','in_progress','review','qa','done')",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
-          "default": "'backlog'"
+          "default": "'todo'"
         },
         "priority": {
           "name": "priority",
-          "type": "enum('low','medium','high','critical')",
+          "type": "varchar(50)",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
           "default": "'medium'"
         },
-        "requiredSkills": {
-          "name": "requiredSkills",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true,
-          "autoincrement": false
-        },
-        "estimationHours": {
-          "name": "estimationHours",
-          "type": "decimal(5,2)",
+        "required_skills": {
+          "name": "required_skills",
+          "type": "json",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "assignedAgentId": {
-          "name": "assignedAgentId",
+        "estimation_hours": {
+          "name": "estimation_hours",
           "type": "int",
           "primaryKey": false,
           "notNull": false,
           "autoincrement": false
         },
-        "acceptanceCriteria": {
-          "name": "acceptanceCriteria",
-          "type": "text",
+        "assigned_agent_id": {
+          "name": "assigned_agent_id",
+          "type": "int",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false
         },
-        "createdAt": {
-          "name": "createdAt",
+        "acceptance_criteria": {
+          "name": "acceptance_criteria",
+          "type": "json",
+          "primaryKey": false,
+          "notNull": false,
+          "autoincrement": false
+        },
+        "created_at": {
+          "name": "created_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
           "default": "(now())"
         },
-        "updatedAt": {
-          "name": "updatedAt",
+        "updated_at": {
+          "name": "updated_at",
           "type": "timestamp",
           "primaryKey": false,
-          "notNull": true,
+          "notNull": false,
           "autoincrement": false,
           "onUpdate": true,
           "default": "(now())"
         },
-        "completedAt": {
-          "name": "completedAt",
+        "completed_at": {
+          "name": "completed_at",
           "type": "timestamp",
           "primaryKey": false,
           "notNull": false,

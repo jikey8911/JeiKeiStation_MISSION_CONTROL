@@ -1,4 +1,4 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal, serial, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
@@ -67,19 +67,19 @@ export type InsertSprint = typeof sprints.$inferInsert;
  * Tareas SCRUM con metadatos completos
  */
 export const tasks = mysqlTable("tasks", {
-  id: int("id").autoincrement().primaryKey(),
-  sprintId: int("sprintId"),
+  id: serial("id").primaryKey(),
+  sprintId: int("sprint_id"),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  status: mysqlEnum("status", ["backlog", "in_progress", "review", "qa", "done"]).default("backlog").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high", "critical"]).default("medium").notNull(),
-  requiredSkills: text("requiredSkills").notNull(), // JSON stringified
-  estimationHours: decimal("estimationHours", { precision: 5, scale: 2 }),
-  assignedAgentId: int("assignedAgentId"),
-  acceptanceCriteria: text("acceptanceCriteria").notNull(), // JSON stringified
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  completedAt: timestamp("completedAt"),
+  status: varchar("status", { length: 50 }).default("todo"),
+  priority: varchar("priority", { length: 50 }).default("medium"),
+  requiredSkills: json("required_skills"),
+  estimationHours: int("estimation_hours"),
+  assignedAgentId: int("assigned_agent_id"),
+  acceptanceCriteria: json("acceptance_criteria"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 export type Task = typeof tasks.$inferSelect;
