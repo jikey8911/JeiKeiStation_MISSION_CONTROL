@@ -1,26 +1,37 @@
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications } from "../drizzle/schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import {
+  InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications
+} from "../drizzle/schema";
 
 let _db: ReturnType<typeof drizzle> | null = null;
+let _pool: pg.Pool | null = null;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
+// ENV mockup for role assignment
+const ENV = {
+  ownerOpenId: process.env.OWNER_OPENID || "dev_user_id"
+};
+
 export async function getDb() {
   if (!_db) {
-    console.log("[Database] Initializing connection...");
+    console.log("[Database] Initializing connection pool...");
     const dbUrl = process.env.DATABASE_URL;
-    if (dbUrl && !dbUrl.includes("user:pass@localhost")) {
+    if (dbUrl) {
       try {
-        console.log("[Database] Connecting to DATABASE_URL...");
-        const db = drizzle(dbUrl);
+        console.log("[Database] Connecting to PostgreSQL...");
+        _pool = new pg.Pool({
+          connectionString: dbUrl,
+        });
+
+        const db = drizzle(_pool);
         // Test connection
         await db.execute(sql`SELECT 1`);
         _db = db;
-        console.log("[Database] Drizzle initialized.");
+        console.log("[Database] Drizzle initialized with PostgreSQL.");
       } catch (error) {
-        console.warn("[Database] Failed to connect, falling back to mock:", error);
-        _useMock = true;
-        _db = null;
+        console.error("[Database] Failed to connect to PostgreSQL:", error);
+        throw error;
       }
     } else {
       throw new Error("[Database] No valid DATABASE_URL found");
@@ -59,6 +70,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       values.lastSignedIn = user.lastSignedIn;
       updateSet.lastSignedIn = user.lastSignedIn;
     }
+
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
@@ -75,8 +87,10 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.lastSignedIn = new Date();
     }
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
-      set: updateSet,
+    // PostgreSQL uses onConflictDoUpdate
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
+      set: updateSet as any,
     });
   } catch (error) {
     console.error("[Database] Failed to upsert user:", error);
@@ -103,6 +117,9 @@ export async function createAgent(data: {
 }) {
   const db = await getDb();
 
+  // En PostgreSQL skills es text (JSON stringified) o podría ser jsonb.
+  // En el esquema lo dejé como text para mantener compatibilidad con la lógica actual de stringify,
+  // pero lo ideal sería jsonb. Vamos a mantener text por ahora como estaba en MySQL pero ajustado.
   const result = await db.insert(agents).values({
     name: data.name,
     description: data.description,
@@ -111,7 +128,7 @@ export async function createAgent(data: {
     maxCapacity: data.maxCapacity || 10,
     status: "available",
     currentWorkload: 0,
-  });
+  }).returning();
 
   return result;
 }
@@ -158,7 +175,7 @@ export async function createSprint(data: {
     description: data.description,
     plannedVelocity: data.plannedVelocity || 0,
     status: "planning",
-  });
+  }).returning();
 
   return result;
 }
@@ -204,7 +221,7 @@ export async function createTask(data: {
     estimationHours: data.estimationHours,
     acceptanceCriteria: data.acceptanceCriteria || [],
     status: "backlog",
-  });
+  }).returning();
 
   return result;
 }
@@ -276,7 +293,7 @@ export async function createTaskDependency(taskId: number, dependsOnTaskId: numb
   return await db.insert(taskDependencies).values({
     taskId,
     dependsOnTaskId,
-  });
+  }).returning();
 }
 
 export async function getTaskDependencies(taskId: number) {
@@ -310,7 +327,7 @@ export async function getBlockingTasks(taskId: number) {
 
   if (blockingTaskIds.length === 0) return [];
 
-  const result = await db.select().from(tasks).where(sql`${tasks.id} IN (${blockingTaskIds.join(",")})`);
+  const result = await db.select().from(tasks).where(inArray(tasks.id, blockingTaskIds));
   return result.map(task => ({
     ...task,
     requiredSkills: (task.requiredSkills || []) as string[],
@@ -338,7 +355,7 @@ export async function createNotification(data: {
     taskId: data.taskId,
     sprintId: data.sprintId,
     read: false,
-  });
+  }).returning();
 }
 
 export async function getNotifications(userId: number, unreadOnly = false, notArchived = false, type?: string) {
@@ -355,8 +372,7 @@ export async function getNotifications(userId: number, unreadOnly = false, notAr
   }
 
   if (type) {
-    // Usar una comparación de string para el tipo
-    conditions.push(sql`${notifications.type} = ${type}`);
+    conditions.push(eq(notifications.type, type as any));
   }
 
   return await db.select().from(notifications)
@@ -404,6 +420,6 @@ export async function getNotificationsByType(userId: number, type: string) {
   const db = await getDb();
 
   return await db.select().from(notifications)
-    .where(and(eq(notifications.userId, userId), sql`${notifications.type} = ${type}`, eq(notifications.archived, false)))
+    .where(and(eq(notifications.userId, userId), eq(notifications.type, type as any), eq(notifications.archived, false)))
     .orderBy(desc(notifications.createdAt));
 }

@@ -1,5 +1,5 @@
 import "dotenv/config";
-import mysql from "mysql2/promise";
+import pg from "pg";
 
 async function main() {
   const url = process.env.DATABASE_URL;
@@ -7,21 +7,21 @@ async function main() {
     console.log("No DATABASE_URL");
     return;
   }
+  const pool = new pg.Pool({
+    connectionString: url,
+  });
   try {
-    const connection = await mysql.createConnection(url);
-    const [tables] = await connection.query("SHOW TABLES");
-    console.log("Tables:", tables);
+    const client = await pool.connect();
+    const tables = await client.query("SELECT table_name FROM information_schema.tables WHERE table_schema = 'public'");
+    console.log("Tables:", tables.rows);
 
-    const [tasksCols] = await connection.query("DESCRIBE tasks");
-    console.log("Tasks columns:", tasksCols);
+    if (tables.rows.some(r => r.table_name === 'tasks')) {
+      const tasksCols = await client.query("SELECT column_name, data_type FROM information_schema.columns WHERE table_name = 'tasks'");
+      console.log("Tasks columns:", tasksCols.rows);
+    }
 
-    const [agentsCols] = await connection.query("DESCRIBE agents");
-    console.log("Agents columns:", agentsCols);
-
-    const [sprintsCols] = await connection.query("DESCRIBE sprints");
-    console.log("Sprints columns:", sprintsCols);
-
-    await connection.end();
+    client.release();
+    await pool.end();
   } catch (e) {
     console.error("Error connecting to DB:", e);
   }
