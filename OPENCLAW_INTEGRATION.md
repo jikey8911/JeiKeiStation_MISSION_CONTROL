@@ -99,7 +99,7 @@ OpenClaw debe enviar la cabecera `x-api-key` en todas las solicitudes:
 
 ```bash
 curl -H "x-api-key: jk_secret_agent_key_2026" \
-  http://localhost:3000/api/trpc/tasks/list
+  http://localhost:3000/api/trpc/tasks.list
 ```
 
 ### 2. Obtención de Tareas Huérfanas
