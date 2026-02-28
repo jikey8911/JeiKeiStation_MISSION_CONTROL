@@ -67,8 +67,8 @@ export const mockDb = {
         id: nextIds.tasks++,
         status: "backlog",
         createdAt: new Date(),
-        requiredSkills: JSON.stringify(data.requiredSkills || []),
-        acceptanceCriteria: JSON.stringify(data.acceptanceCriteria || [])
+        requiredSkills: data.requiredSkills || [],
+        acceptanceCriteria: data.acceptanceCriteria || []
       };
       tasksArr.push(task);
       return { lastInsertId: task.id };
