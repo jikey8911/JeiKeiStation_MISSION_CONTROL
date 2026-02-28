@@ -30,9 +30,6 @@ export default defineConfig({
     port: 3000,
     strictPort: true,
     hmr: {
-      // Configuración robusta para HMR en Codespaces
-      // En Codespaces, el cliente (navegador) debe conectar vía puerto 443 (HTTPS/WSS)
-      // del proxy de GitHub, no directamente al puerto 3000 o 5173 del contenedor.
       host: process.env.VITE_HMR_HOST || undefined,
       clientPort: isCodespace ? 443 : 3000,
       protocol: isCodespace ? "wss" : "ws",
@@ -44,10 +41,11 @@ export default defineConfig({
     ],
     proxy: {
       "/api": {
-        target: "http://localhost:3000",
+        // Apuntar al contenedor de la API en lugar de localhost
+        target: "http://jeikei_api:3001",
         changeOrigin: true,
         secure: false,
-        ws: true, // Habilitar proxy para WebSockets en la ruta /api si se usa tRPC con WS
+        ws: true,
       },
     },
     fs: {

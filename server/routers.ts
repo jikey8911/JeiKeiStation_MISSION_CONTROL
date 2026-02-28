@@ -96,7 +96,6 @@ export const appRouter = router({
         const tasksInSprint = await db.getTasks(input.sprintId);
         const allDeps = await db.getAllDependencies();
         
-        // Filtrar dependencias que pertenecen a tareas del sprint
         const taskIds = new Set(tasksInSprint.map(t => t.id));
         const dependenciesInSprint = allDeps.filter(
           dep => taskIds.has(dep.taskId) && taskIds.has(dep.dependsOnTaskId)
@@ -116,7 +115,6 @@ export const appRouter = router({
         const completedTasks = tasksInSprint.filter(t => t.status === "done").length;
         const completionPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
-        // Distribución por requiredSkills
         const skillDistribution: Record<string, number> = {};
         tasksInSprint.forEach(task => {
           (task.requiredSkills || []).forEach((skill: string) => {
@@ -166,7 +164,8 @@ export const appRouter = router({
     updateStatus: protectedProcedure
       .input(z.object({ taskId: z.number(), status: z.string(), agentId: z.number().optional() }))
       .mutation(async ({ input }) => {
-        const updatedTask = await db.updateTaskStatus(input.taskId, input.status, input.agentId);
+        await db.updateTaskStatus(input.taskId, input.status, input.agentId);
+        const updatedTask = await db.getTaskById(input.taskId);
         eventEmitter.emit("taskUpdated", updatedTask);
         return { success: true };
       }),
@@ -174,18 +173,16 @@ export const appRouter = router({
     assignToAgent: protectedProcedure
       .input(z.object({ taskId: z.number(), agentId: z.number() }))
       .mutation(async ({ input }) => {
-        const assignedTask = await db.assignTaskToAgent(input.taskId, input.agentId);
-        
-        // Actualizar carga de trabajo del agente
+        await db.assignTaskToAgent(input.taskId, input.agentId);
         const agent = await db.getAgentById(input.agentId);
         if (agent) {
           await db.updateAgentWorkload(input.agentId, agent.currentWorkload + 1);
         }
+        const assignedTask = await db.getTaskById(input.taskId);
         eventEmitter.emit("taskUpdated", assignedTask);
         return { success: true };
       }),
 
-    // Importar tareas desde Markdown
     importFromMarkdown: protectedProcedure
       .input(z.object({ markdown: z.string(), sprintId: z.number().optional() }))
       .mutation(async ({ input }) => {
@@ -202,14 +199,12 @@ export const appRouter = router({
             estimationHours: task.estimationHours,
             acceptanceCriteria: task.acceptanceCriteria,
           });
-
           createdTasks.push(result);
         }
 
         return { count: createdTasks.length, tasks: createdTasks };
       }),
 
-    // Asignación automática de tareas
     autoAssign: protectedProcedure
       .input(z.object({ taskId: z.number() }))
       .mutation(async ({ input }) => {
@@ -221,25 +216,23 @@ export const appRouter = router({
           agents.map(a => ({
             id: a.id,
             name: a.name,
-            skills: typeof a.skills === 'string' ? JSON.parse(a.skills) : a.skills,
+            skills: a.skills as string[],
             currentWorkload: a.currentWorkload,
             maxCapacity: a.maxCapacity,
             status: a.status as "available" | "busy" | "offline",
           })),
-          task.requiredSkills
+          task.requiredSkills as string[]
         );
 
-        if (!bestAgent) {
-          throw new Error("No available agent with required skills");
-        }
+        if (!bestAgent) throw new Error("No available agent with required skills");
 
-        const assignedTask = await db.assignTaskToAgent(input.taskId, bestAgent.id);
+        await db.assignTaskToAgent(input.taskId, bestAgent.id);
         await db.updateAgentWorkload(bestAgent.id, bestAgent.currentWorkload + 1);
+        const assignedTask = await db.getTaskById(input.taskId);
         eventEmitter.emit("taskUpdated", assignedTask);
         return { agentId: bestAgent.id, agentName: bestAgent.name };
       }),
 
-    // Endpoint para OpenClaw (Protegido por API Key)
     serviceAutoAssign: serviceProcedure
       .input(z.object({ taskId: z.number() }))
       .mutation(async ({ input }) => {
@@ -251,20 +244,19 @@ export const appRouter = router({
           agents.map(a => ({
             id: a.id,
             name: a.name,
-            skills: a.skills,
+            skills: a.skills as string[],
             currentWorkload: a.currentWorkload,
             maxCapacity: a.maxCapacity,
             status: a.status as "available" | "busy" | "offline",
           })),
-          task.requiredSkills
+          task.requiredSkills as string[]
         );
 
-        if (!bestAgent) {
-          throw new Error("No available agent with required skills");
-        }
+        if (!bestAgent) throw new Error("No available agent with required skills");
 
-        const assignedTask = await db.assignTaskToAgent(input.taskId, bestAgent.id);
+        await db.assignTaskToAgent(input.taskId, bestAgent.id);
         await db.updateAgentWorkload(bestAgent.id, bestAgent.currentWorkload + 1);
+        const assignedTask = await db.getTaskById(input.taskId);
         eventEmitter.emit("taskUpdated", assignedTask);
         return { agentId: bestAgent.id, agentName: bestAgent.name };
       }),
@@ -299,12 +291,10 @@ export const appRouter = router({
     create: protectedProcedure
       .input(z.object({ taskId: z.number(), dependsOnTaskId: z.number() }))
       .mutation(async ({ input }) => {
-        // Verificar ciclos usando TODAS las dependencias existentes
         const allDeps = await db.getAllDependencies();
         if (hasCyclicDependency(allDeps, input.taskId, input.dependsOnTaskId)) {
           throw new Error("Ciclo circular detectado. No se puede agregar la dependencia.");
         }
-
         return await db.createTaskDependency(input.taskId, input.dependsOnTaskId);
       }),
 

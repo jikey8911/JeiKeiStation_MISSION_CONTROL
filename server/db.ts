@@ -7,7 +7,6 @@ import { mockDb } from './db.mock';
 let _db: ReturnType<typeof drizzle> | null = null;
 let _useMock = false;
 
-// Lazily create the drizzle instance so local tooling can run without a DB.
 export async function getDb() {
   if (!_db && !_useMock) {
     console.log("[Database] Initializing connection...");
@@ -16,7 +15,6 @@ export async function getDb() {
       try {
         console.log("[Database] Connecting to DATABASE_URL...");
         const db = drizzle(dbUrl);
-        // Test connection
         await db.execute(sql`SELECT 1`);
         _db = db;
         console.log("[Database] Drizzle initialized.");
@@ -50,17 +48,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     const updateSet: Record<string, unknown> = {};
 
     const textFields = ["name", "email", "loginMethod"] as const;
-    type TextField = (typeof textFields)[number];
-
-    const assignNullable = (field: TextField) => {
-      const value = user[field];
-      if (value === undefined) return;
-      const normalized = value ?? null;
-      values[field] = normalized;
-      updateSet[field] = normalized;
-    };
-
-    textFields.forEach(assignNullable);
+    textFields.forEach(field => {
+      if (user[field] !== undefined) {
+        values[field] = user[field] ?? null;
+        updateSet[field] = user[field] ?? null;
+      }
+    });
 
     if (user.lastSignedIn !== undefined) {
       values.lastSignedIn = user.lastSignedIn;
@@ -74,13 +67,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
       updateSet.role = 'admin';
     }
 
-    if (!values.lastSignedIn) {
-      values.lastSignedIn = new Date();
-    }
-
-    if (Object.keys(updateSet).length === 0) {
-      updateSet.lastSignedIn = new Date();
-    }
+    if (!values.lastSignedIn) values.lastSignedIn = new Date();
+    if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({
       set: updateSet,
@@ -93,12 +81,8 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) {
-    return mockDb.users.find(openId);
-  }
-
+  if (!db) return mockDb.users.find(openId);
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
-
   return result.length > 0 ? result[0] : undefined;
 }
 
@@ -114,60 +98,36 @@ export async function createAgent(data: {
   const db = await getDb();
   if (!db) return mockDb.agents.create(data) as any;
 
-  const result = await db.insert(agents).values({
+  return await db.insert(agents).values({
     name: data.name,
     description: data.description,
     avatar: data.avatar,
-    skills: JSON.stringify(data.skills),
+    skills: data.skills,
     maxCapacity: data.maxCapacity || 10,
     status: "available",
     currentWorkload: 0,
   });
-
-  return result;
 }
 
 export async function getAgents() {
   const db = await getDb();
-  if (!db) {
-    const result = mockDb.agents.list();
-    return result.map(agent => ({
-      ...agent,
-      skills: JSON.parse(agent.skills || "[]") as string[],
-    }));
-  }
-
-  const result = await db.select().from(agents);
-  return result.map(agent => ({
-    ...agent,
-    skills: JSON.parse(agent.skills || "[]") as string[],
-  }));
+  if (!db) return mockDb.agents.list().map(a => ({ ...a, skills: JSON.parse(a.skills || "[]") }));
+  return await db.select().from(agents);
 }
 
 export async function getAgentById(id: number) {
   const db = await getDb();
   if (!db) {
     const agent = mockDb.agents.get(id);
-    if (!agent) return null;
-    return {
-      ...agent,
-      skills: JSON.parse(agent.skills || "[]") as string[],
-    };
+    return agent ? { ...agent, skills: JSON.parse(agent.skills || "[]") } : null;
   }
-
   const result = await db.select().from(agents).where(eq(agents.id, id)).limit(1);
-  if (result.length === 0) return null;
-
-  return {
-    ...result[0],
-    skills: JSON.parse(result[0].skills || "[]") as string[],
-  };
+  return result.length > 0 ? result[0] : null;
 }
 
 export async function updateAgentWorkload(agentId: number, workload: number) {
   const db = await getDb();
   if (!db) return mockDb.agents.updateWorkload(agentId, workload);
-
   await db.update(agents).set({ currentWorkload: workload }).where(eq(agents.id, agentId));
 }
 
@@ -180,28 +140,23 @@ export async function createSprint(data: {
 }) {
   const db = await getDb();
   if (!db) return mockDb.sprints.create(data) as any;
-
-  const result = await db.insert(sprints).values({
+  return await db.insert(sprints).values({
     name: data.name,
     description: data.description,
     plannedVelocity: data.plannedVelocity || 0,
     status: "planning",
   });
-
-  return result;
 }
 
 export async function getSprints() {
   const db = await getDb();
   if (!db) return mockDb.sprints.list();
-
   return await db.select().from(sprints).orderBy(desc(sprints.createdAt));
 }
 
 export async function getSprintById(id: number) {
   const db = await getDb();
   if (!db) return mockDb.sprints.get(id) || null;
-
   const result = await db.select().from(sprints).where(eq(sprints.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
@@ -209,7 +164,6 @@ export async function getSprintById(id: number) {
 export async function updateSprintStatus(sprintId: number, status: string) {
   const db = await getDb();
   if (!db) return mockDb.sprints.updateStatus(sprintId, status);
-
   await db.update(sprints).set({ status: status as any }).where(eq(sprints.id, sprintId));
 }
 
@@ -226,8 +180,7 @@ export async function createTask(data: {
 }) {
   const db = await getDb();
   if (!db) return mockDb.tasks.create(data) as any;
-
-  const result = await db.insert(tasks).values({
+  return await db.insert(tasks).values({
     sprintId: data.sprintId,
     title: data.title,
     description: data.description,
@@ -235,56 +188,27 @@ export async function createTask(data: {
     requiredSkills: data.requiredSkills,
     estimationHours: data.estimationHours,
     acceptanceCriteria: data.acceptanceCriteria || [],
-    status: "backlog",
+    status: "todo",
   });
-
-  return result;
 }
 
 export async function getTasks(sprintId?: number) {
   const db = await getDb();
-  if (!db) {
-    const result = mockDb.tasks.list(sprintId);
-    return result.map(task => ({
-      ...task,
-      requiredSkills: (typeof task.requiredSkills === 'string' ? JSON.parse(task.requiredSkills) : task.requiredSkills) as string[],
-      acceptanceCriteria: (typeof task.acceptanceCriteria === 'string' ? JSON.parse(task.acceptanceCriteria) : task.acceptanceCriteria) as string[],
-    }));
-  }
-
+  if (!db) return mockDb.tasks.list(sprintId).map(t => ({ ...t, requiredSkills: JSON.parse(t.requiredSkills || "[]"), acceptanceCriteria: JSON.parse(t.acceptanceCriteria || "[]") }));
+  
   let query = db.select().from(tasks);
-  if (sprintId) {
-    query = query.where(eq(tasks.sprintId, sprintId)) as any;
-  }
-
-  const result = await query.orderBy(desc(tasks.createdAt));
-  return result.map(task => ({
-    ...task,
-    requiredSkills: (task.requiredSkills || []) as string[],
-    acceptanceCriteria: (task.acceptanceCriteria || []) as string[],
-  }));
+  if (sprintId) query = query.where(eq(tasks.sprintId, sprintId)) as any;
+  return await query.orderBy(desc(tasks.createdAt));
 }
 
 export async function getTaskById(id: number) {
   const db = await getDb();
   if (!db) {
     const task = mockDb.tasks.get(id);
-    if (!task) return null;
-    return {
-      ...task,
-      requiredSkills: (typeof task.requiredSkills === 'string' ? JSON.parse(task.requiredSkills) : task.requiredSkills) as string[],
-      acceptanceCriteria: (typeof task.acceptanceCriteria === 'string' ? JSON.parse(task.acceptanceCriteria) : task.acceptanceCriteria) as string[],
-    };
+    return task ? { ...task, requiredSkills: JSON.parse(task.requiredSkills || "[]"), acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") } : null;
   }
-
   const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
-  if (result.length === 0) return null;
-
-  return {
-    ...result[0],
-    requiredSkills: (result[0].requiredSkills || []) as string[],
-    acceptanceCriteria: (result[0].acceptanceCriteria || []) as string[],
-  };
+  return result.length > 0 ? result[0] : null;
 }
 
 export async function updateTaskStatus(taskId: number, status: string, agentId?: number) {
@@ -295,13 +219,8 @@ export async function updateTaskStatus(taskId: number, status: string, agentId?:
   if (!task) throw new Error("Task not found");
 
   const completedAt = status === "done" ? new Date() : null;
+  await db.update(tasks).set({ status, completedAt }).where(eq(tasks.id, taskId));
 
-  await db.update(tasks).set({
-    status: status as any,
-    completedAt: completedAt,
-  }).where(eq(tasks.id, taskId));
-
-  // Registrar en historial
   if (agentId) {
     await db.insert(taskHistory).values({
       taskId,
@@ -315,7 +234,6 @@ export async function updateTaskStatus(taskId: number, status: string, agentId?:
 export async function assignTaskToAgent(taskId: number, agentId: number) {
   const db = await getDb();
   if (!db) return mockDb.tasks.assign(taskId, agentId);
-
   await db.update(tasks).set({ assignedAgentId: agentId }).where(eq(tasks.id, taskId));
 }
 
@@ -324,62 +242,34 @@ export async function assignTaskToAgent(taskId: number, agentId: number) {
 export async function createTaskDependency(taskId: number, dependsOnTaskId: number) {
   const db = await getDb();
   if (!db) return mockDb.dependencies.create(taskId, dependsOnTaskId) as any;
-
-  return await db.insert(taskDependencies).values({
-    taskId,
-    dependsOnTaskId,
-  });
+  return await db.insert(taskDependencies).values({ taskId, dependsOnTaskId });
 }
 
 export async function getTaskDependencies(taskId: number) {
   const db = await getDb();
   if (!db) return mockDb.dependencies.list(taskId);
-
   return await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
 }
 
 export async function getAllDependencies() {
   const db = await getDb();
   if (!db) return mockDb.dependencies.list();
-
   return await db.select().from(taskDependencies);
-}
-
-export async function deleteDependency(taskId: number, dependsOnTaskId: number) {
-  const db = await getDb();
-  if (!db) return mockDb.dependencies.delete(taskId, dependsOnTaskId);
-
-  return await db.delete(taskDependencies).where(
-    and(
-      eq(taskDependencies.taskId, taskId),
-      eq(taskDependencies.dependsOnTaskId, dependsOnTaskId)
-    )
-  );
 }
 
 export async function getBlockingTasks(taskId: number) {
   const db = await getDb();
-  if (!db) {
-    const deps = mockDb.dependencies.list(taskId);
-    const blockingIds = deps.map(d => d.dependsOnTaskId);
-    return mockDb.tasks.list().filter(t => blockingIds.includes(t.id)).map(task => ({
-      ...task,
-      requiredSkills: JSON.parse(task.requiredSkills || "[]") as string[],
-      acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") as string[],
-    }));
-  }
-
+  if (!db) return [];
   const deps = await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
-  const blockingTaskIds = deps.map(d => d.dependsOnTaskId);
+  if (deps.length === 0) return [];
+  const blockingIds = deps.map(d => d.dependsOnTaskId);
+  return await db.select().from(tasks).where(inArray(tasks.id, blockingIds));
+}
 
-  if (blockingTaskIds.length === 0) return [];
-
-  const result = await db.select().from(tasks).where(sql`${tasks.id} IN (${blockingTaskIds.join(",")})`);
-  return result.map(task => ({
-    ...task,
-    requiredSkills: (task.requiredSkills || []) as string[],
-    acceptanceCriteria: (task.acceptanceCriteria || []) as string[],
-  }));
+export async function deleteDependency(taskId: number, dependsOnTaskId: number) {
+  const db = await getDb();
+  if (!db) return;
+  await db.delete(taskDependencies).where(and(eq(taskDependencies.taskId, taskId), eq(taskDependencies.dependsOnTaskId, dependsOnTaskId)));
 }
 
 // ==================== NOTIFICACIONES ====================
@@ -393,8 +283,7 @@ export async function createNotification(data: {
   sprintId?: number;
 }) {
   const db = await getDb();
-  if (!db) return mockDb.notifications.create(data) as any;
-
+  if (!db) return;
   return await db.insert(notifications).values({
     userId: data.userId,
     type: data.type,
@@ -402,88 +291,45 @@ export async function createNotification(data: {
     message: data.message,
     taskId: data.taskId,
     sprintId: data.sprintId,
-    read: false,
   });
 }
 
-export async function getNotifications(userId: number, unreadOnly = false, notArchived = false, type?: string) {
+export async function getNotifications(userId: number, unreadOnly?: boolean, includeArchived?: boolean, type?: string) {
   const db = await getDb();
-  if (!db) {
-    return mockDb.notifications.list(userId).filter(n => {
-      if (unreadOnly && n.read) return false;
-      if (notArchived && n.archived) return false;
-      if (type && n.type !== type) return false;
-      return true;
-    });
-  }
+  if (!db) return [];
+  
+  let conditions = [eq(notifications.userId, userId)];
+  if (unreadOnly) conditions.push(eq(notifications.read, false));
+  if (!includeArchived) conditions.push(eq(notifications.archived, false));
+  if (type) conditions.push(eq(notifications.type, type as any));
 
-  const conditions: any[] = [eq(notifications.userId, userId)];
-
-  if (unreadOnly) {
-    conditions.push(eq(notifications.read, false));
-  }
-
-  if (notArchived) {
-    conditions.push(eq(notifications.archived, false));
-  }
-
-  if (type) {
-    // Usar una comparación de string para el tipo
-    conditions.push(sql`${notifications.type} = ${type}`);
-  }
-
-  return await db.select().from(notifications)
-    .where(and(...conditions))
-    .orderBy(desc(notifications.createdAt));
+  return await db.select().from(notifications).where(and(...conditions)).orderBy(desc(notifications.createdAt));
 }
 
-export async function markNotificationAsRead(notificationId: number) {
+export async function markNotificationAsRead(id: number) {
   const db = await getDb();
-  if (!db) return mockDb.notifications.markRead(notificationId);
-
-  return await db.update(notifications)
-    .set({ read: true })
-    .where(eq(notifications.id, notificationId));
+  if (!db) return;
+  await db.update(notifications).set({ read: true }).where(eq(notifications.id, id));
 }
 
-export async function markNotificationsAsRead(notificationIds: number[]) {
+export async function markNotificationsAsRead(ids: number[]) {
   const db = await getDb();
-  if (!db) return mockDb.notifications.markAllRead(notificationIds);
-
-  if (notificationIds.length === 0) return;
-
-  return await db.update(notifications)
-    .set({ read: true })
-    .where(inArray(notifications.id, notificationIds));
+  if (!db) return;
+  await db.update(notifications).set({ read: true }).where(inArray(notifications.id, ids));
 }
 
-export async function archiveNotification(notificationId: number) {
+export async function archiveNotification(id: number) {
   const db = await getDb();
-  if (!db) return mockDb.notifications.archive(notificationId);
-
-  return await db.update(notifications)
-    .set({ archived: true })
-    .where(eq(notifications.id, notificationId));
+  if (!db) return;
+  await db.update(notifications).set({ archived: true }).where(eq(notifications.id, id));
 }
 
-export async function archiveNotifications(notificationIds: number[]) {
+export async function archiveNotifications(ids: number[]) {
   const db = await getDb();
-  if (!db) return mockDb.notifications.archiveAll(notificationIds);
-
-  if (notificationIds.length === 0) return;
-
-  return await db.update(notifications)
-    .set({ archived: true })
-    .where(inArray(notifications.id, notificationIds));
+  if (!db) return;
+  await db.update(notifications).set({ archived: true }).where(inArray(notifications.id, ids));
 }
 
 export async function getNotificationsByType(userId: number, type: string) {
-  const db = await getDb();
-  if (!db) {
-    return mockDb.notifications.list(userId).filter(n => n.type === type && !n.archived);
-  }
-
-  return await db.select().from(notifications)
-    .where(and(eq(notifications.userId, userId), sql`${notifications.type} = ${type}`, eq(notifications.archived, false)))
-    .orderBy(desc(notifications.createdAt));
+  return await getNotifications(userId, false, false, type);
 }
