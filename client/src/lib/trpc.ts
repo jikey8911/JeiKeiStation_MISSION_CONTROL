@@ -99,7 +99,7 @@ export const queryClientConfig = {
 const getEndingLink = () => {
   if (typeof window === "undefined") {
     return httpBatchLink({
-      url: `http://localhost:3000/api/trpc`,
+      url: `/api/trpc`,
       transformer: superjson,
     });
   }
