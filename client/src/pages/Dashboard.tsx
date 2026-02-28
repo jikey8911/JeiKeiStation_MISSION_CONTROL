@@ -39,6 +39,7 @@ export default function Dashboard() {
     priority: "medium" as const,
     requiredSkills: [] as string[],
     estimationHours: 0,
+    status: "backlog" as string,
   });
 
   const utils = trpc.useUtils();
@@ -48,7 +49,8 @@ export default function Dashboard() {
     data: tasks = [], 
     isLoading: tasksLoading,
     isError: isTasksError,
-    error: tasksError
+    error: tasksError,
+    refetch: refetchTasks
   } = trpc.tasks.list.useQuery({});
 
   const { 
@@ -76,6 +78,7 @@ export default function Dashboard() {
         priority: "medium",
         requiredSkills: [],
         estimationHours: 0,
+        status: "backlog",
       });
       utils.tasks.list.invalidate();
     },
@@ -104,10 +107,14 @@ export default function Dashboard() {
     onSuccess: () => utils.tasks.list.invalidate(),
   });
 
-  const handleAddTask = () => {
+  const handleAddTask = (columnStatus?: string) => {
     if (!newTaskData.title) return toast.error("El nombre de la misión es requerido");
+
+    // Extraer campos que tRPC espera (sin 'status' si no está en el esquema)
+    const { status: _, ...taskInput } = newTaskData;
+
     createTask.mutate({
-      ...newTaskData,
+      ...taskInput,
       sprintId: currentSprint?.id,
       estimationHours: newTaskData.estimationHours || undefined,
     });
@@ -220,7 +227,16 @@ export default function Dashboard() {
             <TabsContent value="overview" className="space-y-8 m-0 outline-none">
               <div className="grid grid-cols-1 lg:grid-cols-4 gap-6">
                 <div className="lg:col-span-3 space-y-6">
-                  <TaskBoard tasks={tasks} onTaskStatusChange={(id, status) => updateTaskStatus.mutate({ taskId: id, status })} onAddTask={() => setIsTaskOpen(true)} />
+                  <TaskBoard
+                    tasks={tasks}
+                    onTaskStatusChange={(id, status) => updateTaskStatus.mutate({ taskId: id, status })}
+                    onAddTask={(columnStatus) => {
+                      if (columnStatus) {
+                        setNewTaskData(prev => ({ ...prev, status: columnStatus }));
+                      }
+                      setIsTaskOpen(true);
+                    }}
+                  />
                   <div className="bg-black/40 border border-white/5 p-6 relative overflow-hidden">
                     <div className="absolute top-0 right-0 p-2 opacity-10"><Activity className="w-24 h-24" /></div>
                     <h3 className="text-[#00f2ff] uppercase tracking-widest text-xs font-bold mb-6">Misión: Grafo de Dependencias</h3>
@@ -323,7 +339,7 @@ export default function Dashboard() {
                   />
                 </div>
               </div>
-              <Button onClick={handleAddTask} className="w-full bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold uppercase py-6 rounded-none shadow-[0_0_15px_rgba(0,242,255,0.4)]">
+              <Button onClick={() => handleAddTask()} className="w-full bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold uppercase py-6 rounded-none shadow-[0_0_15px_rgba(0,242,255,0.4)]">
                 Desplegar Misión
               </Button>
             </div>
