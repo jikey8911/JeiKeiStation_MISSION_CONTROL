@@ -46,12 +46,21 @@ export default function Dashboard() {
   useTaskSubscription();
 
   const { 
-    data: tasks = [], 
+    data: rawTasks = [], 
     isLoading: tasksLoading,
     isError: isTasksError,
     error: tasksError,
     refetch: refetchTasks
   } = trpc.tasks.list.useQuery({});
+
+  const tasks = rawTasks.map((task) => ({
+    ...task,
+    description: task.description || undefined,
+    priority: (task.priority as "low" | "medium" | "high" | "critical") || "medium",
+    status: (task.status as "backlog" | "in_progress" | "review" | "qa" | "done") || "backlog",
+    estimationHours: task.estimationHours || 0,
+    assignedAgentId: task.assignedAgentId ?? undefined,
+  }));
 
   const { 
     data: agents = [], 
@@ -61,10 +70,19 @@ export default function Dashboard() {
   } = trpc.agents.list.useQuery();
 
   const { 
-    data: sprints = [],
+    data: rawSprints = [],
     isError: isSprintsError,
     error: sprintsError
   } = trpc.sprints.list.useQuery();
+
+  const sprints = rawSprints.map((sprint) => ({
+    ...sprint,
+    description: sprint.description ?? undefined,
+    startDate: sprint.startDate ?? undefined,
+    endDate: sprint.endDate ?? undefined,
+    plannedVelocity: sprint.plannedVelocity ?? 0,
+    actualVelocity: sprint.actualVelocity ?? 0,
+  }));
   
   const currentSprint = sprints.find(s => s.status === "active") || sprints[0];
 
