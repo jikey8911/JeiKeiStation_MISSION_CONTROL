@@ -18,7 +18,7 @@ import React, { useState, useRef, useEffect } from "react";
 import { Button } from "@/components/ui/button";
 import { Card, CardContent } from "@/components/ui/card";
 import { Input } from "@/components/ui/input";
-import { ScrollArea } from "@/components/ui/scrollarea";
+import { ScrollArea } from "@/components/ui/scroll-area";
 import {
   Tooltip,
   TooltipContent,
@@ -184,6 +184,7 @@ export function ScrumMeetingRoom() {
               <CardContent className="p-4">
                 <ScrollArea
                   className="h-full"
+                  // @ts-ignore
                   viewportRef={scrollAreaViewport}
                 >
                   <div className="flex flex-col gap-4 pr-4">
