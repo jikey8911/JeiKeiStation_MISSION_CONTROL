@@ -10,7 +10,9 @@ export type Events = {
 // Sobrecargar emit y on para mejor tipado (opcional pero recomendado)
 declare interface TypedEventEmitter {
   on<K extends keyof Events>(event: K, listener: Events[K]): this;
+  off<K extends keyof Events>(event: K, listener: Events[K]): this;
   emit<K extends keyof Events>(event: K, ...args: Parameters<Events[K]>): boolean;
+  removeListener<K extends keyof Events>(event: K, listener: Events[K]): this;
 }
 
 const typedEe = ee as unknown as TypedEventEmitter;
