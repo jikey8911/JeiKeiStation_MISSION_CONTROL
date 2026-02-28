@@ -66,20 +66,21 @@ export type InsertSprint = typeof sprints.$inferInsert;
 /**
  * Tareas SCRUM con metadatos completos
  */
+// drizzle/schema.ts
 export const tasks = mysqlTable("tasks", {
   id: serial("id").primaryKey(),
-  sprintId: int("sprint_id"),
+  sprintId: int("sprint_id"), 
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
   status: varchar("status", { length: 50 }).default("todo"),
   priority: varchar("priority", { length: 50 }).default("medium"),
   requiredSkills: json("required_skills"),
   estimationHours: int("estimation_hours"),
-  assignedAgentId: int("assigned_agent_id"),
+  assignedAgentId: int("assigned_agent_id"), // IMPORTANTE: Debe coincidir con el error
   acceptanceCriteria: json("acceptance_criteria"),
   createdAt: timestamp("created_at").defaultNow(),
   updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
-  completedAt: timestamp("completed_at"),
+  completedAt: timestamp("completed_at"), // IMPORTANTE: Debe existir
 });
 
 export type Task = typeof tasks.$inferSelect;

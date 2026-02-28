@@ -25,18 +25,15 @@ export default defineConfig({
     outDir: path.resolve(import.meta.dirname, "dist/public"),
     emptyOutDir: true,
   },
-  server: {
-    host: "0.0.0.0",
-    port: 3000,
-    strictPort: true,
-    hmr: {
-      // Configuración robusta para HMR en Codespaces
-      // En Codespaces, el cliente (navegador) debe conectar vía puerto 443 (HTTPS/WSS)
-      // del proxy de GitHub, no directamente al puerto 3000 o 5173 del contenedor.
-      host: process.env.VITE_HMR_HOST || undefined,
-      clientPort: isCodespace ? 443 : 3000,
-      protocol: isCodespace ? "wss" : "ws",
-    },
+ server: {
+  host: "0.0.0.0",
+  port: 3000,
+  strictPort: true,
+  hmr: {
+    host: "didactic-eureka-x5qp5745p5xvfwqj-3000.app.github.dev",
+    clientPort: 443,
+    protocol: "wss",
+  },
     allowedHosts: [
       "all",
       ".github.dev",
