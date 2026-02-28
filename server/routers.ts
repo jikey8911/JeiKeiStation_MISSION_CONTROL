@@ -119,7 +119,7 @@ export const appRouter = router({
         // Distribución por requiredSkills
         const skillDistribution: Record<string, number> = {};
         tasksInSprint.forEach(task => {
-          task.requiredSkills.forEach(skill => {
+          (task.requiredSkills || []).forEach((skill: string) => {
             skillDistribution[skill] = (skillDistribution[skill] || 0) + 1;
           });
         });
@@ -276,7 +276,7 @@ export const appRouter = router({
         };
         eventEmitter.on("taskUpdated", onTaskUpdate);
         return () => {
-          eventEmitter.off("taskUpdated", onTaskUpdate);
+          eventEmitter.removeListener("taskUpdated", onTaskUpdate);
         };
       });
     }),
