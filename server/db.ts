@@ -1,31 +1,36 @@
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
-import { drizzle } from "drizzle-orm/mysql2";
-import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications, Agent, Task, Sprint, TaskDependency } from "../drizzle/schema";
+import { drizzle } from "drizzle-orm/node-postgres";
+import pg from "pg";
+import {
+  InsertUser, users, agents, tasks, sprints,
+  taskDependencies, taskHistory, notifications,
+  Agent, Task, Sprint, TaskDependency
+} from "../drizzle/schema";
 import { ENV } from './_core/env';
-import { mockDb } from './db.mock';
 
 let _db: ReturnType<typeof drizzle> | null = null;
-let _useMock = false;
 
 export async function getDb() {
-  if (!_db && !_useMock) {
+  if (!_db) {
     console.log("[Database] Initializing connection...");
     const dbUrl = process.env.DATABASE_URL;
-    if (dbUrl && !dbUrl.includes("user:pass@localhost")) {
+    if (dbUrl) {
       try {
-        console.log("[Database] Connecting to DATABASE_URL...");
-        const db = drizzle(dbUrl);
-        await db.execute(sql`SELECT 1`);
+        console.log("[Database] Connecting to PostgreSQL...");
+        const pool = new pg.Pool({
+          connectionString: dbUrl,
+        });
+        const db = drizzle(pool);
+        // Test connection
+        await pool.query('SELECT 1');
         _db = db;
-        console.log("[Database] Drizzle initialized.");
+        console.log("[Database] Drizzle initialized with PostgreSQL.");
       } catch (error) {
-        console.warn("[Database] Failed to connect, falling back to mock:", error);
-        _useMock = true;
-        _db = null;
+        console.error("[Database] Failed to connect to PostgreSQL:", error);
+        throw error; // No fallback to mock
       }
     } else {
-      console.warn("[Database] No valid DATABASE_URL found, using mock database");
-      _useMock = true;
+      throw new Error("DATABASE_URL not found");
     }
   }
   return _db;
@@ -37,9 +42,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
   }
 
   const db = await getDb();
-  if (!db) {
-    return mockDb.users.upsert(user);
-  }
 
   try {
     const values: InsertUser = {
@@ -68,9 +70,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
 
     if (!values.lastSignedIn) values.lastSignedIn = new Date();
+    updateSet.updatedAt = new Date(); // Manual update for Postgres
+
     if (Object.keys(updateSet).length === 0) updateSet.lastSignedIn = new Date();
 
-    await db.insert(users).values(values).onDuplicateKeyUpdate({
+    await db.insert(users).values(values).onConflictDoUpdate({
+      target: users.openId,
       set: updateSet,
     });
   } catch (error) {
@@ -81,7 +86,6 @@ export async function upsertUser(user: InsertUser): Promise<void> {
 
 export async function getUserByOpenId(openId: string) {
   const db = await getDb();
-  if (!db) return mockDb.users.find(openId);
   const result = await db.select().from(users).where(eq(users.openId, openId)).limit(1);
   return result.length > 0 ? result[0] : undefined;
 }
@@ -96,9 +100,8 @@ export async function createAgent(data: {
   maxCapacity?: number;
 }) {
   const db = await getDb();
-  if (!db) return mockDb.agents.create(data) as any;
 
-  return await db.insert(agents).values({
+  const result = await db.insert(agents).values({
     name: data.name,
     description: data.description,
     avatar: data.avatar,
@@ -106,29 +109,28 @@ export async function createAgent(data: {
     maxCapacity: data.maxCapacity || 10,
     status: "available",
     currentWorkload: 0,
-  });
+  }).returning();
+
+  return result[0];
 }
 
 export async function getAgents() {
   const db = await getDb();
-  if (!db) return mockDb.agents.list().map(a => ({ ...a, skills: JSON.parse(a.skills || "[]") }));
   return await db.select().from(agents);
 }
 
 export async function getAgentById(id: number) {
   const db = await getDb();
-  if (!db) {
-    const agent = mockDb.agents.get(id);
-    return agent ? { ...agent, skills: JSON.parse(agent.skills || "[]") } : null;
-  }
   const result = await db.select().from(agents).where(eq(agents.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 
 export async function updateAgentWorkload(agentId: number, workload: number) {
   const db = await getDb();
-  if (!db) return mockDb.agents.updateWorkload(agentId, workload);
-  await db.update(agents).set({ currentWorkload: workload }).where(eq(agents.id, agentId));
+  await db.update(agents).set({
+    currentWorkload: workload,
+    updatedAt: new Date()
+  }).where(eq(agents.id, agentId));
 }
 
 // ==================== SPRINTS ====================
@@ -139,32 +141,33 @@ export async function createSprint(data: {
   plannedVelocity?: number;
 }) {
   const db = await getDb();
-  if (!db) return mockDb.sprints.create(data) as any;
-  return await db.insert(sprints).values({
+  const result = await db.insert(sprints).values({
     name: data.name,
     description: data.description,
     plannedVelocity: data.plannedVelocity || 0,
     status: "planning",
-  });
+  }).returning();
+
+  return result[0];
 }
 
 export async function getSprints() {
   const db = await getDb();
-  if (!db) return mockDb.sprints.list();
   return await db.select().from(sprints).orderBy(desc(sprints.createdAt));
 }
 
 export async function getSprintById(id: number) {
   const db = await getDb();
-  if (!db) return mockDb.sprints.get(id) || null;
   const result = await db.select().from(sprints).where(eq(sprints.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 
 export async function updateSprintStatus(sprintId: number, status: string) {
   const db = await getDb();
-  if (!db) return mockDb.sprints.updateStatus(sprintId, status);
-  await db.update(sprints).set({ status: status as any }).where(eq(sprints.id, sprintId));
+  await db.update(sprints).set({
+    status: status as any,
+    updatedAt: new Date()
+  }).where(eq(sprints.id, sprintId));
 }
 
 // ==================== TAREAS ====================
@@ -179,8 +182,7 @@ export async function createTask(data: {
   acceptanceCriteria?: string[];
 }) {
   const db = await getDb();
-  if (!db) return mockDb.tasks.create(data) as any;
-  return await db.insert(tasks).values({
+  const result = await db.insert(tasks).values({
     sprintId: data.sprintId,
     title: data.title,
     description: data.description,
@@ -189,37 +191,38 @@ export async function createTask(data: {
     estimationHours: data.estimationHours,
     acceptanceCriteria: data.acceptanceCriteria || [],
     status: "todo",
-  });
+  }).returning();
+
+  return result[0];
 }
 
 export async function getTasks(sprintId?: number) {
   const db = await getDb();
-  if (!db) return mockDb.tasks.list(sprintId).map(t => ({ ...t, requiredSkills: JSON.parse(t.requiredSkills || "[]"), acceptanceCriteria: JSON.parse(t.acceptanceCriteria || "[]") }));
   
-  let query = db.select().from(tasks);
-  if (sprintId) query = query.where(eq(tasks.sprintId, sprintId)) as any;
-  return await query.orderBy(desc(tasks.createdAt));
+  if (sprintId) {
+    return await db.select().from(tasks).where(eq(tasks.sprintId, sprintId)).orderBy(desc(tasks.createdAt));
+  }
+  return await db.select().from(tasks).orderBy(desc(tasks.createdAt));
 }
 
 export async function getTaskById(id: number) {
   const db = await getDb();
-  if (!db) {
-    const task = mockDb.tasks.get(id);
-    return task ? { ...task, requiredSkills: JSON.parse(task.requiredSkills || "[]"), acceptanceCriteria: JSON.parse(task.acceptanceCriteria || "[]") } : null;
-  }
   const result = await db.select().from(tasks).where(eq(tasks.id, id)).limit(1);
   return result.length > 0 ? result[0] : null;
 }
 
 export async function updateTaskStatus(taskId: number, status: string, agentId?: number) {
   const db = await getDb();
-  if (!db) return mockDb.tasks.updateStatus(taskId, status);
 
   const task = await getTaskById(taskId);
   if (!task) throw new Error("Task not found");
 
   const completedAt = status === "done" ? new Date() : null;
-  await db.update(tasks).set({ status, completedAt }).where(eq(tasks.id, taskId));
+  await db.update(tasks).set({
+    status,
+    completedAt,
+    updatedAt: new Date()
+  }).where(eq(tasks.id, taskId));
 
   if (agentId) {
     await db.insert(taskHistory).values({
@@ -233,33 +236,32 @@ export async function updateTaskStatus(taskId: number, status: string, agentId?:
 
 export async function assignTaskToAgent(taskId: number, agentId: number) {
   const db = await getDb();
-  if (!db) return mockDb.tasks.assign(taskId, agentId);
-  await db.update(tasks).set({ assignedAgentId: agentId }).where(eq(tasks.id, taskId));
+  await db.update(tasks).set({
+    assignedAgentId: agentId,
+    updatedAt: new Date()
+  }).where(eq(tasks.id, taskId));
 }
 
 // ==================== DEPENDENCIAS ====================
 
 export async function createTaskDependency(taskId: number, dependsOnTaskId: number) {
   const db = await getDb();
-  if (!db) return mockDb.dependencies.create(taskId, dependsOnTaskId) as any;
-  return await db.insert(taskDependencies).values({ taskId, dependsOnTaskId });
+  const result = await db.insert(taskDependencies).values({ taskId, dependsOnTaskId }).returning();
+  return result[0];
 }
 
 export async function getTaskDependencies(taskId: number) {
   const db = await getDb();
-  if (!db) return mockDb.dependencies.list(taskId);
   return await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
 }
 
 export async function getAllDependencies() {
   const db = await getDb();
-  if (!db) return mockDb.dependencies.list();
   return await db.select().from(taskDependencies);
 }
 
 export async function getBlockingTasks(taskId: number) {
   const db = await getDb();
-  if (!db) return [];
   const deps = await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
   if (deps.length === 0) return [];
   const blockingIds = deps.map(d => d.dependsOnTaskId);
@@ -268,7 +270,6 @@ export async function getBlockingTasks(taskId: number) {
 
 export async function deleteDependency(taskId: number, dependsOnTaskId: number) {
   const db = await getDb();
-  if (!db) return;
   await db.delete(taskDependencies).where(and(eq(taskDependencies.taskId, taskId), eq(taskDependencies.dependsOnTaskId, dependsOnTaskId)));
 }
 
@@ -283,20 +284,20 @@ export async function createNotification(data: {
   sprintId?: number;
 }) {
   const db = await getDb();
-  if (!db) return;
-  return await db.insert(notifications).values({
+  const result = await db.insert(notifications).values({
     userId: data.userId,
     type: data.type,
     title: data.title,
     message: data.message,
     taskId: data.taskId,
     sprintId: data.sprintId,
-  });
+  }).returning();
+
+  return result[0];
 }
 
 export async function getNotifications(userId: number, unreadOnly?: boolean, includeArchived?: boolean, type?: string) {
   const db = await getDb();
-  if (!db) return [];
   
   let conditions = [eq(notifications.userId, userId)];
   if (unreadOnly) conditions.push(eq(notifications.read, false));
@@ -308,26 +309,28 @@ export async function getNotifications(userId: number, unreadOnly?: boolean, inc
 
 export async function markNotificationAsRead(id: number) {
   const db = await getDb();
-  if (!db) return;
-  await db.update(notifications).set({ read: true }).where(eq(notifications.id, id));
+  const result = await db.update(notifications).set({ read: true }).where(eq(notifications.id, id)).returning();
+  return result[0];
 }
 
 export async function markNotificationsAsRead(ids: number[]) {
   const db = await getDb();
-  if (!db) return;
-  await db.update(notifications).set({ read: true }).where(inArray(notifications.id, ids));
+  if (ids.length === 0) return undefined;
+  const result = await db.update(notifications).set({ read: true }).where(inArray(notifications.id, ids)).returning();
+  return result;
 }
 
 export async function archiveNotification(id: number) {
   const db = await getDb();
-  if (!db) return;
-  await db.update(notifications).set({ archived: true }).where(eq(notifications.id, id));
+  const result = await db.update(notifications).set({ archived: true }).where(eq(notifications.id, id)).returning();
+  return result[0];
 }
 
 export async function archiveNotifications(ids: number[]) {
   const db = await getDb();
-  if (!db) return;
-  await db.update(notifications).set({ archived: true }).where(inArray(notifications.id, ids));
+  if (ids.length === 0) return undefined;
+  const result = await db.update(notifications).set({ archived: true }).where(inArray(notifications.id, ids)).returning();
+  return result;
 }
 
 export async function getNotificationsByType(userId: number, type: string) {
