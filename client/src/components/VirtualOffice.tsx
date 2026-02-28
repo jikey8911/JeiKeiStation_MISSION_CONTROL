@@ -56,9 +56,29 @@ export function VirtualOffice() {
 
   if (agentsLoading || tasksLoading) {
     return (
-      <div className="w-full h-full flex items-center justify-center bg-slate-900 text-white">
-        <Activity className="w-8 h-8 animate-spin text-blue-500 mr-3" />
-        <span>Cargando Mission Control...</span>
+      <div className="w-full h-[600px] flex items-center justify-center bg-slate-900/50 text-white rounded-lg border border-white/5">
+        <Activity className="w-8 h-8 animate-spin text-[#00f2ff] mr-3" />
+        <span className="uppercase tracking-widest text-xs font-bold">Iniciando Virtual Office...</span>
+      </div>
+    );
+  }
+
+  if (activeAgents.length === 0) {
+    return (
+      <div className="w-full h-[600px] border border-dashed border-white/10 bg-black/20 flex flex-col items-center justify-center text-center p-12 rounded-lg">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md space-y-6"
+        >
+          <div className="mx-auto w-16 h-16 bg-[#00f2ff]/10 border border-[#00f2ff]/30 rounded-full flex items-center justify-center">
+            <Users className="w-8 h-8 text-[#00f2ff]" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold uppercase tracking-[0.2em]">Oficina Virtual Desierta</h3>
+            <p className="text-white/40 text-sm">No hay agentes activos en el sistema. Asegúrate de registrar agentes y configurar su estado como disponible para verlos en acción.</p>
+          </div>
+        </motion.div>
       </div>
     );
   }

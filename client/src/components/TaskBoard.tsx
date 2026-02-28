@@ -84,6 +84,32 @@ export function TaskBoard({ tasks, onTaskStatusChange, onAddTask }: TaskBoardPro
     return columnTasks.reduce((sum, task) => sum + (task.estimationHours || 0), 0);
   };
 
+  if (tasks.length === 0) {
+    return (
+      <div className="w-full h-[600px] border border-dashed border-white/10 bg-black/20 flex flex-col items-center justify-center text-center p-12">
+        <motion.div
+          initial={{ opacity: 0, scale: 0.9 }}
+          animate={{ opacity: 1, scale: 1 }}
+          className="max-w-md space-y-6"
+        >
+          <div className="mx-auto w-16 h-16 bg-[#00f2ff]/10 border border-[#00f2ff]/30 rounded-full flex items-center justify-center">
+            <Plus className="w-8 h-8 text-[#00f2ff]" />
+          </div>
+          <div className="space-y-2">
+            <h3 className="text-xl font-bold uppercase tracking-[0.2em]">Misiones no Detectadas</h3>
+            <p className="text-white/40 text-sm">El sector táctico está despejado. Inicia un protocolo de nueva misión para comenzar el despliegue de agentes.</p>
+          </div>
+          <Button
+            onClick={() => onAddTask?.("backlog")}
+            className="bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold rounded-none uppercase tracking-widest text-xs px-8 h-12"
+          >
+            Iniciar Protocolo de Misión
+          </Button>
+        </motion.div>
+      </div>
+    );
+  }
+
   return (
     <div className="w-full h-full overflow-x-auto bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-950 dark:to-slate-900 p-6 rounded-lg">
       <div className="flex gap-4 min-w-max">

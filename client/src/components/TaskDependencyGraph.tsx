@@ -11,7 +11,7 @@ import ReactFlow, {
 import "reactflow/dist/style.css";
 import { Card } from "@/components/ui/card";
 import { trpc as api } from "@/lib/trpc";
-import { Loader2, AlertCircle } from "lucide-react";
+import { Loader2, AlertCircle, Activity } from "lucide-react";
 
 interface TaskDependencyGraphProps {
   sprintId: number;
@@ -101,6 +101,18 @@ export function TaskDependencyGraph({ sprintId }: TaskDependencyGraphProps) {
         <div className="flex flex-col items-center gap-2">
           <Loader2 className="w-8 h-8 animate-spin text-blue-500" />
           <p className="text-sm text-slate-500">Cargando topología de tareas...</p>
+        </div>
+      </Card>
+    );
+  }
+
+  if (nodes.length === 0) {
+    return (
+      <Card className="h-[400px] flex items-center justify-center bg-black/20 border-white/5">
+        <div className="flex flex-col items-center gap-3 text-center p-8">
+          <Activity className="w-12 h-12 text-white/10" />
+          <p className="text-slate-500 font-medium">No hay topología de misiones disponible</p>
+          <p className="text-[10px] text-slate-600 uppercase tracking-widest max-w-[200px]">Establece misiones y dependencias para visualizar el mapa táctico.</p>
         </div>
       </Card>
     );

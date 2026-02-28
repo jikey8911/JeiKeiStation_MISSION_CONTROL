@@ -28,39 +28,35 @@ export const useTaskAssignmentChanges = (sprintId?: number) => {
     { sprintId },
     {
       refetchInterval: 3000, // Polling cada 3 segundos
-      onSuccess: (newTasks) => {
-        if (prevTasksRef.current.length > 0) {
-          // 2. Detección de cambios comparando con el estado anterior
-          newTasks.forEach((newTask) => {
-            const oldTask = prevTasksRef.current.find((t) => t.id === newTask.id);
-            
-            if (oldTask) {
-              const agentChanged = oldTask.assignedAgentId !== newTask.assignedAgentId;
-              const statusChanged = oldTask.status !== newTask.status;
-
-              if (agentChanged || statusChanged) {
-                console.log(`Cambio detectado en tarea ${newTask.id}:`, {
-                  fromAgent: oldTask.assignedAgentId,
-                  toAgent: newTask.assignedAgentId,
-                  fromStatus: oldTask.status,
-                  toStatus: newTask.status
-                });
-
-                setLastChangedTask({
-                  taskId: newTask.id,
-                  previousAgentId: oldTask.assignedAgentId,
-                  newAgentId: newTask.assignedAgentId,
-                  task: newTask as Task,
-                });
-              }
-            }
-          });
-        }
-        // Actualizar la referencia para la próxima comparación
-        prevTasksRef.current = newTasks as Task[];
-      }
     }
   );
+
+  useEffect(() => {
+    if (tasks && prevTasksRef.current.length > 0) {
+      // 2. Detección de cambios comparando con el estado anterior
+      tasks.forEach((newTask) => {
+        const oldTask = prevTasksRef.current.find((t) => t.id === newTask.id);
+
+        if (oldTask) {
+          const agentChanged = oldTask.assignedAgentId !== newTask.assignedAgentId;
+          const statusChanged = oldTask.status !== newTask.status;
+
+          if (agentChanged || statusChanged) {
+            setLastChangedTask({
+              taskId: newTask.id,
+              previousAgentId: oldTask.assignedAgentId,
+              newAgentId: newTask.assignedAgentId,
+              task: newTask as Task,
+            });
+          }
+        }
+      });
+    }
+
+    if (tasks) {
+      prevTasksRef.current = tasks as Task[];
+    }
+  }, [tasks]);
 
   // Efecto para limpiar el estado de cambio después de un tiempo (para animaciones)
   useEffect(() => {
