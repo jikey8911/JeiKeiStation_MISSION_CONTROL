@@ -1,0 +1,70 @@
+
+
+services:
+  # ===========================================================================
+  # # BASE DE DATOS
+  # ===========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: jeikei_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_USER: jeikei_user
+      MYSQL_PASSWORD: jeikei_password
+      MYSQL_DATABASE: jeikei_station
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    # # HEALTHCHECK: Asegura que la DB esté lista antes de levantar Node
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  # ===========================================================================
+  # # PLATAFORMA CENTRAL (NODE + VITE)
+  # ===========================================================================
+  jeikei_platform:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeikei_node_platform
+    ports:
+      - "3000:3000"  # Puerto Unificado (HTTP + WebSockets + Vite HMR)
+    env_file:
+      - .env
+    volumes:
+      - .:/app
+      - /app/node_modules
+    depends_on:
+      mysql:
+        condition: service_healthy # # Espera al Healthcheck de MySQL
+    restart: unless-stopped
+
+  # ===========================================================================
+  # # AGENTE OPENCLAW (PYTHON)
+  # ===========================================================================
+  openclaw_agent:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw_python_worker
+    ports:
+      - "8000:8000" # # Puerto activo con FastAPI
+    env_file:
+      - .env
+    depends_on:
+      - jeikei_platform
+    environment:
+      # # Forzamos las rutas dinámicas para sobreescribir cualquier hardcode
+      - JEIKEI_API_URL=http://jeikei_platform:3000/api/trpc
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    volumes:
+      - .:/app
+    restart: unless-stopped
+
+volumes:
+  mysql_data:

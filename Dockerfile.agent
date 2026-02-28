@@ -1,0 +1,34 @@
+# =============================================================================
+# # DOCKERFILE: AGENTE OPENCLAW (PYTHON + FASTAPI + HEARTBEAT)
+# =============================================================================
+FROM python:3.10-slim
+
+# # Directorio de trabajo
+WORKDIR /app
+
+# # Instalación de dependencias del sistema (ej. Git para el DevOps Agent)
+RUN apt-get update && apt-get install -y \
+    git \
+    curl \
+    && rm -rf /var/lib/apt/lists/*
+
+# # Optimización de caché de capas Docker: Copiar solo requirements primero
+COPY server/agent_backend/requirements.txt ./
+
+# # Instalación limpia de dependencias de Python
+RUN pip install --no-cache-dir -r requirements.txt
+
+# # Copia del código fuente (respeta .dockerignore)
+COPY . .
+
+# # Exponer el puerto de la API de FastAPI
+EXPOSE 8000
+
+# # VARIABLES DE ENTORNO POR DEFECTO (Se sobreescriben con .env / docker-compose)
+ENV PYTHONPATH=/app
+ENV HOST=0.0.0.0
+ENV PORT=8000
+
+# # ENTRYPOINT CORREGIDO:
+# Ejecuta el Heartbeat en segundo plano (&) y el servidor FastAPI en primer plano
+CMD ["sh", "-c", "python openclaw/skills/jeikei_mission_control/heartbeat.py & uvicorn server.agent_backend.main:app --host 0.0.0.0 --port 8000"]
