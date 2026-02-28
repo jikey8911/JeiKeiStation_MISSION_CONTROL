@@ -1,0 +1,60 @@
+/**
+ * JeiKei Station - Render.com Blueprint
+ * Define los servicios necesarios para el despliegue en Render
+ */
+services:
+  # Base de Datos PostgreSQL 16
+  - type: database
+    name: jeikei_db
+    region: oregon
+    plan: free
+    postgresJWTSigningKey:
+      generateValue: true
+
+  # Web Service Principal (Frontend + Backend Node.js)
+  - type: web
+    name: jeikei_platform
+    env: node
+    region: oregon
+    plan: free
+    buildCommand: pnpm install && pnpm build && pnpm run db:push
+    startCommand: pnpm run start
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: jeikei_db
+          property: connectionString
+      - key: NODE_ENV
+        value: production
+      - key: PORT
+        value: 3000
+      - key: SERVICE_API_KEY
+        generateValue: true
+      - key: VITE_API_URL
+        value: /api/trpc
+      - key: JWT_SECRET
+        generateValue: true
+
+  # Worker Service (OpenClaw DevOps Agent)
+  - type: worker
+    name: openclaw_devops_agent
+    env: python
+    region: oregon
+    plan: free
+    buildCommand: pip install -r server/agent_backend/requirements.txt
+    startCommand: python openclaw/skills/jeikei_mission_control/heartbeat.py
+    envVars:
+      - key: JEIKEI_API_URL
+        fromService:
+          name: jeikei_platform
+          type: web
+          property: host
+        value: http://${jeikei_platform_host}/api/trpc
+      - key: GITHUB_TOKEN
+        sync: false # Debe configurarse manualmente en Render Dashboard
+      - key: SERVICE_API_KEY
+        fromService:
+          name: jeikei_platform
+          type: web
+          property: envVar
+          envVarKey: SERVICE_API_KEY
