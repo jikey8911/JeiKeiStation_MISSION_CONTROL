@@ -24,7 +24,7 @@ EXPOSE 3001
 
 # Variables de entorno por defecto
 ENV NODE_ENV=development
-ENV PORT=3000
+ENV PORT=3001
 
 # El comando por defecto se sobreescribe en docker-compose.yml
 CMD ["pnpm", "run", "dev"]
