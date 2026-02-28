@@ -12,11 +12,15 @@ export async function getDb() {
     if (dbUrl && !dbUrl.includes("user:pass@localhost")) {
       try {
         console.log("[Database] Connecting to DATABASE_URL...");
-        _db = drizzle(dbUrl);
+        const db = drizzle(dbUrl);
+        // Test connection
+        await db.execute(sql`SELECT 1`);
+        _db = db;
         console.log("[Database] Drizzle initialized.");
       } catch (error) {
-        console.error("[Database] Failed to connect:", error);
-        throw error;
+        console.warn("[Database] Failed to connect, falling back to mock:", error);
+        _useMock = true;
+        _db = null;
       }
     } else {
       throw new Error("[Database] No valid DATABASE_URL found");

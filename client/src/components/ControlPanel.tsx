@@ -35,6 +35,7 @@ export function ControlPanel({
   ];
 
   const completionRate = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
+  const hasData = totalTasks > 0;
 
   return (
     <div className="w-full h-full bg-gradient-to-br from-slate-950 via-slate-900 to-slate-950 rounded-lg p-8 overflow-auto">
@@ -172,31 +173,38 @@ export function ControlPanel({
           {/* Distribución de Tareas */}
           <Card className="bg-slate-800/50 border-slate-700/50 p-6">
             <h3 className="text-white font-semibold mb-4">Distribución de Tareas</h3>
-            <ResponsiveContainer width="100%" height={250}>
-              <PieChart>
-                <Pie
-                  data={taskDistribution}
-                  cx="50%"
-                  cy="50%"
-                  labelLine={false}
-                  label={({ name, value }) => `${name}: ${value}`}
-                  outerRadius={80}
-                  fill="#8884d8"
-                  dataKey="value"
-                >
-                  {COLORS.map((color, index) => (
-                    <Cell key={`cell-${index}`} fill={color} />
-                  ))}
-                </Pie>
-                <Tooltip
-                  contentStyle={{
-                    backgroundColor: "#1e293b",
-                    border: "1px solid #475569",
-                    borderRadius: "8px",
-                  }}
-                />
-              </PieChart>
-            </ResponsiveContainer>
+            {hasData ? (
+              <ResponsiveContainer width="100%" height={250}>
+                <PieChart>
+                  <Pie
+                    data={taskDistribution}
+                    cx="50%"
+                    cy="50%"
+                    labelLine={false}
+                    label={({ name, value }) => `${name}: ${value}`}
+                    outerRadius={80}
+                    fill="#8884d8"
+                    dataKey="value"
+                  >
+                    {COLORS.map((color, index) => (
+                      <Cell key={`cell-${index}`} fill={color} />
+                    ))}
+                  </Pie>
+                  <Tooltip
+                    contentStyle={{
+                      backgroundColor: "#1e293b",
+                      border: "1px solid #475569",
+                      borderRadius: "8px",
+                    }}
+                  />
+                </PieChart>
+              </ResponsiveContainer>
+            ) : (
+              <div className="h-64 flex flex-col items-center justify-center text-slate-500 text-center">
+                <Users className="w-8 h-8 mb-2 opacity-20" />
+                <p className="text-sm italic">Sin misiones en el sector</p>
+              </div>
+            )}
           </Card>
         </motion.div>
 
