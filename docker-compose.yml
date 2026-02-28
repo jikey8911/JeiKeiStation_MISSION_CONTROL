@@ -1,24 +1,21 @@
-
-
 services:
   # ===========================================================================
-  # # BASE DE DATOS
+  # # BASE DE DATOS (POSTGRESQL)
   # ===========================================================================
-  mysql:
-    image: mysql:8.0
-    container_name: jeikei_mysql
+  postgres:
+    image: postgres:16
+    container_name: jeikei_postgres
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: jeikei_user
-      MYSQL_PASSWORD: jeikei_password
-      MYSQL_DATABASE: jeikei_station
+      POSTGRES_USER: jeikei_user
+      POSTGRES_PASSWORD: jeikei_password
+      POSTGRES_DB: jeikei_station
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     # # HEALTHCHECK: Asegura que la DB esté lista antes de levantar Node
     healthcheck:
-      test: ["CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password"]
+      test: ["CMD-SHELL", "pg_isready -U jeikei_user -d jeikei_station"]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -40,8 +37,8 @@ services:
       - .:/app
       - /app/node_modules
     depends_on:
-      mysql:
-        condition: service_healthy # # Espera al Healthcheck de MySQL
+      postgres:
+        condition: service_healthy # # Espera al Healthcheck de PostgreSQL
     restart: unless-stopped
 
   # ===========================================================================
@@ -67,4 +64,4 @@ services:
     restart: unless-stopped
 
 volumes:
-  mysql_data:
+  postgres_data:

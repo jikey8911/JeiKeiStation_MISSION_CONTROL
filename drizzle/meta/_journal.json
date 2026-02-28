@@ -1,12 +1,12 @@
 {
   "version": "7",
-  "dialect": "mysql",
+  "dialect": "postgresql",
   "entries": [
     {
       "idx": 0,
-      "version": "5",
-      "when": 1772221568113,
-      "tag": "0000_outgoing_boomerang",
+      "version": "7",
+      "when": 1772256004036,
+      "tag": "0000_parallel_nova",
       "breakpoints": true
     }
   ]
