@@ -1,9 +1,0 @@
-{
-  "query": "ALTER TABLE notifications ADD COLUMN archived BOOLEAN DEFAULT FALSE NOT NULL;",
-  "command": "mysql --batch --raw --column-names --default-character-set=utf8mb4 --host gateway02.us-east-1.prod.aws.tidbcloud.com --port 4000 --user PdNsfYMkU5PhwJN.d4fa149c6748 --database WhMfrqwy6gs9KKKQMbftpd --execute ALTER TABLE notifications ADD COLUMN archived BOOLEAN DEFAULT FALSE NOT NULL;",
-  "rows": [],
-  "messages": [],
-  "stdout": "",
-  "stderr": "",
-  "execution_time_ms": 789
-}
