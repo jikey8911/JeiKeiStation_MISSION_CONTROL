@@ -1,19 +1,26 @@
 import { describe, it, expect, beforeEach, vi } from "vitest";
 import * as db from "./db";
 
-// Mock de la base de datos
-vi.mock("./db", async () => {
-  const actual = await vi.importActual("./db");
+// Mock de la base de datos para no depender de una conexión real durante tests unitarios
+vi.mock("./db", async (importOriginal) => {
+  const actual = await importOriginal<typeof import("./db")>();
   return {
     ...actual,
     getDb: vi.fn(),
+    createNotification: vi.fn(async () => ({ id: 1 })),
+    markNotificationAsRead: vi.fn(async () => ({ id: 1 })),
+    markNotificationsAsRead: vi.fn(async (ids) => ids.length > 0 ? { count: ids.length } : undefined),
+    archiveNotification: vi.fn(async () => ({ id: 1 })),
+    archiveNotifications: vi.fn(async (ids) => ids.length > 0 ? { count: ids.length } : undefined),
+    getNotifications: vi.fn(async () => []),
+    getNotificationsByType: vi.fn(async () => []),
   };
 });
 
 describe("Sistema de Notificaciones", () => {
   describe("markNotificationAsRead", () => {
     it("debe marcar una notificación como leída", async () => {
-      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      await db.createNotification({ userId: 1, type: "approval_pending", title: "test", message: "test" });
       const result = await db.markNotificationAsRead(1);
       expect(result).toBeDefined();
     });
@@ -21,7 +28,7 @@ describe("Sistema de Notificaciones", () => {
 
   describe("archiveNotification", () => {
     it("debe archivar una notificación", async () => {
-      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      await db.createNotification({ userId: 1, type: "approval_pending", title: "test", message: "test" });
       const result = await db.archiveNotification(1);
       expect(result).toBeDefined();
     });
@@ -51,7 +58,7 @@ describe("Sistema de Notificaciones", () => {
 
   describe("markNotificationsAsRead", () => {
     it("debe marcar múltiples notificaciones como leídas", async () => {
-      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      await db.createNotification({ userId: 1, type: "approval_pending", title: "test", message: "test" });
       const notificationIds = [1];
       const result = await db.markNotificationsAsRead(notificationIds);
       expect(result).toBeDefined();
@@ -65,7 +72,7 @@ describe("Sistema de Notificaciones", () => {
 
   describe("archiveNotifications", () => {
     it("debe archivar múltiples notificaciones", async () => {
-      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      await db.createNotification({ userId: 1, type: "approval_pending", title: "test", message: "test" });
       const notificationIds = [1];
       const result = await db.archiveNotifications(notificationIds);
       expect(result).toBeDefined();
@@ -108,13 +115,13 @@ describe("Sistema de Notificaciones", () => {
   describe("Flujo completo de notificación", () => {
     it("debe crear, marcar como leído y archivar una notificación", async () => {
       // 1. Crear notificación
-      const createResult = await db.createNotification({
+      const createResult = (await db.createNotification({
         userId: 1,
         type: "task_blocked",
         title: "Tarea bloqueada",
         message: "La tarea X está bloqueada por Y",
         taskId: 123,
-      });
+      })) as any;
       expect(createResult).toBeDefined();
       const id = createResult.id;
 
