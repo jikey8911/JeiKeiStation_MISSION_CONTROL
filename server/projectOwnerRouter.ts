@@ -3,30 +3,7 @@ import { z } from "zod";
 import { invokeLLM, Message } from "./_core/llm";
 import * as db from "./db";
 import { parseMarkdownTasks } from "./utils";
-
-/**
- * Prompt del sistema para el Agente Project Owner
- */
-const SYSTEM_PROMPT = `
-Eres el "JeiKei Project Owner", un agente de IA experto en metodologías ágiles y gestión de productos.
-Tu objetivo es entrevistar al usuario para comprender profundamente su proyecto hasta alcanzar una confianza superior al 93%.
-
-REGLAS DE LA ENTREVISTA:
-1. Haz una pregunta a la vez.
-2. Sé profesional, analítico y curioso.
-3. Evalúa las respuestas del usuario. Si son vagas, pide más detalles.
-4. Cuando sientas que tienes suficiente información (confianza > 93%), debes finalizar la entrevista.
-5. Al finalizar, debes generar un resumen del proyecto en formato Markdown que incluya:
-   - Nombre del Proyecto
-   - Visión General
-   - Historias de Usuario Principales
-   - Un Tablero Kanban inicial (To Do, In Progress, Done)
-   - Sugerencia de agentes necesarios y sus habilidades.
-
-ESTADO ACTUAL:
-Debes llevar el control de la "Confianza" (0-100%).
-Comienza saludando y preguntando por la idea general del proyecto si es la primera vez.
-`;
+import { SYSTEM_PROMPT, calculateConfidence, generateMarkdownBoard } from "./_core/projectOwnerPrompts";
 
 export const projectOwnerRouter = router({
   /**
@@ -41,10 +18,12 @@ export const projectOwnerRouter = router({
             content: z.string(),
           })
         ),
+        phase: z.number().optional().default(1),
+        questionsAsked: z.number().optional().default(0),
       })
     )
     .mutation(async ({ input, ctx }) => {
-      const { messages } = input;
+      const { messages, phase, questionsAsked } = input;
 
       // Añadir el prompt del sistema al inicio si no está
       const fullMessages: Message[] = [
@@ -60,15 +39,26 @@ export const projectOwnerRouter = router({
 
         const assistantMessage = response.choices[0].message.content as string;
 
-        // Aquí podríamos implementar una lógica para detectar si la entrevista ha terminado
-        // y disparar la creación del proyecto automáticamente.
-        // Por ahora, solo devolvemos la respuesta del asistente.
+        // Extraer confianza del mensaje
+        const confidence = extractConfidence(assistantMessage);
+        
+        // Detectar si la entrevista ha terminado
+        const isFinished = assistantMessage.includes("ENTREVISTA FINALIZADA") || 
+                          assistantMessage.includes("# Tablero Kanban") ||
+                          confidence >= 93;
+
+        // Determinar la siguiente fase basada en la confianza
+        let nextPhase = phase;
+        if (confidence >= 80 && phase < 4) nextPhase = 4;
+        else if (confidence >= 60 && phase < 3) nextPhase = 3;
+        else if (confidence >= 30 && phase < 2) nextPhase = 2;
 
         return {
           message: assistantMessage,
-          // Podríamos intentar extraer el nivel de confianza si el LLM lo incluye en un formato específico
-          confidence: extractConfidence(assistantMessage),
-          isFinished: assistantMessage.includes("ENTREVISTA FINALIZADA") || assistantMessage.includes("# Tablero Kanban"),
+          confidence,
+          isFinished,
+          phase: nextPhase,
+          questionsAsked: questionsAsked + 1,
         };
       } catch (error) {
         console.error("[ProjectOwner] LLM Error:", error);

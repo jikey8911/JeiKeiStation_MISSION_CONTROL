@@ -13,7 +13,7 @@ import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
 import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
 import { SprintManager } from "@/components/SprintManager";
 import { OpenClawDeployer } from "@/components/OpenClawDeployer";
-import { ProjectInterview } from "@/components/ProjectInterview";
+import { ProjectInterviewV2 } from "@/components/ProjectInterviewV2";
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
@@ -295,18 +295,7 @@ export default function Dashboard() {
             </TabsContent>
 
             <TabsContent value="project-owner" className="space-y-8 m-0 outline-none">
-              <ProjectInterview />
-            </TabsContent>
-          </Tabs>tent value="control" className="m-0 outline-none">
-              <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
-                <div className="lg:col-span-2">
-                  <SprintManager 
-                    sprints={sprints} 
-                    onCreateSprint={async (data) => { await createSprintMutation.mutateAsync(data); }}
-                    onUpdateSprintStatus={async (id, status) => { await updateSprintStatusMutation.mutateAsync({ sprintId: id, status }); }}
-                  />
-                </div>
-              </div>
+              <ProjectInterviewV2 />
             </TabsContent>
           </Tabs>
         </main>
