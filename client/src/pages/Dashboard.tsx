@@ -14,6 +14,7 @@ import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
 import { SprintManager } from "@/components/SprintManager";
 import { OpenClawDeployer } from "@/components/OpenClawDeployer";
 import { ProjectInterviewV2 } from "@/components/ProjectInterviewV2";
+import { ProjectCreationModeDialog } from "@/components/ProjectCreationModeDialog";
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
@@ -33,6 +34,8 @@ interface Task {
 export default function Dashboard() {
   const [isTaskOpen, setIsTaskOpen] = useState(false);
   const [isImportOpen, setIsImportOpen] = useState(false);
+  const [isProjectModeOpen, setIsProjectModeOpen] = useState(false);
+  const [projectMode, setProjectMode] = useState<"manual" | "ai" | null>(null);
   const [markdownContent, setMarkdownContent] = useState("");
   const [newTaskData, setNewTaskData] = useState({
     title: "",
@@ -238,7 +241,7 @@ export default function Dashboard() {
                   <Upload className="w-4 h-4 mr-2" /> Sync Backlog
                 </Button>
                 <Button 
-                  onClick={() => setIsTaskOpen(true)}
+                  onClick={() => setIsProjectModeOpen(true)}
                   className="bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold rounded-none uppercase tracking-widest text-[10px] px-6 h-12 shadow-[0_0_15px_rgba(0,242,255,0.3)]"
                 >
                   <Plus className="w-4 h-4 mr-2" /> New Mission
@@ -295,10 +298,34 @@ export default function Dashboard() {
             </TabsContent>
 
             <TabsContent value="project-owner" className="space-y-8 m-0 outline-none">
-              <ProjectInterviewV2 />
+              {projectMode === "ai" ? (
+                <ProjectInterviewV2 />
+              ) : (
+                <div className="flex items-center justify-center py-12 text-center">
+                  <div className="space-y-4">
+                    <Sparkles className="w-12 h-12 text-[#00f2ff] mx-auto opacity-50" />
+                    <p className="text-white/60">Selecciona "New Mission" para comenzar una entrevista con el Project Owner</p>
+                  </div>
+                </div>
+              )}
             </TabsContent>
           </Tabs>
         </main>
+
+        <ProjectCreationModeDialog 
+          open={isProjectModeOpen}
+          onOpenChange={setIsProjectModeOpen}
+          onSelectMode={(mode) => {
+            setProjectMode(mode);
+            if (mode === "manual") {
+              setIsTaskOpen(true);
+            } else if (mode === "ai") {
+              // Navegar a la pestaña del Project Owner
+              const projectOwnerTab = document.querySelector('[value="project-owner"]') as HTMLElement;
+              if (projectOwnerTab) projectOwnerTab.click();
+            }
+          }}
+        />
 
         <Dialog open={isTaskOpen} onOpenChange={setIsTaskOpen}>
           <DialogContent className="bg-[#0f0f0f] border border-[#00f2ff]/30 text-white max-w-md rounded-none">
