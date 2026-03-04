@@ -7,9 +7,17 @@ import { createServer as createViteServer } from "vite";
 import viteConfig from "../../vite.config";
 
 export async function setupVite(app: Express, server: Server) {
+  const hmrConfig: any = { server };
+
+  if (process.env.VITE_HMR_HOST) {
+    hmrConfig.host = process.env.VITE_HMR_HOST;
+    hmrConfig.clientPort = process.env.VITE_HMR_PORT ? parseInt(process.env.VITE_HMR_PORT) : 443;
+    hmrConfig.protocol = process.env.VITE_HMR_PROTOCOL || 'wss';
+  }
+
   const serverOptions = {
     middlewareMode: true,
-    hmr: { server },
+    hmr: hmrConfig,
     allowedHosts: true as const,
   };
 

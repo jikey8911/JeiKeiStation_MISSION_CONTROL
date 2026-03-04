@@ -1,0 +1,203 @@
+import { useState, useEffect } from "react";
+
+export default function Home() {
+  const [timeString, setTimeString] = useState("00:00:00");
+  const [isDark, setIsDark] = useState(true);
+
+  useEffect(() => {
+    const updateClock = () => {
+      const now = new Date();
+      setTimeString(now.toLocaleTimeString("en-US", { hour12: false }));
+    };
+    const timer = setInterval(updateClock, 1000);
+    updateClock();
+    return () => clearInterval(timer);
+  }, []);
+
+  const toggleTheme = () => setIsDark(!isDark);
+
+  return (
+    <div
+      className={`${
+        isDark ? "dark" : ""
+      } bg-black dark:bg-[#050505] font-['Rajdhani',sans-serif] min-h-screen flex items-center justify-center relative transition-colors duration-300 overflow-hidden`}
+    >
+      {/* Estilos inyectados para las animaciones y tipografías personalizadas */}
+      <style>{`
+        @import url('https://fonts.googleapis.com/css2?family=JetBrains+Mono:wght@400;700&family=Rajdhani:wght@400;500;600;700&display=swap');
+        @import url('https://fonts.googleapis.com/icon?family=Material+Icons+Round');
+
+        .glass-panel {
+            backdrop-filter: blur(8px);
+            -webkit-backdrop-filter: blur(8px);
+        }
+        .clip-corner-tl { clip-path: polygon(10px 0, 100% 0, 100% 100%, 0 100%, 0 10px); }
+        .clip-corner-br { clip-path: polygon(0 0, 100% 0, 100% calc(100% - 10px), calc(100% - 10px) 100%, 0 100%); }
+        .clip-tech { clip-path: polygon(20px 0, 100% 0, 100% calc(100% - 20px), calc(100% - 20px) 100%, 0 100%, 0 20px); }
+
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: #050505; }
+        ::-webkit-scrollbar-thumb { background: #00F2FF; border-radius: 2px; }
+
+        @keyframes scanline {
+            0% { transform: translateY(-100%); }
+            100% { transform: translateY(100%); }
+        }
+        .animate-scanline { animation: scanline 8s linear infinite; }
+        .animate-spin-slow { animation: spin 12s linear infinite; }
+      `}</style>
+
+      {/* Background Layers */}
+      <div className="absolute inset-0 bg-[linear-gradient(to_right,rgba(0,242,255,0.05)_1px,transparent_1px),linear-gradient(to_bottom,rgba(0,242,255,0.05)_1px,transparent_1px)] bg-[length:40px_40px] pointer-events-none opacity-20 dark:opacity-30 z-0"></div>
+      <div className="absolute top-10 left-10 w-64 h-64 border border-[#00F2FF]/10 rounded-full border-dashed animate-spin-slow z-0 hidden md:block"></div>
+      <div
+        className="absolute bottom-10 right-10 w-96 h-96 border border-[#00F2FF]/5 rounded-full border-dashed animate-spin-slow z-0 hidden md:block"
+        style={{ animationDirection: "reverse" }}
+      ></div>
+
+      <div className="relative z-10 w-full max-w-4xl p-4 md:p-8 flex flex-col items-center">
+        
+        {/* Header Bar */}
+        <div className="w-full flex justify-between items-center mb-8 font-['JetBrains_Mono',monospace] text-xs tracking-widest text-[#00F2FF]/60 dark:text-[#00F2FF]/80">
+          <div className="flex items-center gap-2">
+            <span className="w-2 h-2 rounded-full bg-[#00FF9D] animate-pulse"></span>
+            <span>SYSTEM ONLINE</span>
+          </div>
+          <div className="hidden md:flex gap-4">
+            <span>SECURE CONNECTION</span>
+            <span>V.4.2.0</span>
+          </div>
+          <div className="text-right">
+            <span>{timeString}</span>
+          </div>
+        </div>
+
+        {/* Main Interface Panel */}
+        <div className="relative w-full max-w-lg glass-panel bg-[rgba(10,20,30,0.8)] border border-[#00F2FF]/50 shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] rounded-lg overflow-hidden clip-tech transform transition-all hover:scale-[1.01] duration-500">
+          <div className="absolute inset-0 bg-gradient-to-b from-transparent via-[#00F2FF]/5 to-transparent h-full w-full pointer-events-none animate-scanline z-20"></div>
+          
+          {/* Neon Corner Accents */}
+          <div className="absolute top-0 left-0 w-8 h-8 border-t-2 border-l-2 border-[#00F2FF]"></div>
+          <div className="absolute top-0 right-0 w-8 h-8 border-t-2 border-r-2 border-[#00F2FF]"></div>
+          <div className="absolute bottom-0 left-0 w-8 h-8 border-b-2 border-l-2 border-[#00F2FF]"></div>
+          <div className="absolute bottom-0 right-0 w-8 h-8 border-b-2 border-r-2 border-[#00F2FF]"></div>
+
+          <div className="p-10 md:p-14 flex flex-col items-center relative z-30">
+            
+            {/* Logo */}
+            <div className="mb-6 relative group">
+              <div className="absolute inset-0 bg-[#00F2FF] rounded-full blur-xl opacity-20 group-hover:opacity-40 transition-opacity"></div>
+              <img
+                alt="JeiKei Station Logo"
+                className="w-24 h-24 md:w-32 md:h-32 object-contain relative z-10 drop-shadow-[0_0_15px_rgba(0,242,255,0.5)]"
+                src="https://lh3.googleusercontent.com/aida-public/AB6AXuB7ZzIE3ggH36RNdMb4DIEMCCRUfSR7jHu9sqcRFNMEqF_Un0UEDMnzxKPBhfRA1BF8BEn7-k1zvZgaM2VEdSZ5KAnv3Rfl3CpKLkwdeLgiBvJRLN7cRrY_DErDfkUEnqNe3I2oGAYsdjosiLVHb8ACJ8DaWZRNeKrB2GEEPhSiaZOHDc6z25T-KUz5Yf-0Cm35BrrUToEaJbI1pZ4zamG-D793QojTb8kAUEdXMURzO_HTl6FAb31sWaawDh_zyR4D7kBwBs9se8WE"
+              />
+            </div>
+
+            <h1 className="text-3xl md:text-4xl font-bold text-white mb-2 tracking-wide uppercase flex items-center gap-3">
+              <span className="text-[#00F2FF] text-4xl material-icons-round">hexagon</span>
+              JeiKeiStation
+            </h1>
+            <p className="text-[#00F2FF]/60 font-['JetBrains_Mono',monospace] text-sm tracking-[0.2em] mb-10">
+              MISSION CONTROL ACCESS
+            </p>
+
+            <form className="w-full space-y-6" onSubmit={(e) => e.preventDefault()}>
+              
+              <div className="relative group">
+                <label className="absolute -top-3 left-4 bg-transparent px-1 text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF] font-bold" htmlFor="username">USUARIO // ID</label>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="material-icons-round text-[#00F2FF]/50 group-focus-within:text-[#00F2FF] transition-colors">person</span>
+                </div>
+                <input
+                  className="w-full bg-black/40 border border-[#00F2FF]/30 text-[#00F2FF] text-sm font-['JetBrains_Mono',monospace] rounded-none focus:ring-1 focus:ring-[#00F2FF] focus:border-[#00F2FF] block pl-10 p-3 placeholder-[#00F2FF]/20 backdrop-blur-sm transition-all outline-none"
+                  id="username"
+                  placeholder="ENTER ID"
+                  type="text"
+                />
+                <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
+                <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
+              </div>
+
+              <div className="relative group">
+                <label className="absolute -top-3 left-4 bg-transparent px-1 text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF] font-bold" htmlFor="password">CONTRASEÑA // KEY</label>
+                <div className="absolute inset-y-0 left-0 pl-3 flex items-center pointer-events-none">
+                  <span className="material-icons-round text-[#00F2FF]/50 group-focus-within:text-[#00F2FF] transition-colors">lock</span>
+                </div>
+                <input
+                  className="w-full bg-black/40 border border-[#00F2FF]/30 text-[#00F2FF] text-sm font-['JetBrains_Mono',monospace] rounded-none focus:ring-1 focus:ring-[#00F2FF] focus:border-[#00F2FF] block pl-10 p-3 placeholder-[#00F2FF]/20 backdrop-blur-sm transition-all outline-none"
+                  id="password"
+                  placeholder="••••••••"
+                  type="password"
+                />
+                <div className="absolute right-0 top-0 h-2 w-2 border-t border-r border-[#00F2FF] opacity-50"></div>
+                <div className="absolute left-0 bottom-0 h-2 w-2 border-b border-l border-[#00F2FF] opacity-50"></div>
+              </div>
+
+              <div className="flex items-center justify-between text-xs font-['JetBrains_Mono',monospace] text-[#00F2FF]/60">
+                <label className="flex items-center space-x-2 cursor-pointer hover:text-[#00F2FF] transition-colors">
+                  <input
+                    className="form-checkbox bg-transparent border-[#00F2FF]/50 text-[#00F2FF] rounded-none focus:ring-0 focus:ring-offset-0 h-3 w-3"
+                    type="checkbox"
+                  />
+                  <span>REMEMBER SESSION</span>
+                </label>
+                <a className="hover:text-white hover:underline decoration-[#00F2FF] decoration-2 underline-offset-4 transition-all" href="#">
+                  FORGOT KEY?
+                </a>
+              </div>
+
+              {/* Botón temporalmente sustituido por la falta de Clerk en el entorno interactivo */}
+              <button
+                className="w-full relative overflow-hidden group bg-[#00F2FF]/20 hover:bg-[#00F2FF]/30 border border-[#00F2FF] text-[#00F2FF] font-bold py-4 px-4 rounded-none transition-all duration-300 shadow-[0_0_10px_rgba(0,242,255,0.1)] hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] clip-corner-br mt-4"
+                type="button"
+                onClick={() => console.log("Login de Clerk no disponible en este visor. Integra este código en tu entorno local.")}
+              >
+                <span className="relative z-10 flex items-center justify-center gap-2 tracking-[0.2em] font-['Rajdhani',sans-serif] text-lg group-hover:text-white transition-colors">
+                  ACCEDER
+                  <span className="material-icons-round text-sm animate-pulse">chevron_right</span>
+                </span>
+                <div className="absolute inset-0 bg-[#00F2FF] w-0 group-hover:w-full transition-all duration-300 ease-out -z-0 opacity-20"></div>
+              </button>
+            </form>
+          </div>
+
+          {/* Bottom Bar */}
+          <div className="h-2 w-full bg-black/40 flex items-center justify-center gap-1 border-t border-[#00F2FF]/20">
+            <div className="h-1 w-10 bg-[#00F2FF]/40"></div>
+            <div className="h-1 w-1 bg-[#00F2FF]/40"></div>
+            <div className="h-1 w-1 bg-[#00F2FF]/40"></div>
+            <div className="h-1 w-10 bg-[#00F2FF]/40"></div>
+          </div>
+        </div>
+
+        {/* HUD Bottom Graphics */}
+        <div
+          className="mt-8 md:mt-12 w-full max-w-2xl h-16 relative hidden md:block"
+          style={{ perspective: "1000px" }}
+        >
+          <div
+            className="absolute inset-0 bg-gradient-to-t from-[#00F2FF]/5 to-transparent border border-[#00F2FF]/20 rounded-xl shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] opacity-50"
+            style={{ transform: "rotateX(60deg)" }}
+          >
+            <div className="w-full h-full bg-[linear-gradient(to_right,#00F2FF10_1px,transparent_1px),linear-gradient(to_bottom,#00F2FF10_1px,transparent_1px)] bg-[size:20px_20px]"></div>
+          </div>
+          <div className="absolute -bottom-4 left-1/2 transform -translate-x-1/2 text-[10px] font-['JetBrains_Mono',monospace] text-[#00F2FF]/40 whitespace-nowrap">
+            SYSTEM INTEGRITY CHECK: PASS // CONNECTION SECURE
+          </div>
+        </div>
+      </div>
+
+      {/* Theme Toggle Button */}
+      <div className="fixed bottom-6 right-6 z-50">
+        <button
+          onClick={toggleTheme}
+          className="bg-[rgba(10,20,30,0.8)] border border-[#00F2FF]/30 text-[#00F2FF] p-3 rounded-full hover:shadow-[0_0_10px_rgba(0,242,255,0.5),0_0_20px_rgba(0,242,255,0.3)] transition-all duration-300 flex items-center justify-center group"
+          id="theme-toggle"
+        >
+          <span className="material-icons-round group-hover:rotate-180 transition-transform">brightness_4</span>
+        </button>
+      </div>
+    </div>
+  );
+}
