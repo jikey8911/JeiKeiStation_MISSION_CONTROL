@@ -13,10 +13,11 @@ import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
 import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
 import { SprintManager } from "@/components/SprintManager";
 import { OpenClawDeployer } from "@/components/OpenClawDeployer";
+import { ProjectInterview } from "@/components/ProjectInterview";
 import { SignedIn, UserButton } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 import { useTaskSubscription } from "@/hooks/useTaskSubscription";
-import { Loader2, Plus, Upload, Shield, Activity, LayoutDashboard, Share2, Users } from "lucide-react";
+import { Loader2, Plus, Upload, Shield, Activity, LayoutDashboard, Share2, Users, Sparkles } from "lucide-react";
 import { toast } from "sonner";
 
 interface Task {
@@ -223,6 +224,9 @@ export default function Dashboard() {
                 <TabsTrigger value="control" className="rounded-none data-[state=active]:bg-[#00f2ff]/10 data-[state=active]:text-[#00f2ff] px-6 py-3 uppercase tracking-widest text-[10px] font-bold">
                   <Shield className="w-4 h-4 mr-2" /> Control
                 </TabsTrigger>
+                <TabsTrigger value="project-owner" className="rounded-none data-[state=active]:bg-[#00f2ff]/10 data-[state=active]:text-[#00f2ff] px-6 py-3 uppercase tracking-widest text-[10px] font-bold border-l border-white/5">
+                  <Sparkles className="w-4 h-4 mr-2" /> Project Owner
+                </TabsTrigger>
               </TabsList>
 
               <div className="flex gap-3">
@@ -286,12 +290,14 @@ export default function Dashboard() {
                 {currentSprint && <TaskDependencyGraph sprintId={currentSprint.id} />}
               </div>
             </TabsContent>
-
-            <TabsContent value="deployer" className="m-0 outline-none">
-              <OpenClawDeployer />
+            <TabsContent value="control" className="space-y-8 m-0 outline-none">
+              <ControlPanel />
             </TabsContent>
 
-            <TabsContent value="control" className="m-0 outline-none">
+            <TabsContent value="project-owner" className="space-y-8 m-0 outline-none">
+              <ProjectInterview />
+            </TabsContent>
+          </Tabs>tent value="control" className="m-0 outline-none">
               <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
                 <div className="lg:col-span-2">
                   <SprintManager 

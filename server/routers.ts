@@ -10,6 +10,7 @@ import { parseMarkdownTasks, findBestAgent, hasCyclicDependency } from "./utils"
 import { eventEmitter } from "./ee";
 import { notificationsRouter } from "./notificationsRouter";
 import { webhooksRouter } from "./webhooksRouter";
+import { projectOwnerRouter } from "./projectOwnerRouter";
 
 export const appRouter = router({
   system: systemRouter,
@@ -307,6 +308,9 @@ export const appRouter = router({
 
   // ==================== NOTIFICACIONES ====================
   notifications: notificationsRouter,
+
+  // ==================== PROJECT OWNER ====================
+  projectOwner: projectOwnerRouter,
 });
 
 export type AppRouter = typeof appRouter;
