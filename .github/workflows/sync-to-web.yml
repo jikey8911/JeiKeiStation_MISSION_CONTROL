@@ -1,0 +1,20 @@
+name: Sync to MISSION_CONTROL_WEB
+
+on:
+  push:
+    branches:
+      - main
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Source Repository
+        uses: actions/checkout@v4
+        with:
+          fetch-depth: 0
+
+      - name: Sync to Destination Repository
+        run: |
+          git remote add web https://x-access-token:${{ secrets.WEB_SYNC_TOKEN }}@github.com/jikey8911/JeiKeiStation_MISSION_CONTROL_WEB.git
+          git push web main:main --force
