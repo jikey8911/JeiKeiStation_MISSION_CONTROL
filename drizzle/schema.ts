@@ -1,25 +1,18 @@
-import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, decimal } from "drizzle-orm/mysql-core";
+import { int, mysqlEnum, mysqlTable, text, timestamp, varchar, boolean, serial, json } from "drizzle-orm/mysql-core";
 
 /**
  * Core user table backing auth flow.
- * Extend this file with additional tables as your product grows.
- * Columns use camelCase to match both database fields and generated types.
  */
 export const users = mysqlTable("users", {
-  /**
-   * Surrogate primary key. Auto-incremented numeric value managed by the database.
-   * Use this for relations between tables.
-   */
   id: int("id").autoincrement().primaryKey(),
-  /** Manus OAuth identifier (openId) returned from the OAuth callback. Unique per user. */
-  openId: varchar("openId", { length: 64 }).notNull().unique(),
+  openId: varchar("open_id", { length: 64 }).notNull().unique(),
   name: text("name"),
   email: varchar("email", { length: 320 }),
-  loginMethod: varchar("loginMethod", { length: 64 }),
+  loginMethod: varchar("login_method", { length: 64 }),
   role: mysqlEnum("role", ["user", "admin"]).default("user").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  lastSignedIn: timestamp("lastSignedIn").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
+  lastSignedIn: timestamp("last_signed_in").defaultNow().notNull(),
 });
 
 export type User = typeof users.$inferSelect;
@@ -32,13 +25,13 @@ export const agents = mysqlTable("agents", {
   id: int("id").autoincrement().primaryKey(),
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
-  avatar: varchar("avatar", { length: 512 }), // URL del avatar
-  skills: text("skills").notNull(), // JSON stringified: ["FRONTEND", "BACKEND", "QA", "DISEÑO", "ANÁLISIS", "DB"]
+  avatar: varchar("avatar", { length: 512 }),
+  skills: json("skills").notNull(), // Cambiado a json real para MySQL
   status: mysqlEnum("status", ["available", "busy", "offline"]).default("available").notNull(),
-  currentWorkload: int("currentWorkload").default(0).notNull(), // Número de tareas asignadas
-  maxCapacity: int("maxCapacity").default(10).notNull(), // Máximo de tareas simultáneas
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  currentWorkload: int("current_workload").default(0).notNull(),
+  maxCapacity: int("max_capacity").default(10).notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Agent = typeof agents.$inferSelect;
@@ -52,12 +45,12 @@ export const sprints = mysqlTable("sprints", {
   name: varchar("name", { length: 255 }).notNull(),
   description: text("description"),
   status: mysqlEnum("status", ["planning", "active", "review", "retrospective", "closed"]).default("planning").notNull(),
-  startDate: timestamp("startDate"),
-  endDate: timestamp("endDate"),
-  plannedVelocity: int("plannedVelocity").default(0),
-  actualVelocity: int("actualVelocity").default(0),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
+  startDate: timestamp("start_date"),
+  endDate: timestamp("end_date"),
+  plannedVelocity: int("planned_velocity").default(0),
+  actualVelocity: int("actual_velocity").default(0),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow().notNull(),
 });
 
 export type Sprint = typeof sprints.$inferSelect;
@@ -67,19 +60,19 @@ export type InsertSprint = typeof sprints.$inferInsert;
  * Tareas SCRUM con metadatos completos
  */
 export const tasks = mysqlTable("tasks", {
-  id: int("id").autoincrement().primaryKey(),
-  sprintId: int("sprintId"),
+  id: serial("id").primaryKey(),
+  sprintId: int("sprint_id"),
   title: varchar("title", { length: 255 }).notNull(),
   description: text("description"),
-  status: mysqlEnum("status", ["backlog", "in_progress", "review", "qa", "done"]).default("backlog").notNull(),
-  priority: mysqlEnum("priority", ["low", "medium", "high", "critical"]).default("medium").notNull(),
-  requiredSkills: text("requiredSkills").notNull(), // JSON stringified
-  estimationHours: decimal("estimationHours", { precision: 5, scale: 2 }),
-  assignedAgentId: int("assignedAgentId"),
-  acceptanceCriteria: text("acceptanceCriteria").notNull(), // JSON stringified
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
-  updatedAt: timestamp("updatedAt").defaultNow().onUpdateNow().notNull(),
-  completedAt: timestamp("completedAt"),
+  status: varchar("status", { length: 50 }).default("todo"),
+  priority: varchar("priority", { length: 50 }).default("medium"),
+  requiredSkills: json("required_skills"),
+  estimationHours: int("estimation_hours"),
+  assignedAgentId: int("assigned_agent_id"),
+  acceptanceCriteria: json("acceptance_criteria"),
+  createdAt: timestamp("created_at").defaultNow(),
+  updatedAt: timestamp("updated_at").defaultNow().onUpdateNow(),
+  completedAt: timestamp("completed_at"),
 });
 
 export type Task = typeof tasks.$inferSelect;
@@ -88,11 +81,11 @@ export type InsertTask = typeof tasks.$inferInsert;
 /**
  * Dependencias entre tareas
  */
-export const taskDependencies = mysqlTable("taskDependencies", {
+export const taskDependencies = mysqlTable("task_dependencies", {
   id: int("id").autoincrement().primaryKey(),
-  taskId: int("taskId").notNull(),
-  dependsOnTaskId: int("dependsOnTaskId").notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  taskId: int("task_id").notNull(),
+  dependsOnTaskId: int("depends_on_task_id").notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type TaskDependency = typeof taskDependencies.$inferSelect;
@@ -101,14 +94,14 @@ export type InsertTaskDependency = typeof taskDependencies.$inferInsert;
 /**
  * Historial de transiciones de tareas para auditoría
  */
-export const taskHistory = mysqlTable("taskHistory", {
+export const taskHistory = mysqlTable("task_history", {
   id: int("id").autoincrement().primaryKey(),
-  taskId: int("taskId").notNull(),
-  fromStatus: varchar("fromStatus", { length: 50 }),
-  toStatus: varchar("toStatus", { length: 50 }).notNull(),
-  agentId: int("agentId"),
+  taskId: int("task_id").notNull(),
+  fromStatus: varchar("from_status", { length: 50 }),
+  toStatus: varchar("to_status", { length: 50 }).notNull(),
+  agentId: int("agent_id"),
   notes: text("notes"),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type TaskHistory = typeof taskHistory.$inferSelect;
@@ -119,15 +112,15 @@ export type InsertTaskHistory = typeof taskHistory.$inferInsert;
  */
 export const notifications = mysqlTable("notifications", {
   id: int("id").autoincrement().primaryKey(),
-  userId: int("userId").notNull(),
+  userId: int("user_id").notNull(),
   type: mysqlEnum("type", ["approval_pending", "task_blocked", "qa_completed", "sprint_closed", "task_assigned"]).notNull(),
   title: varchar("title", { length: 255 }).notNull(),
   message: text("message"),
-  taskId: int("taskId"),
-  sprintId: int("sprintId"),
+  taskId: int("task_id"),
+  sprintId: int("sprint_id"),
   read: boolean("read").default(false).notNull(),
   archived: boolean("archived").default(false).notNull(),
-  createdAt: timestamp("createdAt").defaultNow().notNull(),
+  createdAt: timestamp("created_at").defaultNow().notNull(),
 });
 
 export type Notification = typeof notifications.$inferSelect;

@@ -5,6 +5,8 @@ import superjson from "superjson";
 import { toast } from "sonner";
 import {
   QueryClient,
+  QueryCache,
+  MutationCache,
   DefaultError,
   UseQueryOptions,
   UseMutationOptions,
@@ -84,7 +86,7 @@ export const queryClientConfig = {
   defaultOptions: {
     queries: {
       retry: 1,
-      retryDelay: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+      retryDelay: (attemptIndex: number) => Math.min(1000 * 2 ** attemptIndex, 30000),
       staleTime: 1000 * 60 * 5, // 5 minutos
       gcTime: 1000 * 60 * 10, // 10 minutos (antes era cacheTime)
     },
@@ -97,13 +99,28 @@ export const queryClientConfig = {
 const getEndingLink = () => {
   if (typeof window === "undefined") {
     return httpBatchLink({
-      url: `http://localhost:3000/api/trpc`,
+      url: `/api/trpc`,
       transformer: superjson,
     });
   }
 
+  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
   const client = createWSClient({
-    url: `ws://localhost:3000/api/trpc`,
+    url: `${protocol}//${window.location.host}/api/trpc`,
+    lazy: {
+      enabled: true,
+      closeMs: 3000,
+    },
+    retryDelayMs: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
+    onOpen: () => {
+      console.log("WebSocket connection established");
+    },
+    onClose: (cause) => {
+      console.log("WebSocket connection closed", cause);
+    },
+    onError: (error) => {
+      console.error("WebSocket error", error);
+    },
   });
 
   return splitLink({
@@ -133,29 +150,26 @@ export const trpcClient = trpc.createClient({
 export function createQueryClient() {
   return new QueryClient({
     ...queryClientConfig,
-    defaultOptions: {
-      ...queryClientConfig.defaultOptions,
-      queries: {
-        ...queryClientConfig.defaultOptions.queries,
-        onError: (error: unknown) => {
-          const formattedMessage = formatErrorMessage(error);
-          toast.error(formattedMessage, {
-            duration: 4000,
-            description: "Intenta de nuevo o contacta al soporte si el problema persiste.",
-          });
-        },
+    queryCache: new QueryCache({
+      onError: (error) => {
+        const formattedMessage = formatErrorMessage(error);
+        toast.error(formattedMessage, {
+          duration: 4000,
+          description:
+            "Intenta de nuevo o contacta al soporte si el problema persiste.",
+        });
       },
-      mutations: {
-        ...queryClientConfig.defaultOptions.mutations,
-        onError: (error: unknown) => {
-          const formattedMessage = formatErrorMessage(error);
-          toast.error(formattedMessage, {
-            duration: 4000,
-            description: "Intenta de nuevo o contacta al soporte si el problema persiste.",
-          });
-        },
+    }),
+    mutationCache: new MutationCache({
+      onError: (error) => {
+        const formattedMessage = formatErrorMessage(error);
+        toast.error(formattedMessage, {
+          duration: 4000,
+          description:
+            "Intenta de nuevo o contacta al soporte si el problema persiste.",
+        });
       },
-    },
+    }),
   });
 }
 
