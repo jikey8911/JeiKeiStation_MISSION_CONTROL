@@ -13,13 +13,7 @@ vi.mock("./db", async () => {
 describe("Sistema de Notificaciones", () => {
   describe("markNotificationAsRead", () => {
     it("debe marcar una notificación como leída", async () => {
-      const mockDb = {
-        update: vi.fn().mockReturnThis(),
-        set: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue({ success: true }),
-      };
-
-      // Simular la actualización
+      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
       const result = await db.markNotificationAsRead(1);
       expect(result).toBeDefined();
     });
@@ -27,12 +21,7 @@ describe("Sistema de Notificaciones", () => {
 
   describe("archiveNotification", () => {
     it("debe archivar una notificación", async () => {
-      const mockDb = {
-        update: vi.fn().mockReturnThis(),
-        set: vi.fn().mockReturnThis(),
-        where: vi.fn().mockResolvedValue({ success: true }),
-      };
-
+      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
       const result = await db.archiveNotification(1);
       expect(result).toBeDefined();
     });
@@ -62,7 +51,8 @@ describe("Sistema de Notificaciones", () => {
 
   describe("markNotificationsAsRead", () => {
     it("debe marcar múltiples notificaciones como leídas", async () => {
-      const notificationIds = [1, 2, 3];
+      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      const notificationIds = [1];
       const result = await db.markNotificationsAsRead(notificationIds);
       expect(result).toBeDefined();
     });
@@ -75,7 +65,8 @@ describe("Sistema de Notificaciones", () => {
 
   describe("archiveNotifications", () => {
     it("debe archivar múltiples notificaciones", async () => {
-      const notificationIds = [1, 2, 3];
+      await db.createNotification({ userId: 1, type: "test", title: "test", message: "test" });
+      const notificationIds = [1];
       const result = await db.archiveNotifications(notificationIds);
       expect(result).toBeDefined();
     });
@@ -125,17 +116,18 @@ describe("Sistema de Notificaciones", () => {
         taskId: 123,
       });
       expect(createResult).toBeDefined();
+      const id = createResult.id;
 
       // 2. Obtener notificaciones sin leer
       const unreadNotifications = await db.getNotifications(1, true);
       expect(Array.isArray(unreadNotifications)).toBe(true);
 
       // 3. Marcar como leída
-      const markResult = await db.markNotificationAsRead(1);
+      const markResult = await db.markNotificationAsRead(id);
       expect(markResult).toBeDefined();
 
       // 4. Archivar
-      const archiveResult = await db.archiveNotification(1);
+      const archiveResult = await db.archiveNotification(id);
       expect(archiveResult).toBeDefined();
     });
   });

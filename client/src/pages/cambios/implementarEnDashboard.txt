@@ -1,0 +1,316 @@
+import { useState } from "react";
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Button } from "@/components/ui/button";
+import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Textarea } from "@/components/ui/textarea";
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
+import { TaskBoard } from "@/components/TaskBoard";
+import { VirtualOffice } from "@/components/VirtualOffice";
+import { ControlPanel } from "@/components/ControlPanel";
+import { NotificationBell } from "@/components/NotificationBell";
+import { SprintHealthIndicator } from "@/components/SprintHealthIndicator";
+import { TaskDependencyGraph } from "@/components/TaskDependencyGraph";
+import { SprintManager } from "@/components/SprintManager";
+import { OpenClawDeployer } from "@/components/OpenClawDeployer";
+import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
+import { trpc } from "@/lib/trpc";
+import { useTaskSubscription } from "@/hooks/useTaskSubscription";
+import { Loader2, Plus, Upload, Shield, Activity, LayoutDashboard, Share2, Users } from "lucide-react";
+import { toast } from "sonner";
+
+interface Task {
+  id: number;
+  title: string;
+  description?: string;
+  priority: "low" | "medium" | "high" | "critical";
+  requiredSkills: string[];
+  status: "todo" | "in_progress" | "review" | "done";
+  estimationHours: number;
+}
+
+export default function Dashboard() {
+  const [isTaskOpen, setIsTaskOpen] = useState(false);
+  const [isImportOpen, setIsImportOpen] = useState(false);
+  const [markdownContent, setMarkdownContent] = useState("");
+  const [newTaskData, setNewTaskData] = useState<Omit<Task, "id">>({
+    title: "",
+    description: "",
+    priority: "medium",
+    requiredSkills: [],
+    status: "todo",
+    estimationHours: 0,
+  });
+
+  const utils = trpc.useUtils();
+  useTaskSubscription();
+
+  const { data: tasks, isLoading: tasksLoading } = trpc.tasks.list.useQuery();
+  const createTask = trpc.tasks.create.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      setIsTaskOpen(false);
+      setNewTaskData({
+        title: "",
+        description: "",
+        priority: "medium",
+        requiredSkills: [],
+        status: "todo",
+        estimationHours: 0,
+      });
+      toast.success("Misión asignada correctamente");
+    },
+  });
+
+  const importTasks = trpc.tasks.importMarkdown.useMutation({
+    onSuccess: () => {
+      utils.tasks.list.invalidate();
+      setIsImportOpen(false);
+      setMarkdownContent("");
+      toast.success("Backlog importado con éxito");
+    },
+  });
+
+  const handleAddTask = () => {
+    if (!newTaskData.title) return toast.error("La misión requiere un título");
+    createTask.mutate(newTaskData as any);
+  };
+
+  const handleImportMarkdown = () => {
+    if (!markdownContent) return toast.error("No hay contenido que procesar");
+    importTasks.mutate({ markdown: markdownContent });
+  };
+
+  if (tasksLoading) {
+    return (
+      <div className="flex h-screen w-screen items-center justify-center bg-[#050505]">
+        <div className="flex flex-col items-center gap-4">
+          <Loader2 className="h-12 w-12 animate-spin text-[#00f2ff]" />
+          <p className="text-sm font-mono tracking-[0.2em] text-[#00f2ff]/60 uppercase">Iniciando Sistemas de Misión...</p>
+        </div>
+      </div>
+    );
+  }
+
+  return (
+    <SignedIn>
+      <div className="min-h-screen bg-[#050505] text-[#e0e0e0] overflow-hidden selection:bg-[#00f2ff] selection:text-black">
+        {/* Patrón HUD de Fondo */}
+        <div 
+          className="fixed inset-0 pointer-events-none opacity-20" 
+          style={{ 
+            backgroundImage: `linear-gradient(rgba(0, 242, 255, 0.05) 1px, transparent 1px), linear-gradient(90deg, rgba(0, 242, 255, 0.05) 1px, transparent 1px)`,
+            backgroundSize: '40px 40px' 
+          }}
+        />
+
+        {/* Header Táctico */}
+        <header className="relative z-10 border-b border-[#00f2ff]/20 bg-[#0a0a0a]/80 backdrop-blur-md px-6 py-3 flex items-center justify-between shadow-[0_4px_20px_rgba(0,0,0,0.8)]">
+          <div className="flex items-center gap-4">
+            {/* Logo JK Station integrado */}
+            <div className="relative group">
+              <div className="absolute inset-0 bg-[#00f2ff] rounded-full blur-md opacity-20 group-hover:opacity-40 transition-opacity"></div>
+              <div className="w-12 h-12 rounded-full border-2 border-[#00f2ff] flex items-center justify-center bg-black overflow-hidden relative z-10">
+                <span className="text-xl font-black text-[#00f2ff] tracking-tighter">JK</span>
+                <div className="absolute bottom-0 inset-x-0 bg-[#00f2ff] text-[6px] text-black font-bold text-center leading-none py-0.5">STATION</div>
+              </div>
+            </div>
+            
+            <div className="flex flex-col">
+              <h1 className="text-xl font-bold tracking-[0.15em] text-white">JEIKEI STATION</h1>
+              <div className="flex items-center gap-2">
+                <span className="w-2 h-2 rounded-full bg-[#00ff9d] animate-pulse"></span>
+                <p className="text-[10px] font-mono text-[#00f2ff]/70 uppercase tracking-widest">Mission Control: Online</p>
+              </div>
+            </div>
+          </div>
+
+          <div className="flex items-center gap-4">
+            <SprintHealthIndicator />
+            <div className="h-8 w-px bg-white/10 mx-2"></div>
+            <div className="flex gap-2">
+              <Button 
+                onClick={() => setIsTaskOpen(true)}
+                className="bg-transparent border border-[#00f2ff]/50 text-[#00f2ff] hover:bg-[#00f2ff] hover:text-black transition-all gap-2 h-9 px-4 rounded-none uppercase text-xs tracking-widest"
+              >
+                <Plus className="w-4 h-4" />
+                Nueva Misión
+              </Button>
+              <Button 
+                onClick={() => setIsImportOpen(true)}
+                className="bg-transparent border border-white/20 text-white/70 hover:bg-white/10 transition-all gap-2 h-9 px-4 rounded-none uppercase text-xs tracking-widest"
+              >
+                <Upload className="w-4 h-4" />
+                Importar
+              </Button>
+            </div>
+            <NotificationBell />
+          </div>
+        </header>
+
+        <main className="relative z-10 p-4 lg:p-6 h-[calc(100vh-64px)] overflow-y-auto">
+          <Tabs defaultValue="panel" className="w-full h-full flex flex-col">
+            <TabsList className="w-fit bg-[#0a0a0a] border border-white/10 rounded-none p-1 mb-6 self-center">
+              <TabsTrigger 
+                value="panel" 
+                className="rounded-none gap-2 data-[state=active]:bg-[#00f2ff] data-[state=active]:text-black uppercase text-[10px] tracking-[0.2em] px-6 h-8"
+              >
+                <LayoutDashboard className="w-3.5 h-3.5" />
+                Panel de Control
+              </TabsTrigger>
+              <TabsTrigger 
+                value="kanban" 
+                className="rounded-none gap-2 data-[state=active]:bg-[#00f2ff] data-[state=active]:text-black uppercase text-[10px] tracking-[0.2em] px-6 h-8"
+              >
+                <Shield className="w-3.5 h-3.5" />
+                Tablero Kanban
+              </TabsTrigger>
+              <TabsTrigger 
+                value="office" 
+                className="rounded-none gap-2 data-[state=active]:bg-[#00f2ff] data-[state=active]:text-black uppercase text-[10px] tracking-[0.2em] px-6 h-8"
+              >
+                <Users className="w-3.5 h-3.5" />
+                Oficina Virtual
+              </TabsTrigger>
+              <TabsTrigger 
+                value="topology" 
+                className="rounded-none gap-2 data-[state=active]:bg-[#00f2ff] data-[state=active]:text-black uppercase text-[10px] tracking-[0.2em] px-6 h-8"
+              >
+                <Share2 className="w-3.5 h-3.5" />
+                Topología
+              </TabsTrigger>
+              <TabsTrigger 
+                value="sprint" 
+                className="rounded-none gap-2 data-[state=active]:bg-[#00f2ff] data-[state=active]:text-black uppercase text-[10px] tracking-[0.2em] px-6 h-8"
+              >
+                <Activity className="w-3.5 h-3.5" />
+                Gestión Sprint
+              </TabsTrigger>
+            </TabsList>
+
+            <div className="flex-1 min-h-0 bg-[#0f0f0f]/50 border border-white/5 backdrop-blur-sm relative">
+              {/* Decoración Táctica de Esquinas */}
+              <div className="absolute top-0 left-0 w-4 h-4 border-t-2 border-l-2 border-[#00f2ff]/40"></div>
+              <div className="absolute top-0 right-0 w-4 h-4 border-t-2 border-r-2 border-[#00f2ff]/40"></div>
+              <div className="absolute bottom-0 left-0 w-4 h-4 border-b-2 border-l-2 border-[#00f2ff]/40"></div>
+              <div className="absolute bottom-0 right-0 w-4 h-4 border-b-2 border-r-2 border-[#00f2ff]/40"></div>
+
+              <TabsContent value="panel" className="h-full m-0 p-4">
+                <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 h-full overflow-y-auto">
+                  <div className="lg:col-span-2">
+                    <ControlPanel />
+                  </div>
+                  <div className="space-y-6">
+                    <OpenClawDeployer />
+                  </div>
+                </div>
+              </TabsContent>
+
+              <TabsContent value="kanban" className="h-full m-0">
+                <TaskBoard tasks={tasks || []} />
+              </TabsContent>
+
+              <TabsContent value="office" className="h-full m-0">
+                <VirtualOffice />
+              </TabsContent>
+
+              <TabsContent value="topology" className="h-full m-0 p-4">
+                <TaskDependencyGraph tasks={tasks || []} />
+              </TabsContent>
+
+              <TabsContent value="sprint" className="h-full m-0 p-4">
+                <SprintManager />
+              </TabsContent>
+            </div>
+          </Tabs>
+        </main>
+
+        {/* Dialog: Nueva Tarea (Misión) */}
+        <Dialog open={isTaskOpen} onOpenChange={setIsTaskOpen}>
+          <DialogContent className="bg-[#0f0f0f] border border-[#00f2ff]/30 text-white max-w-md rounded-none">
+            <DialogHeader>
+              <DialogTitle className="text-[#00f2ff] uppercase tracking-[0.2em] font-bold text-center">Protocolo de Nueva Misión</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-[#00f2ff]/70">Nombre de la Misión</label>
+                <Input
+                  placeholder="ID de Misión / Título"
+                  value={newTaskData.title}
+                  onChange={(e) => setNewTaskData({ ...newTaskData, title: e.target.value })}
+                  className="bg-black/50 border-white/10 rounded-none focus:border-[#00f2ff] transition-colors"
+                />
+              </div>
+              <div className="space-y-1">
+                <label className="text-[10px] uppercase tracking-widest text-[#00f2ff]/70">Detalles Operativos</label>
+                <Textarea
+                  placeholder="Descripción detallada de la tarea..."
+                  value={newTaskData.description}
+                  onChange={(e) => setNewTaskData({ ...newTaskData, description: e.target.value })}
+                  className="bg-black/50 border-white/10 rounded-none min-h-[100px] focus:border-[#00f2ff] transition-colors"
+                />
+              </div>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-[#00f2ff]/70">Prioridad</label>
+                  <Select
+                    value={newTaskData.priority}
+                    onValueChange={(val: any) => setNewTaskData({ ...newTaskData, priority: val })}
+                  >
+                    <SelectTrigger className="bg-black/50 border-white/10 rounded-none uppercase text-[10px] tracking-widest">
+                      <SelectValue placeholder="Prioridad" />
+                    </SelectTrigger>
+                    <SelectContent className="bg-[#0f0f0f] border-white/10 text-white rounded-none">
+                      <SelectItem value="low">Baja</SelectItem>
+                      <SelectItem value="medium">Normal</SelectItem>
+                      <SelectItem value="high">Alta</SelectItem>
+                      <SelectItem value="critical">Crítica</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-1">
+                  <label className="text-[10px] uppercase tracking-widest text-[#00f2ff]/70">Estimación (H)</label>
+                  <Input
+                    type="number"
+                    value={newTaskData.estimationHours}
+                    onChange={(e) => setNewTaskData({ ...newTaskData, estimationHours: parseFloat(e.target.value) || 0 })}
+                    className="bg-black/50 border-white/10 rounded-none focus:border-[#00f2ff]"
+                  />
+                </div>
+              </div>
+              <Button 
+                onClick={handleAddTask} 
+                className="w-full bg-[#00f2ff] hover:bg-[#00d0db] text-black font-bold uppercase tracking-[0.2em] rounded-none py-6 shadow-[0_0_15px_rgba(0,242,255,0.4)] mt-4"
+              >
+                Desplegar Misión
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+
+        {/* Dialog: Importar Markdown */}
+        <Dialog open={isImportOpen} onOpenChange={setIsImportOpen}>
+          <DialogContent className="bg-[#0f0f0f] border border-white/20 text-white max-w-2xl rounded-none">
+            <DialogHeader>
+              <DialogTitle className="text-white uppercase tracking-[0.2em] font-bold">Importar Backlog (Markdown)</DialogTitle>
+            </DialogHeader>
+            <div className="space-y-4 pt-4">
+              <Textarea
+                placeholder="Pega tu estructura de misiones aquí..."
+                value={markdownContent}
+                onChange={(e) => setMarkdownContent(e.target.value)}
+                className="min-h-64 bg-black/30 border-white/10 font-mono text-sm"
+              />
+              <Button 
+                onClick={handleImportMarkdown} 
+                className="w-full bg-white text-black hover:bg-[#e0e0e0] font-bold uppercase tracking-widest rounded-none py-6"
+              >
+                Sincronizar Datos
+              </Button>
+            </div>
+          </DialogContent>
+        </Dialog>
+      </div>
+    </SignedIn>
+  );
+}
