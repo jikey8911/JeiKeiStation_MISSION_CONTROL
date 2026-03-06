@@ -1,5 +1,5 @@
 import { createTRPCReact } from "@trpc/react-query";
-import { httpBatchLink, wsLink, splitLink, createWSClient } from "@trpc/client";
+import { httpBatchLink } from "@trpc/client";
 import type { AppRouter } from "../../../server/routers";
 import superjson from "superjson";
 import { toast } from "sonner";
@@ -104,38 +104,16 @@ const getEndingLink = () => {
     });
   }
 
-  const protocol = window.location.protocol === "https:" ? "wss:" : "ws:";
-  const client = createWSClient({
-    url: `${protocol}//${window.location.host}/api/trpc`,
-    lazy: {
-      enabled: true,
-      closeMs: 3000,
+  // En local desactivamos WS para evitar errores de handshake/auth en dashboard informativo.
+  return httpBatchLink({
+    url: `http://localhost:3000/api/trpc`,
+    transformer: superjson,
+    fetch(input, init) {
+      return globalThis.fetch(input, {
+        ...(init ?? {}),
+        credentials: "include",
+      });
     },
-    retryDelayMs: (attemptIndex) => Math.min(1000 * 2 ** attemptIndex, 30000),
-    onOpen: () => {
-      console.log("WebSocket connection established");
-    },
-    onClose: (cause) => {
-      console.log("WebSocket connection closed", cause);
-    },
-    onError: (error) => {
-      console.error("WebSocket error", error);
-    },
-  });
-
-  return splitLink({
-    condition: (op) => op.type === "subscription",
-    true: wsLink({ client, transformer: superjson }),
-    false: httpBatchLink({
-      url: `http://localhost:3000/api/trpc`,
-      transformer: superjson,
-      fetch(input, init) {
-        return globalThis.fetch(input, {
-          ...(init ?? {}),
-          credentials: "include",
-        });
-      },
-    }),
   });
 };
 
