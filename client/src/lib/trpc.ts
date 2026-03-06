@@ -127,7 +127,7 @@ const getEndingLink = () => {
     condition: (op) => op.type === "subscription",
     true: wsLink({ client, transformer: superjson }),
     false: httpBatchLink({
-      url: `/api/trpc`,
+      url: `http://localhost:3000/api/trpc`,
       transformer: superjson,
       fetch(input, init) {
         return globalThis.fetch(input, {

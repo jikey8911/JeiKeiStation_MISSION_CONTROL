@@ -15,7 +15,7 @@ export async function createContext(
   let user: User | null = null;
 
   try {
-    const clerkUser = await sdk.authenticateRequest(opts.req);
+    const clerkUser = await (sdk as any).authenticateRequest(opts.req);
     if (clerkUser && clerkUser.sub) {
       // Intentar obtener el usuario de nuestra base de datos usando el openId (sub de Clerk)
       const dbUser = await getUserByOpenId(clerkUser.sub);
