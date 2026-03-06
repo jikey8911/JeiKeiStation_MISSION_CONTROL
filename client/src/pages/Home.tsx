@@ -5,6 +5,7 @@ import { useLocation } from "wouter";
 export default function Home() {
   const [timeString, setTimeString] = useState("00:00:00");
   const [, setLocation] = useLocation();
+  const [sparks, setSparks] = useState<{ id: number; left: string; top: string }[]>([]);
 
   useEffect(() => {
     const updateClock = () => {
@@ -14,6 +15,18 @@ export default function Home() {
     const timer = setInterval(updateClock, 1000);
     updateClock();
     return () => clearInterval(timer);
+  }, []);
+
+  useEffect(() => {
+    const createSpark = () => {
+      const id = Date.now();
+      const left = Math.random() * 100 + "%";
+      const top = Math.random() * 100 + "%";
+      setSparks(prev => [...prev.slice(-25), { id, left, top }]);
+    };
+
+    const interval = setInterval(createSpark, 150);
+    return () => clearInterval(interval);
   }, []);
 
   return (
@@ -40,12 +53,32 @@ export default function Home() {
         .animate-scanline { animation: scanline 8s linear infinite; }
         .animate-spin-slow { animation: spin 12s linear infinite; }
         @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+        @keyframes spark {
+          from { transform: scale(0.3); opacity: 1; }
+          to { transform: scale(2); opacity: 0; }
+        }
+        .neural-spark {
+          position: absolute;
+          width: 6px;
+          height: 6px;
+          border-radius: 50%;
+          background: radial-gradient(circle, #00F2FF, transparent 70%);
+          animation: spark 2s ease-out forwards;
+          pointer-events: none;
+        }
       `}</style>
 
       <div className="absolute inset-0 pointer-events-none overflow-hidden">
         <div className="absolute inset-0 bg-[linear-gradient(to_right,#00F2FF05_1px,transparent_1px),linear-gradient(to_bottom,#00F2FF05_1px,transparent_1px)] bg-[size:40px_40px]"></div>
         <div className="absolute inset-0 bg-[radial-gradient(circle_at_50%_50%,rgba(0,242,255,0.05),transparent_70%)]"></div>
         <div className="absolute top-0 left-0 w-full h-1 bg-[#00F2FF]/20 animate-scanline"></div>
+        {sparks.map(spark => (
+          <div
+            key={spark.id}
+            className="neural-spark"
+            style={{ left: spark.left, top: spark.top }}
+          />
+        ))}
       </div>
 
       <div className="relative z-10 w-full max-w-lg px-6 flex flex-col items-center">

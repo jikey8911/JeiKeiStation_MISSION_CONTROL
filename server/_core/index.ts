@@ -1,6 +1,8 @@
 import "dotenv/config";
 import express from "express";
 import { createServer } from "http";
+import path from "path";
+import fs from "fs";
 import { WebSocketServer } from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -53,7 +55,16 @@ async function startServer() {
 
   // En desarrollo, si es el proceso de la API (puerto 3001), no necesitamos Vite
   // Si es el proceso del Frontend (puerto 3000), usamos Vite
-  const port = parseInt(process.env.PORT || "3000");
+    const port = parseInt(process.env.PORT || "3000");
+
+    // Limpiar caché de Vite para forzar recarga de .env
+    if (process.env.NODE_ENV === "development" && port === 3000) {
+      const viteCache = path.resolve(import.meta.dirname, "../../node_modules/.vite");
+      if (fs.existsSync(viteCache)) {
+        console.log("[Vite] Cleaning cache...");
+        fs.rmSync(viteCache, { recursive: true, force: true });
+      }
+    }
 
   if (process.env.NODE_ENV === "development") {
     if (port === 3000) {
