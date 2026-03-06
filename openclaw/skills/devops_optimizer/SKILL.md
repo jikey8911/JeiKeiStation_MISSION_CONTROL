@@ -19,7 +19,7 @@ pip install GitPython PyGithub colorama requests
 
 1. Configura las variables de entorno:
    ```bash
-   export GITHUB_TOKEN="tu_github_token"
+   export GITHUB_TOKEN="tu_token_de_github"
    export JEIKEI_AGENT_TOKEN="tu_jwt_token_de_jeikeistation"
    export JEIKEI_BACKEND_URL="http://127.0.0.1:8000" # Opcional, por defecto localhost
    ```

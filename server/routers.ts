@@ -6,11 +6,43 @@ import { observable } from "@trpc/server/observable";
 import { serviceProcedure } from "./serviceAuth";
 import { z } from "zod";
 import * as db from "./db";
+import fs from "fs";
+import path from "path";
 import { parseMarkdownTasks, findBestAgent, hasCyclicDependency } from "./utils";
 import { eventEmitter } from "./ee";
 import { notificationsRouter } from "./notificationsRouter";
 import { webhooksRouter } from "./webhooksRouter";
 import { projectOwnerRouter } from "./projectOwnerRouter";
+
+async function getLocalOpenClawAgents() {
+  try {
+    const skillsDir = path.resolve(import.meta.dirname, "../openclaw/skills");
+    if (!fs.existsSync(skillsDir)) return [];
+
+    const dirs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
+    let idx = 1000;
+
+    return dirs.map((dir) => {
+      const normalized = dir.toLowerCase();
+      const isDevOp = normalized.includes("devops");
+      const isProductOwner = normalized.includes("mission_control") || normalized.includes("owner") || normalized.includes("jeikei");
+
+      return {
+        id: idx++,
+        name: isDevOp ? "DevOp" : isProductOwner ? "Product Owner" : dir.replace(/[_-]/g, " "),
+        description: `OpenClaw skill: ${dir}`,
+        avatar: null,
+        skills: [dir],
+        status: "connected",
+        currentWorkload: 0,
+        maxCapacity: 10,
+        source: "openclaw",
+      };
+    });
+  } catch {
+    return [];
+  }
+}
 
 export const appRouter = router({
   system: systemRouter,
@@ -29,7 +61,16 @@ export const appRouter = router({
   // ==================== AGENTES ====================
   agents: router({
     list: publicProcedure.query(async () => {
-      return await db.getAgents();
+      const dbAgents = await db.getAgents();
+      const openclawAgents = await getLocalOpenClawAgents();
+
+      const merged = [...dbAgents];
+      for (const oa of openclawAgents) {
+        const exists = merged.some((a: any) => String(a.name || "").toLowerCase() === String(oa.name).toLowerCase());
+        if (!exists) merged.push(oa as any);
+      }
+
+      return merged;
     }),
 
     get: publicProcedure
