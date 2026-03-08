@@ -44,6 +44,26 @@ async function getLocalOpenClawAgents() {
   }
 }
 
+function getAgentPresets() {
+  try {
+    const presetsDir = path.resolve(import.meta.dirname, "../openclaw/agent-presets");
+    if (!fs.existsSync(presetsDir)) return [];
+
+    const files = fs.readdirSync(presetsDir).filter(f => f.endsWith('.json'));
+    return files.map((f, i) => {
+      const raw = fs.readFileSync(path.join(presetsDir, f), 'utf-8');
+      const json = JSON.parse(raw);
+      return {
+        id: i + 1,
+        key: f.replace('.json', ''),
+        ...json,
+      };
+    });
+  } catch {
+    return [];
+  }
+}
+
 export const appRouter = router({
   system: systemRouter,
   webhooks: webhooksRouter,
@@ -79,6 +99,10 @@ export const appRouter = router({
         return await db.getAgentById(input.id);
       }),
 
+    presets: publicProcedure.query(async () => {
+      return getAgentPresets();
+    }),
+
     create: protectedProcedure
       .input(
         z.object({
@@ -91,6 +115,20 @@ export const appRouter = router({
       )
       .mutation(async ({ input }) => {
         return await db.createAgent(input);
+      }),
+
+    createFromPreset: protectedProcedure
+      .input(z.object({ key: z.string() }))
+      .mutation(async ({ input }) => {
+        const preset = getAgentPresets().find((p: any) => p.key === input.key);
+        if (!preset) throw new Error("Preset no encontrado");
+        return await db.createAgent({
+          name: preset.name,
+          description: preset.description,
+          avatar: preset.avatar,
+          skills: preset.skills || [],
+          maxCapacity: preset.maxCapacity || 10,
+        });
       }),
 
     updateWorkload: protectedProcedure

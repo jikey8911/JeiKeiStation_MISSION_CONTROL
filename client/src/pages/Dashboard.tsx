@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useState } from "react";
+import { useLocation } from "wouter";
 import { SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 import { trpc } from "@/lib/trpc";
 import {
@@ -15,6 +16,8 @@ import { Input } from "@/components/ui/input";
 
 export default function Dashboard() {
   const [sparks, setSparks] = useState<{ id: number; left: string; top: string }[]>([]);
+  const [view, setView] = useState<"overview" | "projects">("overview");
+  const [, setLocation] = useLocation();
 
   const { data: tasks = [] } = trpc.tasks.list.useQuery({});
   const { data: agentsRaw = [] } = trpc.agents.list.useQuery({});
@@ -89,11 +92,29 @@ export default function Dashboard() {
           <div className="relative z-10 p-4 h-screen grid grid-cols-[74px_1fr_310px] gap-4">
             {/* left icon menu */}
             <aside className="glass rounded-2xl p-3 flex flex-col items-center gap-3">
-              {[LayoutGrid, ClipboardList, LineChart, Shield, FileText].map((Icon, i) => (
-                <button key={i} className="w-11 h-11 rounded-xl soft flex items-center justify-center text-cyan-300/80 hover:bg-cyan-400/10">
-                  <Icon size={18} />
-                </button>
-              ))}
+              <button
+                onClick={() => setView("overview")}
+                className={`w-11 h-11 rounded-xl soft flex items-center justify-center ${view === "overview" ? "bg-cyan-400/20 text-cyan-200" : "text-cyan-300/80 hover:bg-cyan-400/10"}`}
+                title="Overview"
+              >
+                <LayoutGrid size={18} />
+              </button>
+              <button
+                onClick={() => setView("projects")}
+                className={`w-11 h-11 rounded-xl soft flex items-center justify-center ${view === "projects" ? "bg-cyan-400/20 text-cyan-200" : "text-cyan-300/80 hover:bg-cyan-400/10"}`}
+                title="Projects"
+              >
+                <ClipboardList size={18} />
+              </button>
+              <button className="w-11 h-11 rounded-xl soft flex items-center justify-center text-cyan-300/80 hover:bg-cyan-400/10" title="Metrics">
+                <LineChart size={18} />
+              </button>
+              <button className="w-11 h-11 rounded-xl soft flex items-center justify-center text-cyan-300/80 hover:bg-cyan-400/10" title="Security">
+                <Shield size={18} />
+              </button>
+              <button className="w-11 h-11 rounded-xl soft flex items-center justify-center text-cyan-300/80 hover:bg-cyan-400/10" title="Logs">
+                <FileText size={18} />
+              </button>
               <div className="mt-auto" />
               <button className="w-11 h-11 rounded-xl soft flex items-center justify-center text-white/50 hover:text-white"><Settings size={18} /></button>
               <button className="w-11 h-11 rounded-xl soft flex items-center justify-center text-red-400/70 hover:text-red-300"><LogOut size={18} /></button>
@@ -103,10 +124,14 @@ export default function Dashboard() {
             <main className="flex flex-col gap-4 overflow-hidden">
               <header className="glass rounded-2xl p-4 flex items-center justify-between">
                 <div>
-                  <h1 className="text-4xl font-extrabold tracking-tight">Project Overview</h1>
+                  <h1 className="text-4xl font-extrabold tracking-tight">
+                    {view === "projects" ? "Projects" : "Project Overview"}
+                  </h1>
                   <p className="text-[11px] uppercase tracking-[0.25em] text-cyan-300/60">Mission Control // Session Active</p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <button onClick={() => setLocation('/projects/new')} className="px-3 py-2 rounded-xl border border-cyan-500/30 text-cyan-200 text-sm hover:bg-cyan-500/10">+ proyecto</button>
+                  <button onClick={() => setLocation('/projects/assisted')} className="px-3 py-2 rounded-xl border border-cyan-500/30 text-cyan-200 text-sm hover:bg-cyan-500/10">+ proyecto asistido</button>
                   <div className="relative">
                     <Search size={14} className="absolute left-3 top-1/2 -translate-y-1/2 text-white/30" />
                     <Input placeholder="SEARCH SYSTEM..." className="w-80 pl-9 bg-black/40 border-cyan-500/20 rounded-xl" />
@@ -121,44 +146,67 @@ export default function Dashboard() {
                 </div>
               </header>
 
-              <section className="grid grid-cols-4 gap-4">
-                <Metric title="Active Projects" value={activeProjects} subtitle="Real count" />
-                <Metric title="Completed Missions" value={completedMissions} subtitle="Real count" />
-                <Metric title="Total Progress" value={`${totalProgress}%`} subtitle="Based on tasks" />
-                <Metric title="Team Utilization" value={`${teamUtilization}%`} subtitle="Based on agents" />
-              </section>
+              {view === "overview" ? (
+                <>
+                  <section className="grid grid-cols-4 gap-4">
+                    <Metric title="Active Projects" value={activeProjects} subtitle="Real count" />
+                    <Metric title="Completed Missions" value={completedMissions} subtitle="Real count" />
+                    <Metric title="Total Progress" value={`${totalProgress}%`} subtitle="Based on tasks" />
+                    <Metric title="Team Utilization" value={`${teamUtilization}%`} subtitle="Based on agents" />
+                  </section>
 
-              <section className="grid grid-cols-[2fr_1fr] gap-4 flex-1 min-h-0">
-                <div className="glass rounded-2xl p-4 overflow-y-auto">
-                  <h2 className="text-cyan-300 font-bold tracking-widest text-sm mb-3">● LIVE ACTIVITY FEED</h2>
-                  <div className="space-y-2">
-                    {tasks.length > 0 ? (
-                      tasks.slice(0, 10).map((t: any, i: number) => (
-                        <div key={t.id ?? i} className="bg-black/50 border border-cyan-500/10 rounded-lg p-3 text-sm">
-                          <span className="text-cyan-400/70 mr-2">[TASK]</span>
-                          <span className="text-white/90">{t.title || "Untitled mission"}</span>
-                          <span className="ml-2 text-cyan-300/70 uppercase text-xs">{t.status || "todo"}</span>
-                        </div>
-                      ))
-                    ) : (
-                      <div className="text-white/30 text-sm italic border border-dashed border-white/10 rounded-lg p-4">
-                        No activity yet.
+                  <section className="grid grid-cols-[2fr_1fr] gap-4 flex-1 min-h-0">
+                    <div className="glass rounded-2xl p-4 overflow-y-auto">
+                      <h2 className="text-cyan-300 font-bold tracking-widest text-sm mb-3">● LIVE ACTIVITY FEED</h2>
+                      <div className="space-y-2">
+                        {tasks.length > 0 ? (
+                          tasks.slice(0, 10).map((t: any, i: number) => (
+                            <div key={t.id ?? i} className="bg-black/50 border border-cyan-500/10 rounded-lg p-3 text-sm">
+                              <span className="text-cyan-400/70 mr-2">[TASK]</span>
+                              <span className="text-white/90">{t.title || "Untitled mission"}</span>
+                              <span className="ml-2 text-cyan-300/70 uppercase text-xs">{t.status || "todo"}</span>
+                            </div>
+                          ))
+                        ) : (
+                          <div className="text-white/30 text-sm italic border border-dashed border-white/10 rounded-lg p-4">
+                            No activity yet.
+                          </div>
+                        )}
                       </div>
-                    )}
-                  </div>
-                </div>
+                    </div>
 
-                <div className="glass rounded-2xl p-4 flex flex-col items-center justify-center">
-                  <h2 className="text-cyan-300 font-bold tracking-widest text-sm mb-4 self-start">PROJECT STATUS</h2>
-                  <div className="w-40 h-40 rounded-full border-[12px] border-cyan-300/20 flex items-center justify-center text-3xl font-bold text-cyan-300">
-                    {tasks.length}
-                  </div>
-                  <div className="mt-4 w-full text-xs text-white/70 space-y-1">
-                    <div className="flex justify-between"><span>Active Missions</span><span>{activeProjects}</span></div>
-                    <div className="flex justify-between"><span>On Standby</span><span>{Math.max(tasks.length - completedMissions, 0)}</span></div>
-                  </div>
-                </div>
-              </section>
+                    <div className="glass rounded-2xl p-4 flex flex-col items-center justify-center">
+                      <h2 className="text-cyan-300 font-bold tracking-widest text-sm mb-4 self-start">PROJECT STATUS</h2>
+                      <div className="w-40 h-40 rounded-full border-[12px] border-cyan-300/20 flex items-center justify-center text-3xl font-bold text-cyan-300">
+                        {tasks.length}
+                      </div>
+                      <div className="mt-4 w-full text-xs text-white/70 space-y-1">
+                        <div className="flex justify-between"><span>Active Missions</span><span>{activeProjects}</span></div>
+                        <div className="flex justify-between"><span>On Standby</span><span>{Math.max(tasks.length - completedMissions, 0)}</span></div>
+                      </div>
+                    </div>
+                  </section>
+                </>
+              ) : (
+                <section className="glass rounded-2xl p-4 flex-1 overflow-y-auto">
+                  <h2 className="text-cyan-300 font-bold tracking-widest text-sm mb-4">USER PROJECTS</h2>
+                  {sprints.length > 0 ? (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3">
+                      {sprints.map((p: any, i: number) => (
+                        <div key={p.id ?? i} className="bg-black/50 border border-cyan-500/10 rounded-lg p-4">
+                          <p className="text-lg font-bold text-cyan-200">{p.name || `Project ${i + 1}`}</p>
+                          <p className="text-xs text-white/50 mt-1 uppercase">Status: {p.status || "unknown"}</p>
+                          <p className="text-sm text-white/70 mt-3">{p.description || "No description"}</p>
+                        </div>
+                      ))}
+                    </div>
+                  ) : (
+                    <div className="text-white/40 border border-dashed border-white/10 rounded-lg p-6">
+                      No hay proyectos creados todavía.
+                    </div>
+                  )}
+                </section>
+              )}
             </main>
 
             {/* right: logo + agents */}
@@ -169,7 +217,10 @@ export default function Dashboard() {
               </div>
 
               <div className="flex-1 glass rounded-xl p-4 overflow-y-auto">
-                <h3 className="text-cyan-300 text-sm font-bold tracking-widest mb-3">TACTICAL AGENTS</h3>
+                <div className="flex items-center justify-between mb-3">
+                  <h3 className="text-cyan-300 text-sm font-bold tracking-widest">TACTICAL AGENTS</h3>
+                  <button onClick={() => setLocation('/agents')} className="px-2 py-1 text-xs rounded-md border border-cyan-500/30 text-cyan-200 hover:bg-cyan-500/10">Agregar agentes</button>
+                </div>
                 <div className="space-y-3">
                   {agents.map((a: any, i: number) => {
                     const badge = getAgentBadge(a);
