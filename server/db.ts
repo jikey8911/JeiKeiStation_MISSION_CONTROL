@@ -4,6 +4,13 @@ import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistor
 
 let _db: ReturnType<typeof drizzle> | null = null;
 
+let mockAgentId = 1;
+let mockSprintId = 1;
+let mockTaskId = 1;
+const mockAgentsStore: any[] = [];
+const mockSprintsStore: any[] = [];
+const mockTasksStore: any[] = [];
+
 export async function getDb() {
   if (!_db) {
     const dbUrl = process.env.DATABASE_URL;
@@ -20,24 +27,50 @@ export async function getDb() {
 
 const mockDb = {
   users: { find: (id: string) => undefined },
-  agents: { 
-    list: () => [], 
-    get: (id: number) => undefined, 
-    updateWorkload: (id: number, w: number) => {} 
+  agents: {
+    list: () => mockAgentsStore,
+    get: (id: number) => mockAgentsStore.find(a => a.id === id),
+    create: (d: any) => {
+      const agent = {
+        id: mockAgentId++,
+        name: d.name,
+        description: d.description || null,
+        avatar: d.avatar || null,
+        skills: d.skills || [],
+        status: "available",
+        currentWorkload: 0,
+        maxCapacity: d.maxCapacity || 10,
+        createdAt: new Date(),
+      };
+      mockAgentsStore.push(agent);
+      return agent;
+    },
+    updateWorkload: (id: number, w: number) => {
+      const a = mockAgentsStore.find(x => x.id === id);
+      if (a) a.currentWorkload = w;
+    }
   },
-  sprints: { 
-    create: (d: any) => ({ id: 1, ...d }), 
-    list: () => [], 
-    get: (id: number) => undefined, 
-    updateStatus: (id: number, s: string) => {} 
+  sprints: {
+    create: (d: any) => {
+      const sprint = { id: mockSprintId++, name: d.name, description: d.description || null, status: "planning", plannedVelocity: d.plannedVelocity || 0, createdAt: new Date() };
+      mockSprintsStore.push(sprint);
+      return sprint;
+    },
+    list: () => mockSprintsStore,
+    get: (id: number) => mockSprintsStore.find(s => s.id === id),
+    updateStatus: (id: number, s: string) => { const sp = mockSprintsStore.find(x => x.id === id); if (sp) sp.status = s; }
   },
-  tasks: { 
-    create: (d: any) => ({ id: 1, ...d }), 
-    list: (s?: number) => [], 
-    get: (id: number) => undefined, 
-    assign: (t: number, a: number) => {} 
+  tasks: {
+    create: (d: any) => {
+      const task = { id: mockTaskId++, sprintId: d.sprintId || null, title: d.title, description: d.description || null, priority: d.priority || "medium", requiredSkills: d.requiredSkills || [], status: d.status || "todo", estimationHours: d.estimationHours || 0, acceptanceCriteria: d.acceptanceCriteria || [], createdAt: new Date() };
+      mockTasksStore.push(task);
+      return task;
+    },
+    list: (s?: number) => s ? mockTasksStore.filter(t => t.sprintId === s) : mockTasksStore,
+    get: (id: number) => mockTasksStore.find(t => t.id === id),
+    assign: (t: number, a: number) => { const task = mockTasksStore.find(x => x.id === t); if (task) task.assignedAgentId = a; }
   },
-  dependencies: { create: (t: number, d: number) => ({ id: 1 }), list: (t?: number) => [] }
+  dependencies: { create: (t: number, d: number) => ({ id: 1, taskId: t, dependsOnTaskId: d }), list: (t?: number) => [] }
 };
 
 export async function upsertUser(user: InsertUser): Promise<void> {
@@ -72,7 +105,7 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     if (user.role !== undefined) {
       values.role = user.role;
       updateSet.role = user.role;
-    } else if (user.openId === ENV.ownerOpenId) {
+    } else if (user.openId === process.env.OWNER_OPEN_ID) {
       values.role = 'admin';
       updateSet.role = 'admin';
     }
@@ -118,6 +151,7 @@ export async function createAgent(data: {
   maxCapacity?: number;
 }) {
   const db = await getDb();
+  if (!db) return mockDb.agents.create(data) as any;
 
   return await db.insert(agents).values({
     name: data.name,
