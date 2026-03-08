@@ -1,0 +1,7 @@
+{
+  "name": "Graphic Designer",
+  "description": "Diseñador gráfico/UI para branding, interfaces y recursos visuales.",
+  "skills": ["ui", "ux", "branding", "graphics"],
+  "maxCapacity": 7,
+  "avatar": ""
+}

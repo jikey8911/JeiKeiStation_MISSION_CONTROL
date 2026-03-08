@@ -1,0 +1,7 @@
+{
+  "name": "Assistant",
+  "description": "Asistente general para coordinación, documentación y seguimiento.",
+  "skills": ["coordination", "documentation", "planning"],
+  "maxCapacity": 8,
+  "avatar": ""
+}

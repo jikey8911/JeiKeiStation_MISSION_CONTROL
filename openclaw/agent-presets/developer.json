@@ -1,0 +1,7 @@
+{
+  "name": "Developer",
+  "description": "Desarrollador full-stack para implementación técnica y resolución de bugs.",
+  "skills": ["frontend", "backend", "api", "testing"],
+  "maxCapacity": 10,
+  "avatar": ""
+}
