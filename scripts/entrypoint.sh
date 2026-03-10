@@ -7,7 +7,7 @@ until nc -z mysql 3306; do
 done
 
 echo "Ensuring node_modules are synced in container volume..."
-pnpm install --prod=false
+CI=true pnpm install --prod=false
 
 echo "MySQL is up - executing migrations..."
 # Forzar la sincronización del esquema de Drizzle con la base de datos

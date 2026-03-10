@@ -3,6 +3,7 @@ import express from "express";
 import { createServer } from "http";
 import path from "path";
 import fs from "fs";
+import cookieParser from "cookie-parser";
 import { WebSocketServer } from "ws";
 import { applyWSSHandler } from "@trpc/server/adapters/ws";
 import { createExpressMiddleware } from "@trpc/server/adapters/express";
@@ -40,10 +41,11 @@ async function startServer() {
   // Configure body parser
   app.use(express.json({ limit: "50mb" }));
   app.use(express.urlencoded({ limit: "50mb", extended: true }));
-  
+  app.use(cookieParser());
+
   // OAuth callback
   registerOAuthRoutes(app);
-  
+
   // tRPC API
   app.use(
     "/api/trpc",
@@ -55,16 +57,16 @@ async function startServer() {
 
   // En desarrollo, si es el proceso de la API (puerto 3001), no necesitamos Vite
   // Si es el proceso del Frontend (puerto 3000), usamos Vite
-    const port = parseInt(process.env.PORT || "3000");
+  const port = parseInt(process.env.PORT || "3000");
 
-    // Limpiar caché de Vite para forzar recarga de .env
-    if (process.env.NODE_ENV === "development" && port === 3000) {
-      const viteCache = path.resolve(import.meta.dirname, "../../node_modules/.vite");
-      if (fs.existsSync(viteCache)) {
-        console.log("[Vite] Cleaning cache...");
-        fs.rmSync(viteCache, { recursive: true, force: true });
-      }
+  // Limpiar caché de Vite para forzar recarga de .env
+  if (process.env.NODE_ENV === "development" && port === 3000) {
+    const viteCache = path.resolve(import.meta.dirname, "../../node_modules/.vite");
+    if (fs.existsSync(viteCache)) {
+      console.log("[Vite] Cleaning cache...");
+      fs.rmSync(viteCache, { recursive: true, force: true });
     }
+  }
 
   if (process.env.NODE_ENV === "development") {
     if (port === 3000) {
