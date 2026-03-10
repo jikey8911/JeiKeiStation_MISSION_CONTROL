@@ -6,9 +6,12 @@ until nc -z mysql 3306; do
   sleep 1
 done
 
+echo "Ensuring node_modules are synced in container volume..."
+pnpm install --prod=false
+
 echo "MySQL is up - executing migrations..."
 # Forzar la sincronización del esquema de Drizzle con la base de datos
-pnpm run db:push
+npx drizzle-kit push
 
 echo "Starting API server..."
-exec pnpm run dev
+exec pnpm run dev:backend
