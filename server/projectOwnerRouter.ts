@@ -41,11 +41,11 @@ export const projectOwnerRouter = router({
 
         // Extraer confianza del mensaje
         const confidence = extractConfidence(assistantMessage);
-        
+
         // Detectar si la entrevista ha terminado
-        const isFinished = assistantMessage.includes("ENTREVISTA FINALIZADA") || 
-                          assistantMessage.includes("# Tablero Kanban") ||
-                          confidence >= 93;
+        const isFinished = assistantMessage.includes("ENTREVISTA FINALIZADA") ||
+          assistantMessage.includes("# Tablero Kanban") ||
+          confidence >= 93;
 
         // Determinar la siguiente fase basada en la confianza
         let nextPhase = phase;
