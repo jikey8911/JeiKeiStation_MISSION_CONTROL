@@ -76,8 +76,11 @@ services:
       context: .
       dockerfile: Dockerfile.agent
     container_name: openclaw_python_worker
+    profiles:
+      - agents
     ports:
       - "8000:8000"
+      - "2222:22"
     env_file:
       - .env
     depends_on:
@@ -85,9 +88,12 @@ services:
     environment:
       - JEIKEI_API_URL=http://jeikei_api:3001/api/trpc
       - GITHUB_TOKEN=${GITHUB_TOKEN}
+      - ROOT_PASSWORD=openclaw
     volumes:
       - .:/app
+      - openclaw_config:/root/.openclaw
     restart: unless-stopped
 
 volumes:
+  openclaw_config:
   mysql_data:

@@ -1,0 +1,23 @@
+# Guía rápida para construir y levantar los contenedores
+
+## Requisitos previos
+- Docker y Docker Compose instalados.
+- Archivo `.env` completo en la raíz del proyecto.
+
+## Construir imágenes
+- API / Frontend (usa `Dockerfile`):  
+  `docker compose build jeikei_api jeikei_frontend`
+- Agente OpenClaw (usa `Dockerfile.agent`, inmutable y con SSH):  
+  `docker compose --profile agents build openclaw_agent`
+
+## Levantar servicios
+- Base de datos + API + Frontend (stack principal):  
+  `docker compose up -d mysql jeikei_api jeikei_frontend`
+- Agente OpenClaw (aislado por perfil, expone 8000 y SSH en 2222):  
+  `docker compose --profile agents up -d openclaw_agent`
+
+## Accesos rápidos
+- API Backend: http://localhost:3001  
+- Frontend Vite: http://localhost:3000  
+- Agente OpenClaw FastAPI: http://localhost:8000  
+- SSH al agente: `ssh root@localhost -p 2222` (clave: `openclaw_secret`)

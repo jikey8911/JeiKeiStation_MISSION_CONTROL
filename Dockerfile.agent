@@ -1,34 +1,45 @@
 # =============================================================================
-# DOCKERFILE: AGENTE OPENCLAW (PYTHON + FASTAPI + HEARTBEAT)
+# DOCKERFILE: AGENTE OPENCLAW (PYTHON + FASTAPI + SSH)
 # =============================================================================
 FROM python:3.10-slim
 
 # Directorio de trabajo
 WORKDIR /app
 
-# Instalación de dependencias del sistema (ej. Git para el DevOps Agent)
+# Instalación de dependencias del sistema + SSH + Node.js
 RUN apt-get update && apt-get install -y \
     git \
     curl \
+    openssh-server \
+    sudo \
+    procps \
+    gnupg \
+    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
+    && apt-get install -y nodejs \
     && rm -rf /var/lib/apt/lists/*
 
-# Optimización de caché de capas Docker: Copiar solo requirements primero
+# Instalar OpenClaw CLI usando el instalador oficial (Modo No-Interactivo)
+RUN curl -sSL https://openclaw.ai/install.sh | NO_ONBOARD=1 bash || true
+
+# Configuración de SSH para permitir login de root
+RUN mkdir -p /var/run/sshd && \
+    echo 'root:openclaw_secret' | chpasswd && \
+    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
+    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+
+# Optimizacion de caché: Copiar requirements primero
 COPY server/agent_backend/requirements.txt ./
-
-# Instalación limpia de dependencias de Python
 RUN pip install --no-cache-dir -r requirements.txt
+RUN pip install --no-cache-dir openclaw
 
-# Copia del código fuente (respeta .dockerignore)
+# Copia del código fuente
 COPY . .
 
-# Exponer el puerto de la API de FastAPI
-EXPOSE 8000
+# Dar permisos de ejecución al entrypoint
+RUN chmod +x /app/scripts/entrypoint.agent.sh
 
-# VARIABLES DE ENTORNO POR DEFECTO (Se sobreescriben con .env / docker-compose)
-ENV PYTHONPATH=/app
-ENV HOST=0.0.0.0
-ENV PORT=8000
+# Exponer puertos: 8000 (API) y 22 (SSH)
+EXPOSE 8000 22
 
-# ENTRYPOINT CORREGIDO:
-# Ejecuta el Heartbeat en segundo plano (&) y el servidor FastAPI en primer plano
-CMD ["sh", "-c", "python openclaw/skills/jeikei_mission_control/heartbeat.py & uvicorn server.agent_backend.main:app --host 0.0.0.0 --port 8000"]
+# Arranque: sshd + heartbeat en background + uvicorn en foreground
+CMD ["/bin/bash", "-c", "/usr/sbin/sshd && python openclaw/skills/jeikei_mission_control/heartbeat.py & exec uvicorn server.agent_backend.main:app --host 0.0.0.0 --port 8000"]

@@ -12,6 +12,16 @@ import {
   UseMutationOptions,
 } from "@tanstack/react-query";
 
+declare global {
+  interface Window {
+    Clerk?: {
+      session?: {
+        getToken: () => Promise<string | null>;
+      };
+    };
+  }
+}
+
 export const trpc = createTRPCReact<AppRouter>();
 
 /**
@@ -108,6 +118,13 @@ const getEndingLink = () => {
   return httpBatchLink({
     url: `http://localhost:3000/api/trpc`,
     transformer: superjson,
+    async headers() {
+      // Intentar obtener el token de Clerk de la ventana glboal
+      const token = await window.Clerk?.session?.getToken();
+      return {
+        ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      };
+    },
     fetch(input, init) {
       return globalThis.fetch(input, {
         ...(init ?? {}),
