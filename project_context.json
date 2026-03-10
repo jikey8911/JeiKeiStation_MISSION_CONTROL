@@ -1,0 +1,516 @@
+{
+  "project": {
+    "name": "JeiKeiStation MISSION_CONTROL",
+    "version": "1.0.0",
+    "description": "Plataforma de gestión de proyectos SCRUM con agentes AI automatizados, tablero Kanban animado, oficina virtual, y integración con OpenClaw para asignación automática de tareas basada en habilidades",
+    "license": "MIT",
+    "repository": "antigravity/Jeikei_StationLG/JeiKeiStation_MISSION_CONTROL",
+    "packageManager": "pnpm@10.30.3"
+  },
+  "architecture": {
+    "type": "Full-stack monorepo",
+    "frontend": {
+      "framework": "React 19.2.1",
+      "buildTool": "Vite 7.1.7",
+      "port": 3000,
+      "styling": "TailwindCSS 4.1.14 + shadcn/ui components",
+      "stateManagement": "@tanstack/react-query + tRPC",
+      "routing": "wouter",
+      "animations": "framer-motion, reactflow",
+      "charts": "recharts"
+    },
+    "backend": {
+      "runtime": "Node.js (tsx)",
+      "port": 3001,
+      "api": "tRPC 11.6.0",
+      "server": "Express 4.21.2",
+      "orm": "Drizzle ORM 0.44.5",
+      "database": "MySQL 8.0 (mysql2 3.15.0)",
+      "websocket": "ws 8.19.0",
+      "auth": "Clerk (@clerk/clerk-react, @clerk/clerk-sdk-node)"
+    },
+    "database": {
+      "type": "MySQL",
+      "orm": "Drizzle ORM",
+      "migrations": "drizzle-kit",
+      "tables": [
+        "users",
+        "agents",
+        "sprints",
+        "tasks",
+        "task_dependencies",
+        "task_history",
+        "notifications"
+      ]
+    },
+    "openclaw_integration": {
+      "skill_location": "openclaw/skills/jeikei_mission_control/",
+      "api_key_auth": true,
+      "heartbeat_interval": "30 minutes",
+      "webhooks": true,
+      "auto_assignment": true
+    }
+  },
+  "database_schema": {
+    "users": {
+      "description": "Usuarios del sistema (backed by Clerk auth)",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "openId": "varchar(64), unique, not null",
+        "name": "text",
+        "email": "varchar(320)",
+        "loginMethod": "varchar(64)",
+        "role": "enum['user', 'admin'], default 'user'",
+        "createdAt": "timestamp, default now",
+        "updatedAt": "timestamp, default now, on update now",
+        "lastSignedIn": "timestamp, default now"
+      }
+    },
+    "agents": {
+      "description": "Agentes AI con perfiles de habilidades",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "name": "varchar(255), not null",
+        "description": "text",
+        "avatar": "varchar(512)",
+        "skills": "json, not null - array de habilidades (ej: ['BACKEND', 'DB', 'FRONTEND'])",
+        "status": "enum['available', 'busy', 'offline'], default 'available'",
+        "currentWorkload": "int, default 0",
+        "maxCapacity": "int, default 10",
+        "createdAt": "timestamp, default now",
+        "updatedAt": "timestamp, default now, on update now"
+      }
+    },
+    "sprints": {
+      "description": "Sprints SCRUM",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "name": "varchar(255), not null",
+        "description": "text",
+        "status": "enum['planning', 'active', 'review', 'retrospective', 'closed'], default 'planning'",
+        "startDate": "timestamp",
+        "endDate": "timestamp",
+        "plannedVelocity": "int, default 0",
+        "actualVelocity": "int, default 0",
+        "createdAt": "timestamp, default now",
+        "updatedAt": "timestamp, default now, on update now"
+      }
+    },
+    "tasks": {
+      "description": "Tareas SCRUM con metadatos completos",
+      "fields": {
+        "id": "serial, primary key",
+        "sprintId": "int, foreign key to sprints.id",
+        "title": "varchar(255), not null",
+        "description": "text",
+        "status": "varchar(50), default 'todo' - valores: todo, in_progress, review, qa, done",
+        "priority": "varchar(50), default 'medium' - low, medium, high, critical",
+        "requiredSkills": "json - array de habilidades requeridas (ej: ['BACKEND', 'API'])",
+        "estimationHours": "int",
+        "assignedAgentId": "int, foreign key to agents.id",
+        "acceptanceCriteria": "json - array de criterios de aceptación",
+        "createdAt": "timestamp, default now",
+        "updatedAt": "timestamp, default now, on update now",
+        "completedAt": "timestamp"
+      }
+    },
+    "task_dependencies": {
+      "description": "Dependencias entre tareas",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "taskId": "int, not null - tarea que depende",
+        "dependsOnTaskId": "int, not null - tarea de la que depende",
+        "createdAt": "timestamp, default now"
+      }
+    },
+    "task_history": {
+      "description": "Historial de transiciones de tareas para auditoría",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "taskId": "int, not null",
+        "fromStatus": "varchar(50)",
+        "toStatus": "varchar(50), not null",
+        "agentId": "int",
+        "notes": "text",
+        "createdAt": "timestamp, default now"
+      }
+    },
+    "notifications": {
+      "description": "Notificaciones del sistema",
+      "fields": {
+        "id": "int, autoincrement, primary key",
+        "userId": "int, not null",
+        "type": "enum['approval_pending', 'task_blocked', 'qa_completed', 'sprint_closed', 'task_assigned'], not null",
+        "title": "varchar(255), not null",
+        "message": "text",
+        "taskId": "int",
+        "sprintId": "int",
+        "read": "boolean, default false",
+        "archived": "boolean, default false",
+        "createdAt": "timestamp, default now"
+      }
+    }
+  },
+  "trpc_routers": {
+    "public_procedures": [
+      "auth.me",
+      "auth.logout",
+      "agents.list",
+      "agents.get",
+      "agents.create",
+      "agents.update",
+      "agents.delete",
+      "tasks.list",
+      "tasks.get",
+      "tasks.create",
+      "tasks.update",
+      "tasks.delete",
+      "tasks.serviceAutoAssign",
+      "sprints.list",
+      "sprints.get",
+      "sprints.create",
+      "sprints.update",
+      "sprints.delete",
+      "sprints.importFromMarkdown",
+      "dependencies.list",
+      "dependencies.create",
+      "dependencies.delete",
+      "dependencies.getBlocking",
+      "notifications.list",
+      "notifications.markAsRead",
+      "notifications.markAllAsRead",
+      "notifications.archive",
+      "notifications.archiveAll",
+      "projectOwner.*"
+    ],
+    "protected_procedures": [
+      "auth.logout (requires auth cookie)"
+    ],
+    "service_procedures": [
+      "tasks.list (with x-api-key)",
+      "tasks.get (with x-api-key)",
+      "tasks.serviceAutoAssign (with x-api-key)",
+      "agents.list (with x-api-key)",
+      "sprints.get (with x-api-key)",
+      "dependencies.getBlocking (with x-api-key)"
+    ],
+    "webhooks": [
+      "webhooks.register (POST - registra URL para notificaciones)"
+    ]
+  },
+  "key_features": {
+    "scrum_board": {
+      "description": "Tablero Kanban con 5 columnas SCRUM",
+      "columns": ["todo", "in_progress", "review", "qa", "done"],
+      "features": [
+        "Drag-and-drop entre columnas",
+        "Animaciones FLIP para movimiento de tarjetas",
+        "Validación de dependencias (no permite mover tareas bloqueadas)",
+        "Indicadores visuales de tareas bloqueadas (borde rojo, candado)",
+        "Metadatos en tarjetas: prioridad, estimación, agente asignado"
+      ]
+    },
+    "virtual_office": {
+      "description": "Oficina virtual animada con estaciones de trabajo SCRUM",
+      "features": [
+        "Estaciones visuales para cada estado SCRUM",
+        "Avatares de agentes en la oficina",
+        "Indicadores de actividad en tiempo real",
+        "Animaciones de tareas moviéndose entre estaciones"
+      ]
+    },
+    "dashboard": {
+      "description": "Panel de control enterprise dark/navy",
+      "widgets": [
+        "Velocity chart (gráfico de velocidad)",
+        "Burndown/Burnup chart",
+        "Métricas clave del sprint",
+        "Indicadores de actividad en tiempo real",
+        "Alertas visuales de bloqueos",
+        "NotificationCenter integrado"
+      ]
+    },
+    "agent_management": {
+      "description": "Gestión de agentes AI",
+      "features": [
+        "Tabla/grid de agentes con perfiles",
+        "Avatares especializados por habilidad",
+        "Indicadores de estado en tiempo real (available/busy/offline)",
+        "Visualización de carga de trabajo (currentWorkload/maxCapacity)",
+        "Modal de creación/edición de agentes",
+        "Asignación de habilidades (JSON array)",
+        "Detección automática de agentes OpenClaw"
+      ]
+    },
+    "markdown_importer": {
+      "description": "Importador de tareas desde Markdown",
+      "features": [
+        "Carga de archivo Markdown",
+        "Parser de estructura de tareas/historias de usuario",
+        "Validación de metadatos",
+        "Importación masiva a base de datos",
+        "Manejo de errores y reportes"
+      ]
+    },
+    "dependency_management": {
+      "description": "Gestión de dependencias entre tareas",
+      "features": [
+        "Visualización de grafo de dependencias (TaskDependencyGraph)",
+        "Validación de ciclos circulares",
+        "Prevención de asignación de tareas bloqueadas",
+        "Indicadores visuales de tareas bloqueadas"
+      ]
+    },
+    "sprint_management": {
+      "description": "Gestión completa de sprints SCRUM",
+      "features": [
+        "Planificación de sprint (selección de tareas)",
+        "Transiciones de estado de sprint",
+        "Seguimiento de velocidad (planned vs actual)",
+        "Historial de sprints"
+      ]
+    },
+    "notification_system": {
+      "description": "Sistema de notificaciones en tiempo real",
+      "types": [
+        "approval_pending",
+        "task_blocked",
+        "qa_completed",
+        "sprint_closed",
+        "task_assigned"
+      ],
+      "features": [
+        "NotificationCenter con interfaz elegante",
+        "Filtros por tipo de alerta",
+        "Marcar como leído/archivar en lote",
+        "NotificationBell en barra de navegación",
+        "Webhooks para notificaciones externas (OpenClaw)"
+      ]
+    },
+    "project_owner_agent": {
+      "description": "Agente conversacional para crear proyectos desde cero",
+      "phases": [
+        "Fase 1: Idea General (0-30%)",
+        "Fase 2: Requisitos Funcionales (30-60%)",
+        "Fase 3: Detalles Técnicos (60-85%)",
+        "Fase 4: Validación Final (85-93%)"
+      ],
+      "output": [
+        "Crea Sprint con nombre del proyecto",
+        "Genera Historias de Usuario",
+        "Crea Tareas Técnicas iniciales",
+        "Genera Tablero Kanban",
+        "Sugiere Agentes necesarios"
+      ]
+    },
+    "openclaw_integration": {
+      "description": "Integración con OpenClaw para automatización AI",
+      "capabilities": [
+        "list_tasks: Obtiene tareas del backlog/sprint",
+        "auto_assign_task: Matching de habilidades tarea-agente",
+        "update_status: Cambia estado de tarea",
+        "analyze_blockage: Identifica tareas bloqueantes",
+        "get_sprint_status: Obtiene métricas del sprint"
+      ],
+      "components": [
+        "SKILL.md: Definición de capacidades",
+        "jeikei_skill.py: Cliente Python con lógica de matching",
+        "heartbeat.py: Monitoreo automático cada 30 min",
+        "serviceAuth.ts: Middleware de autenticación por API Key",
+        "webhooksRouter.ts: Router para notificaciones"
+      ],
+      "auth": {
+        "method": "API Key en header x-api-key",
+        "env_var": "SERVICE_API_KEY"
+      }
+    }
+  },
+  "development_setup": {
+    "environment_variables": {
+      "DATABASE_URL": "mysql://user:password@host:port/database",
+      "SERVICE_API_KEY": "jk_secret_agent_key_2026",
+      "CLERK_SECRET_KEY": "sk_test_...",
+      "CLERK_PUBLISHABLE_KEY": "pk_test_...",
+      "OPENCLAW_BASE_URL": "http://localhost:3000/api/trpc",
+      "OPENCLAW_API_KEY": "jk_secret_agent_key_2026",
+      "PORT": "3001 (backend)",
+      "VITE_PORT": "3000 (frontend)"
+    },
+    "scripts": {
+      "dev": "NODE_ENV=development tsx watch server/_core/index.ts",
+      "build": "vite build + esbuild server bundle",
+      "start": "NODE_ENV=production node dist/index.js",
+      "test": "vitest run",
+      "db:push": "drizzle-kit push",
+      "db:generate": "drizzle-kit generate",
+      "db:migrate": "drizzle-kit migrate",
+      "check": "tsc --noEmit",
+      "format": "prettier --write ."
+    },
+    "docker": {
+      "services": [
+        "api (puerto 3001)",
+        "frontend (puerto 3000, proxy a API)",
+        "mysql (puerto 3306)",
+        "openclaw-agent (puerto 8000)"
+      ],
+      "command": "docker-compose up --build"
+    }
+  },
+  "current_status": {
+    "completed": [
+      "Esquema de base de datos completo",
+      "Modelos Drizzle ORM",
+      "Procedimientos tRPC para CRUD (agentes, tareas, sprints, dependencias, notificaciones)",
+      "Parser de Markdown para importación",
+      "Motor de asignación automática por habilidades",
+      "Sistema de validación de dependencias",
+      "Tablero Kanban con animaciones FLIP y drag-and-drop",
+      "Oficina virtual animada",
+      "Dashboard enterprise con métricas",
+      "Gestión de agentes con estados en tiempo real",
+      "Importador de Markdown funcional",
+      "Sistema de notificaciones completo",
+      "Integración con OpenClaw (skill, cliente Python, heartbeat)",
+      "Validaciones SCRUM en frontend",
+      "Project Owner Agent conversacional",
+      "Autenticación Clerk integrada",
+      "ServiceAuth middleware para API Key"
+    ],
+    "in_progress": [
+      "Tests unitarios para backend (db.test.ts en desarrollo)",
+      "Visualización de dependencias en tarjetas",
+      "Animación de tareas moviéndose entre estaciones",
+      "Tests unitarios para notificaciones"
+    ],
+    "pending": [
+      "Visualización de grafo de dependencias completo",
+      "Tests unitarios completos para backend",
+      "Documentación README.md final",
+      "Configuración CI/CD",
+      "Repositorio GitHub público/privado"
+    ]
+  },
+  "file_structure": {
+    "root": {
+      "client/": "Frontend React + Vite",
+      "server/": "Backend tRPC + Express",
+      "drizzle/": "Esquema de base de datos y migraciones",
+      "shared/": "Constantes y tipos compartidos",
+      "openclaw/": "Integración con OpenClaw (skills, scripts Python)",
+      "scripts/": "Scripts de utilidad",
+      "patches/": "Parches para dependencias (pnpm)",
+      ".github/": "Configuración de GitHub Actions",
+      ".vscode/": "Configuración de VS Code",
+      ".venv/": "Entorno virtual de Python"
+    },
+    "server": {
+      "_core/": "Core del servidor (trpc, auth, env, systemRouter)",
+      "agent_backend/": "Lógica de agentes AI",
+      "db.ts": "Capa de acceso a datos (Drizzle ORM)",
+      "db.test.ts": "Tests unitarios de db.ts",
+      "routers.ts": "Routers tRPC principales",
+      "serviceAuth.ts": "Middleware de autenticación por API Key",
+      "webhooksRouter.ts": "Router para webhooks de notificaciones",
+      "projectOwnerRouter.ts": "Router del Project Owner Agent",
+      "notificationsRouter.ts": "Router de notificaciones",
+      "utils.ts": "Utilidades (parseMarkdownTasks, findBestAgent, hasCyclicDependency)",
+      "ee.ts": "EventEmitter para eventos del sistema"
+    },
+    "openclaw": {
+      "skills/jeikei_mission_control/": {
+        "SKILL.md": "Definición de la skill para OpenClaw",
+        "jeikei_skill.py": "Cliente Python con lógica de matching",
+        "heartbeat.py": "Script de monitoreo automático"
+      }
+    }
+  },
+  "technologies": {
+    "frontend": [
+      "React 19.2.1",
+      "TypeScript 5.9.3",
+      "Vite 7.1.7",
+      "TailwindCSS 4.1.14",
+      "shadcn/ui (radix-ui components)",
+      "tRPC 11.6.0",
+      "@tanstack/react-query 5.90.2",
+      "wouter 3.3.5",
+      "framer-motion 12.23.22",
+      "recharts 2.15.4",
+      "reactflow 11.11.4",
+      "zod 4.1.12",
+      "react-hook-form 7.64.0"
+    ],
+    "backend": [
+      "Node.js",
+      "TypeScript",
+      "Express 4.21.2",
+      "tRPC 11.6.0",
+      "Drizzle ORM 0.44.5",
+      "mysql2 3.15.0",
+      "ws 8.19.0",
+      "Clerk SDK",
+      "dotenv 17.2.2",
+      "axios 1.12.0"
+    ],
+    "devops": [
+      "Docker",
+      "Docker Compose",
+      "drizzle-kit 0.31.4",
+      "vitest 2.1.4",
+      "prettier 3.6.2",
+      "pnpm 10.30.3"
+    ],
+    "integrations": [
+      "OpenClaw",
+      "Clerk Authentication",
+      "GitHub (planned)"
+    ]
+  },
+  "api_examples": {
+    "list_tasks": {
+      "endpoint": "/api/trpc/tasks.list",
+      "method": "GET",
+      "auth": "x-api-key header (para serviceProcedure) o cookie Clerk (para protectedProcedure)",
+      "params": {
+        "sprintId": "optional - filtrar por sprint"
+      },
+      "response": "Array de objetos Task"
+    },
+    "auto_assign_task": {
+      "endpoint": "/api/trpc/tasks.serviceAutoAssign",
+      "method": "POST",
+      "auth": "x-api-key header required",
+      "body": {
+        "taskId": "number"
+      },
+      "response": "{ agentId: number, agentName: string }"
+    },
+    "get_blocking_tasks": {
+      "endpoint": "/api/trpc/dependencies.getBlocking",
+      "method": "GET",
+      "auth": "x-api-key header o cookie Clerk",
+      "params": {
+        "taskId": "number"
+      },
+      "response": "Array de objetos Task (tareas que bloquean)"
+    },
+    "register_webhook": {
+      "endpoint": "/api/trpc/webhooks.register",
+      "method": "POST",
+      "auth": "x-api-key header",
+      "body": {
+        "url": "string",
+        "eventTypes": "string[] - ['task_blocked', 'qa_completed', etc.]"
+      },
+      "response": "{ success: boolean, webhookId: string }"
+    }
+  },
+  "notes": {
+    "scrum_workflow": "Las tareas siguen el flujo: todo → in_progress → review → qa → done. No se permite saltar estados. Las tareas con dependencias no bloqueadas no pueden pasar a in_progress.",
+    "agent_matching": "El matching de habilidades compara requiredSkills de la tarea con skills del agente. Se considera también currentWorkload vs maxCapacity. El agente con mayor score y disponibilidad es seleccionado.",
+    "openclaw_heartbeat": "El script heartbeat.py se ejecuta cada 30 minutos, busca tareas huérfanas (sin assignedAgentId y status != 'done'), analiza matching de habilidades, y asigna automáticamente usando el serviceProcedure.",
+    "notifications": "Las notificaciones se disparan automáticamente en transiciones de estado: task_blocked (cuando hay dependencias), qa_completed (cuando pasa a done), sprint_closed, task_assigned, approval_pending.",
+    "docker_setup": "El backend corre en puerto 3001, frontend en 3000 con proxy a API. MySQL en 3306. El entrypoint.sh ejecuta db:push automáticamente al iniciar."
+  }
+}
