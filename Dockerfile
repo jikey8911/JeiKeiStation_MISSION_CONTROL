@@ -1,4 +1,4 @@
-# Dockerfile
+# Dockerfile - Optimizado para desarrollo con Docker Compose
 FROM node:20-alpine
 
 # Instalar dependencias necesarias para construir algunos paquetes de node si fuera necesario
@@ -7,18 +7,19 @@ RUN apk add --no-cache libc6-compat python3 make g++ netcat-openbsd
 # Establecer directorio de trabajo
 WORKDIR /app
 
-# Instalar pnpm con la versión especificada en el package.json
-RUN npm install -g pnpm@10.30.1
+RUN corepack enable pnpm && corepack prepare pnpm@10.30.3 --activate
 
 # Copiar archivos de definición de dependencias
 COPY package.json pnpm-lock.yaml ./
 COPY patches ./patches
 
-# Instalar dependencias
-RUN pnpm install --frozen-lockfile
+# Instalar dependencias (incluyendo devDependencies para tsx, drizzle, vite)
+RUN pnpm install --prod=false
 
 # Copiar el resto del código del proyecto
 COPY . .
+
+RUN chmod +x /app/scripts/entrypoint.sh
 
 # Exponer los puertos posibles
 EXPOSE 3000
@@ -29,4 +30,4 @@ ENV NODE_ENV=development
 ENV PORT=3000
 
 # El comando por defecto se sobreescribe en docker-compose.yml
-CMD ["pnpm", "run", "dev"]
+CMD pnpm run dev:frontend
