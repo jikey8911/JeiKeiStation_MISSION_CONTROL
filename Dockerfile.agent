@@ -30,7 +30,7 @@ COPY openClawSettings/agents.json /root/.openclaw/agents/agents.json
 COPY openClawSettings/skills.json /root/.openclaw/skills/skills.json
 
 # Copiar configuración de OpenClaw (modo local, Telegram, Ollama, Redis)
-COPY openclaw.json /root/.openclaw/config.json
+COPY openclaw.json /root/.openclaw/openclaw.json
 
 # Script de inicialización
 RUN echo '#!/bin/bash\n\
