@@ -1,45 +1,51 @@
-# =============================================================================
-# DOCKERFILE: AGENTE OPENCLAW (PYTHON + FASTAPI + SSH)
-# =============================================================================
-FROM python:3.10-slim
+FROM node:22-alpine
 
-# Directorio de trabajo
 WORKDIR /app
 
-# Instalación de dependencias del sistema + SSH + Node.js
-RUN apt-get update && apt-get install -y \
-    git \
+# Instalar dependencias necesarias
+RUN apk add --no-cache \
     curl \
-    openssh-server \
-    sudo \
-    procps \
-    gnupg \
-    && curl -fsSL https://deb.nodesource.com/setup_22.x | bash - \
-    && apt-get install -y nodejs \
-    && rm -rf /var/lib/apt/lists/*
+    bash \
+    git \
+    python3 \
+    make \
+    g++ \
+    openssl \
+    ca-certificates
 
-# Instalar OpenClaw CLI usando el instalador oficial (Modo No-Interactivo)
-RUN curl -sSL https://openclaw.ai/install.sh | NO_ONBOARD=1 bash || true
+# Instalar OpenClaw globalmente
+RUN npm install -g openclaw@latest
 
-# Configuración de SSH para permitir login de root
-RUN mkdir -p /var/run/sshd && \
-    echo 'root:openclaw_secret' | chpasswd && \
-    sed -i 's/#PermitRootLogin prohibit-password/PermitRootLogin yes/' /etc/ssh/sshd_config && \
-    sed -i 's/#PasswordAuthentication yes/PasswordAuthentication yes/' /etc/ssh/sshd_config
+# Crear directorios necesarios
+RUN mkdir -p /root/.openclaw/agents \
+    /root/.openclaw/skills \
+    /root/.openclaw/data \
+    /root/.openclaw/cache
 
-# Optimizacion de caché: Copiar requirements primero
-COPY server/agent_backend/requirements.txt ./
-RUN pip install --no-cache-dir -r requirements.txt
-RUN pip install --no-cache-dir openclaw
+# Script de inicialización
+RUN echo '#!/bin/bash\n\
+    set -e\n\
+    echo "Inicializando OpenClaw..."\n\
+    \n\
+    # Crear directorio de configuración si no existe\n\
+    mkdir -p /root/.openclaw\n\
+    \n\
+    # Inicializar OpenClaw\n\
+    openclaw setup --no-interactive 2>/dev/null || true\n\
+    \n\
+    echo "OpenClaw iniciado exitosamente"\n\
+    echo "Ejecutando gateway..."\n\
+    \n\
+    # Ejecutar OpenClaw\n\
+    exec openclaw\n\
+    ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-# Copia del código fuente
-COPY . .
+# Health check
+HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
+    CMD curl -f http://localhost:5000/health || exit 1
 
-# Dar permisos de ejecución al entrypoint
-RUN chmod +x /app/scripts/entrypoint.agent.sh
+EXPOSE 5000 8000
 
-# Exponer puertos: 8000 (API) y 22 (SSH)
-EXPOSE 8000 22
+ENV NODE_ENV=production
 
-# Arranque: sshd + heartbeat en background + uvicorn en foreground
-CMD ["/bin/bash", "-c", "/usr/sbin/sshd && python openclaw/skills/jeikei_mission_control/heartbeat.py & exec uvicorn server.agent_backend.main:app --host 0.0.0.0 --port 8000"]
+ENTRYPOINT ["/app/entrypoint.sh"]
