@@ -1,0 +1,47 @@
+services:
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw-app
+    ports:
+      - "5000:5000"
+      - "8000:8000"
+    volumes:
+      - openclaw_data:/root/.openclaw/data
+      - openclaw_cache:/root/.openclaw/cache
+    environment:
+      NODE_ENV: production
+    networks:
+      - openclaw-net
+    depends_on:
+      redis:
+        condition: service_healthy
+    restart: unless-stopped
+
+  redis:
+    image: redis:7-alpine
+    container_name: openclaw-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    command: redis-server --appendonly yes --requirepass openclaw123
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+volumes:
+  openclaw_data:
+  openclaw_cache:
+  redis_data:
+
+
+networks:
+  openclaw-net:
+    driver: bridge

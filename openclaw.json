@@ -3,6 +3,7 @@
     "gateway": {
         "host": "0.0.0.0",
         "port": 5000,
+        "mode": "local",
         "apiVersion": "v1",
         "authentication": {
             "enabled": false,
@@ -25,6 +26,10 @@
             "dmPolicy": "pairing",
             "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
             "groupPolicy": "allowlist",
+            "allowedChats": [
+                "8503241862"
+            ],
+            "adminId": "8503241862",
             "streaming": "partial"
         }
     },

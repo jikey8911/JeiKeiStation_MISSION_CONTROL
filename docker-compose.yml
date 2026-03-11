@@ -116,7 +116,9 @@ services:
       retries: 5
 
 volumes:
+  redis_data:
   mysql_data:
   openclaw_data:
   openclaw_cache:
-  redis_data:
+
+
