@@ -13,7 +13,9 @@ RUN apk add --no-cache \
     openssl \
     ca-certificates
 
-# Instalar OpenClaw globalmente
+# Instalar OpenClaw globalmente (Saltando compilación C++ pesada de node-llama-cpp)
+ENV NODE_PREGYP_BUILD_FROM_SOURCE=false
+ENV GITHUB_ACTIONS=true
 RUN npm install -g openclaw@latest
 
 # Crear directorios necesarios
