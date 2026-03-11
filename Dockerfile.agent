@@ -29,24 +29,11 @@ RUN mkdir -p /root/.openclaw/agents \
 COPY openClawSettings/agents.json /root/.openclaw/agents/agents.json
 COPY openClawSettings/skills.json /root/.openclaw/skills/skills.json
 
-# Copiar configuración de OpenClaw (modo local, Telegram, Ollama, Redis)
+# Copiar configuración de OpenClaw con el nombre correcto que espera la CLI
 COPY openclaw.json /root/.openclaw/openclaw.json
 
-# Script de inicialización
-RUN echo '#!/bin/bash\n\
-    set -e\n\
-    echo "Inicializando OpenClaw..."\n\
-    \n\
-    # Crear directorio de configuración si no existe\n\
-    mkdir -p /root/.openclaw\n\
-    \n\
-    echo "✅ OpenClaw iniciado exitosamente"\n\
-    echo "🚀 Iniciando gateway..."\n\
-    \n\
-    # Ejecutar OpenClaw gateway\n\
-    exec openclaw setup --no-interactive 2>/dev/null || true\n\
-    exec openclaw gateway start\n\
-    ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+# Script de inicialización (sin exec en setup, solo en gateway start)
+RUN printf '#!/bin/bash\nset -e\necho "Inicializando OpenClaw..."\nmkdir -p /root/.openclaw\nopenclaw setup --no-interactive 2>/dev/null || true\necho "✅ OpenClaw iniciado exitosamente"\necho "🚀 Iniciando gateway..."\nexec openclaw gateway start\n' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
