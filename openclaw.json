@@ -1,0 +1,123 @@
+{
+    "version": "1.0.0",
+    "gateway": {
+        "host": "0.0.0.0",
+        "port": 5000,
+        "apiVersion": "v1",
+        "authentication": {
+            "enabled": false,
+            "type": "bearer"
+        },
+        "cors": {
+            "enabled": true,
+            "origins": [
+                "*"
+            ]
+        },
+        "rateLimit": {
+            "enabled": true,
+            "requestsPerMinute": 100
+        }
+    },
+    "channels": {
+        "telegram": {
+            "enabled": true,
+            "dmPolicy": "pairing",
+            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+            "groupPolicy": "allowlist",
+            "streaming": "partial"
+        }
+    },
+    "plugins": {
+        "entries": {
+            "telegram": {
+                "enabled": true
+            }
+        }
+    },
+    "skills": {
+        "enabled": true,
+        "directory": "/root/.openclaw/skills",
+        "autoLoad": true,
+        "skills": [
+            {
+                "name": "web-search",
+                "enabled": true,
+                "description": "Buscar en internet"
+            },
+            {
+                "name": "file-operations",
+                "enabled": true,
+                "description": "Operaciones con archivos"
+            },
+            {
+                "name": "code-execution",
+                "enabled": true,
+                "description": "Ejecutar código"
+            },
+            {
+                "name": "database-query",
+                "enabled": true,
+                "description": "Consultar bases de datos"
+            }
+        ]
+    },
+    "agents": {
+        "enabled": true,
+        "directory": "/root/.openclaw/agents",
+        "autoLoad": true,
+        "defaults": {
+            "model": "gpt-4",
+            "temperature": 0.7,
+            "maxTokens": 2048
+        }
+    },
+    "models": {
+        "default": "gpt-4",
+        "providers": [
+            {
+                "name": "openai",
+                "type": "openai",
+                "apiKey": "${OPENAI_API_KEY}",
+                "enabled": true
+            },
+            {
+                "name": "local",
+                "type": "ollama",
+                "baseUrl": "http://host.docker.internal:11434",
+                "model": "llama3",
+                "enabled": true
+            },
+            {
+                "name": "docker-model-runner",
+                "type": "openai-compatible",
+                "baseUrl": "http://host.docker.internal:8000/v1",
+                "apiKey": "not-needed",
+                "enabled": false
+            }
+        ]
+    },
+    "logging": {
+        "level": "info",
+        "format": "json",
+        "file": "/root/.openclaw/data/logs.json"
+    },
+    "cache": {
+        "enabled": true,
+        "type": "redis",
+        "host": "redis",
+        "port": 6379,
+        "ttl": 3600
+    },
+    "security": {
+        "enableSandbox": true,
+        "maxMemory": "512m",
+        "maxExecutionTime": 300
+    },
+    "features": {
+        "enableAgentChaining": true,
+        "enableMemoryManagement": true,
+        "enableErrorRecovery": true,
+        "enableMetrics": true
+    }
+}

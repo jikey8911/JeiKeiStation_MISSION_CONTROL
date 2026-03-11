@@ -1,37 +1,25 @@
-# =============================================================================
-# DOCKER IGNORE - OPTIMIZACIÓN DE CONTEXTO
-# =============================================================================
-
-# Dependencias de Node
-node_modules
-npm-debug.log
-yarn-error.log
-pnpm-debug.log
-
-# Dependencias y Caché de Python
-__pycache__
-*.pyc
-*.pyo
-*.pyd
-.Python
-env/
-venv/
-.env/
-.venv/
-
-# Entorno y Secretos locales
-.env
-.env.local
-
-# Control de Versiones
 .git
 .gitignore
-
-# Compilados y Builds
-dist/
-build/
-client/dist/
-
-# Archivos de SO
+node_modules
+npm-debug.log
+yarn-debug.log
+*.log
 .DS_Store
-Thumbs.db
+.env.local
+.vscode
+.idea
+__pycache__
+*.pyc
+.pytest_cache
+dist
+build
+coverage
+.next
+.nuxt
+.cache
+.vuepress/dist
+.serverless/
+.fusebox/
+.dynamodb/
+.env
+.env.*.local

@@ -69,7 +69,7 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # AGENTE OPENCLAW (PYTHON)
+  # AGENTE OPENCLAW (NODE)
   # ===========================================================================
   openclaw_agent:
     build:
@@ -79,21 +79,34 @@ services:
     profiles:
       - agents
     ports:
+      - "5000:5000"
       - "8000:8000"
-      - "2222:22"
-    env_file:
-      - .env
-    depends_on:
-      - jeikei_api
-    environment:
-      - JEIKEI_API_URL=http://jeikei_api:3001/api/trpc
-      - GITHUB_TOKEN=${GITHUB_TOKEN}
-      - ROOT_PASSWORD=openclaw
     volumes:
-      - .:/app
-      - openclaw_config:/root/.openclaw
+      - ./openclaw.json:/root/.openclaw/config.json:ro
+      - ./openclaw/agents:/root/.openclaw/agents:ro
+      - ./openclaw/skills:/root/.openclaw/skills:ro
+      - openclaw_data:/root/.openclaw/data
+      - openclaw_cache:/root/.openclaw/cache
+    environment:
+      NODE_ENV: production
+      OPENCLAW_CONFIG: /root/.openclaw/config.json
+      LOG_LEVEL: info
+    restart: unless-stopped
+
+  # Servicio opcional: Redis para caché
+  redis:
+    image: redis:7-alpine
+    container_name: openclaw-redis
+    profiles:
+      - agents
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
     restart: unless-stopped
 
 volumes:
-  openclaw_config:
   mysql_data:
+  openclaw_data:
+  openclaw_cache:
+  redis_data:

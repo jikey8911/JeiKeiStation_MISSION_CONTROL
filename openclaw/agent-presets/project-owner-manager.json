@@ -1,0 +1,11 @@
+{
+    "name": "Project Owner Manager",
+    "description": "Agente experto en producto enfocado en entrevistar a los usuarios, identificar métricas y estructurar requisitos de un proyecto en un tablero Kanban. Interviene en el chat de creación de proyectos.",
+    "skills": [
+        "product-management",
+        "agile",
+        "requirements-gathering"
+    ],
+    "maxCapacity": 10,
+    "avatar": "📋"
+}

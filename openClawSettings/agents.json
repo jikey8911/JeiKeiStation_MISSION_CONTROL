@@ -1,0 +1,125 @@
+{
+    "agents": [
+        {
+            "id": "code-analyzer",
+            "name": "Code Analyzer Agent",
+            "description": "Analiza y revisa código",
+            "type": "coding",
+            "enabled": true,
+            "model": "gpt-4",
+            "temperature": 0.3,
+            "maxTokens": 4096,
+            "systemPrompt": "Eres un experto en análisis de código. Revisa el código, identifica problemas, sugiere mejoras y explica la lógica.",
+            "skills": [
+                "code-execution",
+                "file-operations"
+            ],
+            "tools": [
+                {
+                    "name": "analyze-syntax",
+                    "description": "Analizar sintaxis del código"
+                },
+                {
+                    "name": "suggest-improvements",
+                    "description": "Sugerir mejoras"
+                },
+                {
+                    "name": "generate-documentation",
+                    "description": "Generar documentación"
+                }
+            ]
+        },
+        {
+            "id": "research-agent",
+            "name": "Research Agent",
+            "description": "Realiza investigación y busca información",
+            "type": "research",
+            "enabled": true,
+            "model": "gpt-4",
+            "temperature": 0.7,
+            "maxTokens": 2048,
+            "systemPrompt": "Eres un investigador experto. Tu tarea es buscar información relevante, analizarla críticamente y proporcionar resúmenes precisos.",
+            "skills": [
+                "web-search",
+                "file-operations"
+            ],
+            "tools": [
+                {
+                    "name": "search-web",
+                    "description": "Buscar en la web"
+                },
+                {
+                    "name": "summarize",
+                    "description": "Resumir información"
+                },
+                {
+                    "name": "validate-sources",
+                    "description": "Validar fuentes"
+                }
+            ]
+        },
+        {
+            "id": "data-processor",
+            "name": "Data Processor Agent",
+            "description": "Procesa y analiza datos",
+            "type": "data",
+            "enabled": true,
+            "model": "gpt-4",
+            "temperature": 0.5,
+            "maxTokens": 3000,
+            "systemPrompt": "Eres un experto en procesamiento de datos. Puedes limpiar, transformar y analizar conjuntos de datos complejos.",
+            "skills": [
+                "file-operations",
+                "database-query",
+                "code-execution"
+            ],
+            "tools": [
+                {
+                    "name": "read-file",
+                    "description": "Leer archivo de datos"
+                },
+                {
+                    "name": "query-database",
+                    "description": "Consultar base de datos"
+                },
+                {
+                    "name": "transform-data",
+                    "description": "Transformar datos"
+                },
+                {
+                    "name": "generate-report",
+                    "description": "Generar reporte"
+                }
+            ]
+        },
+        {
+            "id": "content-creator",
+            "name": "Content Creator Agent",
+            "description": "Crea contenido de alta calidad",
+            "type": "content",
+            "enabled": true,
+            "model": "gpt-4",
+            "temperature": 0.8,
+            "maxTokens": 2500,
+            "systemPrompt": "Eres un escritor creativo experto. Generas contenido de alta calidad, atractivo y bien estructurado.",
+            "skills": [
+                "file-operations",
+                "web-search"
+            ],
+            "tools": [
+                {
+                    "name": "generate-content",
+                    "description": "Generar contenido"
+                },
+                {
+                    "name": "edit-content",
+                    "description": "Editar contenido"
+                },
+                {
+                    "name": "format-content",
+                    "description": "Formatear contenido"
+                }
+            ]
+        }
+    ]
+}
