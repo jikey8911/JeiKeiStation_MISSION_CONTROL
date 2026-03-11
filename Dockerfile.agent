@@ -1,28 +1,36 @@
-FROM node:22-alpine
+FROM node:22-slim
 
 WORKDIR /app
 
 # Instalar dependencias necesarias
-RUN apk add --no-cache \
+RUN apt-get update && apt-get install -y --no-install-recommends \
     curl \
     bash \
     git \
     python3 \
     make \
     g++ \
+    cmake \
+    build-essential \
     openssl \
-    ca-certificates
+    ca-certificates && \
+    rm -rf /var/lib/apt/lists/*
 
-# Instalar OpenClaw globalmente (Saltando compilación C++ pesada de node-llama-cpp)
-ENV NODE_PREGYP_BUILD_FROM_SOURCE=false
-ENV GITHUB_ACTIONS=true
-RUN npm install -g openclaw@latest
+# Instalar OpenClaw globalmente
+RUN npm install -g openclaw@latest --ignore-scripts
 
 # Crear directorios necesarios
 RUN mkdir -p /root/.openclaw/agents \
     /root/.openclaw/skills \
     /root/.openclaw/data \
     /root/.openclaw/cache
+
+# Copiar agentes y skills preconfigurados
+COPY openClawSettings/agents.json /root/.openclaw/agents/agents.json
+COPY openClawSettings/skills.json /root/.openclaw/skills/skills.json
+
+# Copiar configuración de OpenClaw (modo local, Telegram, Ollama, Redis)
+COPY openclaw.json /root/.openclaw/config.json
 
 # Script de inicialización
 RUN echo '#!/bin/bash\n\
@@ -32,19 +40,17 @@ RUN echo '#!/bin/bash\n\
     # Crear directorio de configuración si no existe\n\
     mkdir -p /root/.openclaw\n\
     \n\
-    # Inicializar OpenClaw\n\
-    openclaw setup --no-interactive 2>/dev/null || true\n\
+    echo "✅ OpenClaw iniciado exitosamente"\n\
+    echo "🚀 Iniciando gateway..."\n\
     \n\
-    echo "OpenClaw iniciado exitosamente"\n\
-    echo "Ejecutando gateway..."\n\
-    \n\
-    # Ejecutar OpenClaw\n\
-    exec openclaw\n\
+    # Ejecutar OpenClaw gateway\n\
+    exec openclaw setup --no-interactive 2>/dev/null || true\n\
+    exec openclaw gateway start\n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # Health check
-HEALTHCHECK --interval=30s --timeout=10s --start-period=40s --retries=3 \
-    CMD curl -f http://localhost:5000/health || exit 1
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health 2>/dev/null || exit 1
 
 EXPOSE 5000 8000
 
