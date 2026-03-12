@@ -1,0 +1,104 @@
+ÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûäÔûä
+ÔûêÔûêÔûæÔûäÔûäÔûäÔûæÔûêÔûêÔûæÔûäÔûäÔûæÔûêÔûêÔûæÔûäÔûäÔûäÔûêÔûêÔûæÔûÇÔûêÔûêÔûæÔûêÔûêÔûæÔûäÔûäÔûÇÔûêÔûêÔûæÔûêÔûêÔûêÔûêÔûæÔûäÔûäÔûÇÔûêÔûêÔûæÔûêÔûêÔûêÔûæÔûêÔûê
+ÔûêÔûêÔûæÔûêÔûêÔûêÔûæÔûêÔûêÔûæÔûÇÔûÇÔûæÔûêÔûêÔûæÔûäÔûäÔûäÔûêÔûêÔûæÔûêÔûæÔûêÔûæÔûêÔûêÔûæÔûêÔûêÔûêÔûêÔûêÔûæÔûêÔûêÔûêÔûêÔûæÔûÇÔûÇÔûæÔûêÔûêÔûæÔûêÔûæÔûêÔûæÔûêÔûê
+ÔûêÔûêÔûæÔûÇÔûÇÔûÇÔûæÔûêÔûêÔûæÔûêÔûêÔûêÔûêÔûêÔûæÔûÇÔûÇÔûÇÔûêÔûêÔûæÔûêÔûêÔûäÔûæÔûêÔûêÔûæÔûÇÔûÇÔûäÔûêÔûêÔûæÔûÇÔûÇÔûæÔûêÔûæÔûêÔûêÔûæÔûêÔûêÔûäÔûÇÔûäÔûÇÔûäÔûêÔûê
+ÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇÔûÇ
+                  ­ƒª× OPENCLAW ­ƒª×                    
+ 
+Ôöî  OpenClaw doctor
+Ôöé
+Ôùç  Startup optimization ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                                                        Ôöé
+Ôöé  - NODE_COMPILE_CACHE is not set; repeated CLI runs can be slower on   Ôöé
+Ôöé    small hosts (Pi/VM).                                                Ôöé
+Ôöé  - OPENCLAW_NO_RESPAWN is not set to 1; set it to avoid extra startup  Ôöé
+Ôöé    overhead from self-respawn.                                         Ôöé
+Ôöé  - Suggested env for low-power hosts:                                  Ôöé
+Ôöé    export NODE_COMPILE_CACHE=/var/tmp/openclaw-compile-cache           Ôöé
+Ôöé    mkdir -p /var/tmp/openclaw-compile-cache                            Ôöé
+Ôöé    export OPENCLAW_NO_RESPAWN=1                                        Ôöé
+Ôöé                                                                        Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Ôöé
+Ôùç  State integrity ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                                                       Ôöé
+Ôöé  - State directory permissions are too open (~/.openclaw). Recommend  Ôöé
+Ôöé    chmod 700.                                                         Ôöé
+Ôöé  - OAuth dir not present (~/.openclaw/credentials). Skipping create   Ôöé
+Ôöé    because no WhatsApp/pairing channel config is active.              Ôöé
+Ôöé                                                                       Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Ôöé
+Ôùç  Security ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                            Ôöé
+Ôöé  - No channel security warnings detected.  Ôöé
+Ôöé  - Run: openclaw security audit --deep     Ôöé
+Ôöé                                            Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Ôöé
+Ôùç  Skills status ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                            Ôöé
+Ôöé  Eligible: 3               Ôöé
+Ôöé  Missing requirements: 48  Ôöé
+Ôöé  Blocked by allowlist: 0   Ôöé
+Ôöé                            Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Ôöé
+Ôùç  Plugins ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                Ôöé
+Ôöé  Loaded: 5     Ôöé
+Ôöé  Disabled: 33  Ôöé
+Ôöé  Errors: 0     Ôöé
+Ôöé                Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Telegram: ok (@JeiKeiSt_bot) (1227ms)
+Agents: main (default)
+Heartbeat interval: 30m (main)
+Session store (main): /root/.openclaw/agents/main/sessions/sessions.json (1 entries)
+- agent:main:main (17m ago)
+Ôöé
+Ôùç  Memory search ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                                                          Ôöé
+Ôöé  Memory search is enabled but no embedding provider is configured.       Ôöé
+Ôöé  Semantic recall will not work without an embedding provider.            Ôöé
+Ôöé  Gateway memory probe for default agent is not ready: No API key found   Ôöé
+Ôöé  for provider "openai". Auth store:                                      Ôöé
+Ôöé  /root/.openclaw/agents/main/agent/auth-profiles.json (agentDir:         Ôöé
+Ôöé  /root/.openclaw/agents/main/agent). Configure auth for this agent       Ôöé
+Ôöé  (openclaw agents add <id>) or copy auth-profiles.json from the main     Ôöé
+Ôöé  agentDir.                                                               Ôöé
+Ôöé                                                                          Ôöé
+Ôöé  No API key found for provider "google". Auth store:                     Ôöé
+Ôöé  /root/.openclaw/agents/main/agent/auth-profiles.json (agentDir:         Ôöé
+Ôöé  /root/.openclaw/agents/main/agent). Configure auth for this agent       Ôöé
+Ôöé  (openclaw agents add <id>) or copy auth-profiles.json from the main     Ôöé
+Ôöé  agentDir.                                                               Ôöé
+Ôöé                                                                          Ôöé
+Ôöé  No API key found for provider "voyage". Auth store:                     Ôöé
+Ôöé  /root/.openclaw/agents/main/agent/auth-profiles.json (agentDir:         Ôöé
+Ôöé  /root/.openclaw/agents/main/agent). Configure auth for this agent       Ôöé
+Ôöé  (openclaw agents add <id>) or copy auth-profiles.json from the main     Ôöé
+Ôöé  agentDir.                                                               Ôöé
+Ôöé                                                                          Ôöé
+Ôöé  No API key found for provider "mistral". Auth store:                    Ôöé
+Ôöé  /root/.openclaw/agents/main/agent/auth-profiles.json (agentDir:         Ôöé
+Ôöé  /root/.openclaw/agents/main/agent). Configure auth for this agent       Ôöé
+Ôöé  (openclaw agents add <id>) or copy auth-profiles.json from the main     Ôöé
+Ôöé  agentDir.                                                               Ôöé
+Ôöé                                                                          Ôöé
+Ôöé  Fix (pick one):                                                         Ôöé
+Ôöé  - Set OPENAI_API_KEY, GEMINI_API_KEY, VOYAGE_API_KEY, or                Ôöé
+Ôöé    MISTRAL_API_KEY in your environment                                   Ôöé
+Ôöé  - Configure credentials: openclaw configure --section model             Ôöé
+Ôöé  - For local embeddings: configure                                       Ôöé
+Ôöé    agents.defaults.memorySearch.provider and local model path            Ôöé
+Ôöé  - To disable: openclaw config set agents.defaults.memorySearch.enabled  Ôöé
+Ôöé    false                                                                 Ôöé
+Ôöé                                                                          Ôöé
+Ôöé  Verify: openclaw memory status --deep                                   Ôöé
+Ôöé                                                                          Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Run "openclaw doctor --fix" to apply changes.
+Ôöé
+Ôöö  Doctor complete.
+
