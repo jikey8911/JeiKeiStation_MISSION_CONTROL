@@ -6,17 +6,17 @@ services:
     container_name: openclaw-app
     ports:
       - "5000:5000"
-      - "8000:8000"
+      - "8001:8001"
     volumes:
+      - ./openclaw_config:/root/.openclaw
       - openclaw_data:/root/.openclaw/data
       - openclaw_cache:/root/.openclaw/cache
     environment:
       NODE_ENV: production
     networks:
       - openclaw-net
-    depends_on:
-      redis:
-        condition: service_healthy
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     restart: unless-stopped
 
   redis:

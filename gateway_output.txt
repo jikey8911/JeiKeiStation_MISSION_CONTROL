@@ -1,0 +1,29 @@
+Invalid config at /root/.openclaw/openclaw.json:\n- models.providers.local.models.0: Invalid input: expected object, received string
+Ôöé
+Ôùç  Config ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                                            Ôöé
+Ôöé  Config invalid; doctor will run with best-effort config.  Ôöé
+Ôöé                                                            Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Ôöé
+Ôùç  Doctor warnings ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò«
+Ôöé                                                                          Ôöé
+Ôöé  - channels.telegram.groupPolicy is "allowlist" but groupAllowFrom (and  Ôöé
+Ôöé    allowFrom) is empty ÔÇö all group messages will be silently dropped.    Ôöé
+Ôöé    Add sender IDs to channels.telegram.groupAllowFrom or                 Ôöé
+Ôöé    channels.telegram.allowFrom, or set groupPolicy to "open".            Ôöé
+Ôöé                                                                          Ôöé
+Ôö£ÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔöÇÔò»
+Config invalid
+File: ~/.openclaw/openclaw.json
+Problem:
+  - models.providers.local.models.0: Invalid input: expected object, received string
+
+Run: openclaw doctor --fix
+Gateway service disabled.
+Start with: openclaw gateway install
+Start with: openclaw gateway
+Start with: systemctl --user start openclaw-gateway.service
+Start with: WSL2 needs systemd enabled: edit /etc/wsl.conf with [boot]\nsystemd=true
+Start with: Then run: wsl --shutdown (from PowerShell) and reopen your distro.
+Start with: Verify: systemctl --user status
