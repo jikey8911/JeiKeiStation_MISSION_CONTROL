@@ -1,0 +1,85 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.8",
+    "lastTouchedAt": "2026-03-12T08:16:30.270Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-12T08:16:30.254Z",
+    "lastRunVersion": "2026.3.8",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
+  "logging": {
+    "level": "debug"
+  },
+  "models": {
+    "providers": {
+      "docker-ai": {
+        "baseUrl": "http://host.docker.internal:8000/v1",
+        "apiKey": "not-needed",
+        "models": [
+          {
+            "id": "docker.io/ai/llama3.2:latest",
+            "name": "llama3.2"
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "docker-ai/docker.io/ai/llama3.2:latest",
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "pairing",
+      "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+      "allowFrom": [
+        8503241862
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "port": 5000,
+    "mode": "local",
+    "bind": "lan",
+    "controlUi": {
+      "allowedOrigins": [
+        "http://localhost:5000",
+        "http://127.0.0.1:5000"
+      ]
+    },
+    "auth": {
+      "mode": "token",
+      "token": "d59c713d72ede635689d531c27caa1a7ff37486db4eeaaca",
+      "rateLimit": {
+        "maxAttempts": 10,
+        "windowMs": 60000,
+        "lockoutMs": 300000
+      }
+    },
+    "trustedProxies": [
+      "127.0.0.1",
+      "::1",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ],
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  }
+}

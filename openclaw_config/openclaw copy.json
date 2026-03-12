@@ -1,0 +1,38 @@
+{
+    "gateway": {
+        "port": 8000,
+        "bind": "0.0.0.0",
+        "trustedProxies": [
+            "127.0.0.1",
+            "::1"
+        ]
+    },
+    "channels": {
+        "telegram": {
+            "enabled": true,
+            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+            "dmPolicy": "allowlist",
+            "allowFrom": [
+                8503241862
+            ],
+            "groupPolicy": "allowlist",
+            "streaming": "partial"
+        }
+    },
+    "models": {
+        "default": "docker-ai/llama3.2",
+        "providers": {
+            "docker-ai": {
+                "type": "openai",
+                "baseUrl": "http://host.docker.internal:11434/v1",
+                "apiKey": "ollama",
+                "models": [
+                    "llama3.2"
+                ]
+            }
+        }
+    },
+    "logging": {
+        "level": "info"
+    }
+}

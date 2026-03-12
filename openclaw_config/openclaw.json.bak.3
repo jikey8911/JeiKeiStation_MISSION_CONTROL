@@ -1,0 +1,68 @@
+{
+  "meta": {
+    "lastTouchedVersion": "2026.3.8",
+    "lastTouchedAt": "2026-03-12T05:20:18.647Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-12T05:20:18.488Z",
+    "lastRunVersion": "2026.3.8",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
+  "logging": {
+    "level": "info"
+  },
+  "models": {
+    "providers": {
+      "docker-ai": {
+        "baseUrl": "http://host.docker.internal:11434/v1",
+        "apiKey": "not-needed",
+        "models": [
+          {
+            "id": "llama3.2",
+            "name": "llama3.2"
+          }
+        ]
+      }
+    }
+  },
+  "agents": {
+    "defaults": {
+      "model": "docker-ai/llama3.2",
+      "compaction": {
+        "mode": "safeguard"
+      }
+    }
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "channels": {
+    "telegram": {
+      "enabled": true,
+      "dmPolicy": "allowlist",
+      "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+      "allowFrom": [
+        8503241862
+      ],
+      "groupPolicy": "allowlist",
+      "streaming": "partial"
+    }
+  },
+  "gateway": {
+    "port": 5000,
+    "mode": "local",
+    "auth": {
+      "mode": "token",
+      "token": "c3a3f7025876a7c61569e44b70c174b4876000ca86ddcf1f"
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    }
+  }
+}

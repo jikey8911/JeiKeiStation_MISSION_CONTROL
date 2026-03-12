@@ -34,7 +34,8 @@
             "permissions": {
                 "allowedPaths": [
                     "/root/.openclaw/data",
-                    "/root/.openclaw/cache"
+                    "/root/.openclaw/cache",
+                    "/app/client/public"
                 ]
             }
         },
@@ -68,6 +69,40 @@
                 "redis"
             ],
             "connectionPooling": true
+        },
+        {
+            "id": "websocket-broadcast",
+            "name": "WebSocket Broadcast Skill",
+            "description": "Permite transmitir estados y coreografías en tiempo real a la Oficina Virtual (CCTV).",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "capabilities": [
+                "broadcast-state",
+                "manage-connections"
+            ],
+            "network": {
+                "allowedPorts": [
+                    8001
+                ]
+            }
+        },
+        {
+            "id": "image-generation",
+            "name": "Image Generation Skill",
+            "description": "Generación y procesamiento de imágenes y assets de diseño gráfico (Banana Engine).",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "capabilities": [
+                "text-to-image",
+                "image-to-image",
+                "format-conversion"
+            ],
+            "rateLimit": {
+                "enabled": true,
+                "requestsPerMinute": 15
+            }
         }
     ]
 }

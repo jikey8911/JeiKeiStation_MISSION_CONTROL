@@ -11,6 +11,8 @@ yarn-debug.log
 __pycache__
 *.pyc
 .pytest_cache
+.pnpm-store
+.venv
 dist
 build
 coverage

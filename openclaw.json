@@ -1,41 +1,62 @@
 {
-    "gateway": {
-        "port": 5000,
-        "mode": "local"
-    },
-    "channels": {
-        "telegram": {
-            "enabled": true,
-            "dmPolicy": "pairing",
-            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
-            "groupPolicy": "allowlist",
-            "streaming": "partial"
-        }
+    "logging": {
+        "level": "debug"
     },
     "models": {
         "providers": {
-            "local": {
+            "docker-ai": {
+                "baseUrl": "http://host.docker.internal:8000/v1",
+                "apiKey": "not-needed",
                 "models": [
-                    "llama3"
+                    {
+                        "id": "docker.io/ai/llama3.2:latest",
+                        "name": "llama3.2"
+                    }
                 ]
             }
         }
     },
     "agents": {
         "defaults": {
-            "model": "local/llama3",
-            "max_iterations": 10
+            "model": "docker-ai/docker.io/ai/llama3.2:latest"
         }
     },
-    "llm": {
-        "provider": "openai",
-        "model": "llama3",
-        "base_url": "http://host.docker.internal:11434/v1",
-        "api_key": "ollama-local",
-        "temperature": 0.7,
-        "max_tokens": -1
+    "channels": {
+        "telegram": {
+            "enabled": true,
+            "dmPolicy": "allowlist",
+            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+            "allowFrom": [
+                8503241862
+            ],
+            "groupPolicy": "allowlist",
+            "streaming": "partial"
+        }
     },
-    "logging": {
-        "level": "info"
+    "gateway": {
+        "port": 5000,
+        "bind": "lan",
+        "mode": "local",
+        "trustedProxies": [
+            "127.0.0.1",
+            "::1",
+            "172.16.0.0/12",
+            "192.168.0.0/16"
+        ],
+        "controlUi": {
+            "allowedOrigins": [
+                "http://localhost:5000",
+                "http://127.0.0.1:5000"
+            ]
+        },
+        "auth": {
+            "mode": "token",
+            "token": "d59c713d72ede635689d531c27caa1a7ff37486db4eeaaca",
+            "rateLimit": {
+                "maxAttempts": 10,
+                "windowMs": 60000,
+                "lockoutMs": 300000
+            }
+        }
     }
 }

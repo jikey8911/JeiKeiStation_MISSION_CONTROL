@@ -1,0 +1,14 @@
+{
+  "providers": {
+    "docker-ai": {
+      "baseUrl": "http://host.docker.internal:8000/v1",
+      "apiKey": "not-needed",
+      "models": [
+        {
+          "id": "docker.io/ai/llama3.2:latest",
+          "name": "llama3.2"
+        }
+      ]
+    }
+  }
+}
