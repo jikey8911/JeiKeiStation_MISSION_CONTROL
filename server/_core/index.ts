@@ -11,6 +11,7 @@ import { registerOAuthRoutes } from "./oauth";
 import { appRouter } from "../routers";
 import { createContext } from "./context";
 import { serveStatic, setupVite } from "./vite";
+import { registerAIProxyRoutes } from "./aiProxy";
 
 async function startServer() {
   const app = express();
@@ -45,6 +46,9 @@ async function startServer() {
 
   // OAuth callback
   registerOAuthRoutes(app);
+
+  // AI Proxy Bridge
+  registerAIProxyRoutes(app);
 
   // tRPC API
   app.use(
