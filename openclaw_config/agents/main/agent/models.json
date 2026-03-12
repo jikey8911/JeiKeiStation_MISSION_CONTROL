@@ -6,6 +6,28 @@
       "models": [
         {
           "id": "docker.io/ai/llama3.2:latest",
+          "name": "llama3.2",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 200000,
+          "maxTokens": 8192
+        }
+      ]
+    },
+    "openai": {
+      "baseUrl": "http://host.docker.internal:3001/openai/v1",
+      "apiKey": "jk_secret_bridge_key",
+      "models": [
+        {
+          "id": "docker.io/ai/llama3.2:latest",
           "name": "llama3.2"
         }
       ]

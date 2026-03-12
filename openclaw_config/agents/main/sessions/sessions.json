@@ -10,7 +10,7 @@
       "accountId": "default"
     },
     "sessionId": "b38d263e-5c6e-46e6-8b29-a4c45f8c34c7",
-    "updatedAt": 1773303660887,
+    "updatedAt": 1773305442091,
     "deliveryContext": {
       "channel": "webchat",
       "accountId": "default"
@@ -63,15 +63,15 @@
       ],
       "version": 0
     },
-    "modelProvider": "docker-ai",
+    "modelProvider": "openai",
     "model": "docker.io/ai/llama3.2:latest",
     "contextTokens": 200000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773303660495,
+      "generatedAt": 1773305422677,
       "sessionId": "b38d263e-5c6e-46e6-8b29-a4c45f8c34c7",
       "sessionKey": "agent:main:main",
-      "provider": "docker-ai",
+      "provider": "openai",
       "model": "docker.io/ai/llama3.2:latest",
       "workspaceDir": "/root/.openclaw/workspace",
       "bootstrapMaxChars": 20000,
@@ -88,9 +88,9 @@
         "sandboxed": false
       },
       "systemPrompt": {
-        "chars": 26662,
+        "chars": 26656,
         "projectContextChars": 13552,
-        "nonProjectContextChars": 13110
+        "nonProjectContextChars": 13104
       },
       "injectedWorkspaceFiles": [
         {
