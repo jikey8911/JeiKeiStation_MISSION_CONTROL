@@ -1,6 +1,6 @@
 FROM node:22-slim
 
-# 1. Configuración de Variables de Entorno
+# 1. Configuración de Variables de Entorno (Alineado con el docker-compose)
 ENV OPENCLAW_HOME=/root
 ENV NODE_ENV=production
 ENV PYTHONUNBUFFERED=1
@@ -22,55 +22,65 @@ RUN apt-get update && apt-get install -y --no-install-recommends \
     cmake \
     build-essential \
     openssl \
-    ca-certificates && \
+    ca-certificates \
+    procps \
+    sudo && \
     rm -rf /var/lib/apt/lists/*
 
+# 2.5. Instalar Homebrew (Linuxbrew) - Requiere un usuario no-root
+RUN useradd -m -s /bin/bash linuxbrew && \
+    echo "linuxbrew ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER linuxbrew
+ENV NONINTERACTIVE=1
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Volvemos a root y exponemos Homebrew al PATH global
+USER root
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
 # 3. Instalar OpenClaw globalmente
-# Usamos --unsafe-perm si es necesario para scripts de post-instalación de npm
 RUN npm install -g openclaw@latest --ignore-scripts
 
-# 4. Crear estructura de directorios siguiendo el estándar de OpenClaw
-RUN mkdir -p $OPENCLAW_HOME/agents/main/sessions \
-    $OPENCLAW_HOME/skills \
-    $OPENCLAW_HOME/data \
+# 4. Crear estructura de directorios siguiendo el estándar
+# Nota: Creamos también las carpetas de agents y skills fuera de .openclaw si las usas así
+RUN mkdir -p $OPENCLAW_HOME/data \
     $OPENCLAW_HOME/cache \
-    $OPENCLAW_HOME/credentials
+    $OPENCLAW_HOME/credentials \
+    /root/agents/main/sessions \
+    /root/skills
 
-# 5. Copiar archivos de configuración desde tu host
-# Nota: Asegúrate de que estas rutas existan en tu carpeta de proyecto local
-COPY openclaw.json $OPENCLAW_HOME/openclaw.json
-COPY openClawSettings/agents.json $OPENCLAW_HOME/agents/agents.json
-COPY openClawSettings/skills.json $OPENCLAW_HOME/skills/skills.json
-
-# (Opcional) Copiar tus Skills personalizadas si ya las tienes
-# COPY skills/ $OPENCLAW_HOME/skills/
+# 5. Copiar archivos de configuración desde la carpeta unificada
+COPY openclaw_config/openclaw.json $OPENCLAW_HOME/openclaw.json
+COPY openclaw_config/agents/agents.json /root/agents/agents.json
+COPY openclaw_config/skills/skills.json /root/skills/skills.json
 
 # 6. Script de Inicialización Robusto
 RUN printf '#!/bin/bash\n\
     set -e\n\
     echo "🤖 Iniciando OpenClaw Expert Mode..."\n\
     \n\
-    # Ajustar permisos de seguridad para evitar WARNs de gateway\n\
-    chmod 700 $OPENCLAW_HOME\n\
-    find $OPENCLAW_HOME -type f -name "*.json" -exec chmod 600 {} +\n\
+    # Ajustar permisos (ignoramos errores si los volúmenes son de Windows/Mac)\n\
+    chmod 700 $OPENCLAW_HOME 2>/dev/null || true\n\
+    find $OPENCLAW_HOME -type f -name "*.json" -exec chmod 600 {} + 2>/dev/null || true\n\
     \n\
     echo "📂 Cargando configuración desde: $OPENCLAW_HOME"\n\
     \n\
-    # Limpieza preventiva de sesiones si el archivo existe\n\
-    if [ -f "$OPENCLAW_HOME/agents/main/sessions/sessions.json" ]; then\n\
+    # Limpieza preventiva de sesiones\n\
+    if [ -f "/root/agents/main/sessions/sessions.json" ]; then\n\
     echo "🧹 Limpiando sesiones antiguas..."\n\
-    openclaw sessions cleanup --store "$OPENCLAW_HOME/agents/main/sessions/sessions.json" --enforce --fix-missing 2>/dev/null || true\n\
+    openclaw sessions cleanup --store "/root/agents/main/sessions/sessions.json" --enforce --fix-missing 2>/dev/null || true\n\
     fi\n\
     \n\
     echo "✅ Entorno listo. Ejecutando Gateway en puerto 5000..."\n\
     exec openclaw gateway --allow-unconfigured \n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
-# 7. Healthcheck para monitorear el estado del agente
+# 7. Healthcheck
 HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
     CMD curl -f http://localhost:5000/health 2>/dev/null || exit 1
 
-# Puertos: 5000 (Gateway/UI), 8000/8001 (Webhooks/Dev)
+# Puertos
 EXPOSE 5000 8000 8001
 
 ENTRYPOINT ["/app/entrypoint.sh"]

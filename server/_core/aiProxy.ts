@@ -6,7 +6,7 @@ import axios from "axios";
  * a los endpoints específicos del servidor de IA de Docker.
  */
 export function registerAIProxyRoutes(app: Express) {
-    const dockerAIUrl = process.env.DOCKER_AI_URL || "http://host.docker.internal:8000";
+    const dockerAIUrl = process.env.DOCKER_AI_URL || "http://openclaw-app:5000";
 
     // 1. Models List
     app.get("/openai/v1/models", async (req: Request, res: Response) => {
@@ -51,13 +51,16 @@ export function registerAIProxyRoutes(app: Express) {
             }
 
             if (!finalBody.model) {
-                finalBody.model = "docker.io/ai/llama3.2:latest";
+                finalBody.model = "default";
             }
 
             console.log(`[AI Proxy] Forwarding ${subPath} to: ${targetUrl} (Final Body Keys: ${Object.keys(finalBody).join(", ")})`);
 
             const response = await axios.post(targetUrl, finalBody, {
-                headers: { "Content-Type": "application/json" },
+                headers: { 
+                    "Content-Type": "application/json",
+                    ...(req.headers.authorization ? { "Authorization": req.headers.authorization } : {})
+                },
                 timeout: 180000
             });
             console.log(`[AI Proxy] SUCCESS in ${Date.now() - startTime}ms`);
