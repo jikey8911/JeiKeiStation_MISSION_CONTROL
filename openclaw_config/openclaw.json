@@ -1,16 +1,37 @@
 {
+  "meta": {
+    "lastTouchedVersion": "2026.3.8",
+    "lastTouchedAt": "2026-03-12T10:53:55.571Z"
+  },
+  "wizard": {
+    "lastRunAt": "2026-03-12T10:53:55.554Z",
+    "lastRunVersion": "2026.3.8",
+    "lastRunCommand": "configure",
+    "lastRunMode": "local"
+  },
   "logging": {
     "level": "debug"
   },
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    }
+  },
   "models": {
     "providers": {
-      "openai": {
-        "baseUrl": "http://host.docker.internal:3001/openai/v1",
-        "apiKey": "jk_secret_bridge_key",
+      "ollama": {
+        "baseUrl": "http://optimistic_cohen:11434",
+        "apiKey": "ollama-local",
+        "api": "ollama",
         "models": [
           {
-            "id": "docker.io/ai/llama3.2:latest",
-            "name": "llama3.2"
+            "id": "llama3.2:latest",
+            "name": "llama3.2",
+            "contextWindow": 16000,
+            "maxTokens": 16000
           }
         ]
       }
@@ -18,9 +39,49 @@
   },
   "agents": {
     "defaults": {
-      "model": "openai/docker.io/ai/llama3.2:latest",
+      "model": {
+        "primary": "ollama/llama3.2:latest"
+      },
+      "models": {
+        "ollama/llama3.2:latest": {}
+      },
+      "workspace": "/root/.openclaw/workspace",
+      "memorySearch": {
+        "enabled": false
+      },
       "compaction": {
         "mode": "safeguard"
+      }
+    }
+  },
+  "tools": {
+    "profile": "coding"
+  },
+  "commands": {
+    "native": "auto",
+    "nativeSkills": "auto",
+    "restart": true,
+    "ownerDisplay": "raw"
+  },
+  "session": {
+    "dmScope": "per-channel-peer"
+  },
+  "hooks": {
+    "internal": {
+      "enabled": true,
+      "entries": {
+        "boot-md": {
+          "enabled": true
+        },
+        "bootstrap-extra-files": {
+          "enabled": true
+        },
+        "command-logger": {
+          "enabled": true
+        },
+        "session-memory": {
+          "enabled": true
+        }
       }
     }
   },
@@ -28,9 +89,9 @@
     "telegram": {
       "enabled": true,
       "dmPolicy": "allowlist",
-      "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+      "botToken": "REDACTED_TELEGRAM_BOT_TOKEN",
       "allowFrom": [
-        8503241862
+        "REDACTED_USER_ID"
       ],
       "groupPolicy": "allowlist",
       "streaming": "partial"
@@ -38,14 +99,8 @@
   },
   "gateway": {
     "port": 5000,
-    "bind": "lan",
     "mode": "local",
-    "trustedProxies": [
-      "127.0.0.1",
-      "::1",
-      "172.16.0.0/12",
-      "192.168.0.0/16"
-    ],
+    "bind": "0.0.0.0",
     "controlUi": {
       "allowedOrigins": [
         "http://localhost:5000",
@@ -54,11 +109,33 @@
     },
     "auth": {
       "mode": "token",
-      "token": "d59c713d72ede635689d531c27caa1a7ff37486db4eeaaca",
-      "rateLimit": {
-        "maxAttempts": 10,
-        "windowMs": 60000,
-        "lockoutMs": 300000
+      "token": "REDACTED_GATEWAY_TOKEN"
+    },
+    "trustedProxies": [
+      "127.0.0.1",
+      "::1",
+      "10.0.0.0/8",
+      "172.16.0.0/12",
+      "192.168.0.0/16"
+    ],
+    "tailscale": {
+      "mode": "off",
+      "resetOnExit": false
+    }
+  },
+  "skills": {
+    "install": {
+      "nodeManager": "npm"
+    },
+    "entries": {
+      "nano-banana-pro": {
+        "apiKey": "REDACTED_API_KEY"
+      },
+      "notion": {
+        "apiKey": "REDACTED_API_KEY"
+      },
+      "openai-image-gen": {
+        "apiKey": "REDACTED_API_KEY"
       }
     }
   }

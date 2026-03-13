@@ -1,0 +1,108 @@
+{
+    "skills": [
+        {
+            "id": "web-search",
+            "name": "Web Search Skill",
+            "description": "Busca información en internet",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "endpoint": "https://api.search.example.com",
+            "authentication": {
+                "type": "api-key",
+                "required": false
+            },
+            "rateLimit": {
+                "enabled": true,
+                "requestsPerMinute": 60
+            }
+        },
+        {
+            "id": "file-operations",
+            "name": "File Operations Skill",
+            "description": "Operaciones con archivos (leer, escribir, eliminar)",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "list",
+                "create-directory"
+            ],
+            "permissions": {
+                "allowedPaths": [
+                    "/root/.openclaw/data",
+                    "/root/.openclaw/cache",
+                    "/app/client/public"
+                ]
+            }
+        },
+        {
+            "id": "code-execution",
+            "name": "Code Execution Skill",
+            "description": "Ejecutar código de forma segura",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "sandbox": true,
+            "supportedLanguages": [
+                "python",
+                "javascript",
+                "bash",
+                "go"
+            ],
+            "timeout": 30
+        },
+        {
+            "id": "database-query",
+            "name": "Database Query Skill",
+            "description": "Consultar bases de datos",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "supportedDatabases": [
+                "postgresql",
+                "mysql",
+                "mongodb",
+                "redis"
+            ],
+            "connectionPooling": true
+        },
+        {
+            "id": "websocket-broadcast",
+            "name": "WebSocket Broadcast Skill",
+            "description": "Permite transmitir estados y coreografías en tiempo real a la Oficina Virtual (CCTV).",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "capabilities": [
+                "broadcast-state",
+                "manage-connections"
+            ],
+            "network": {
+                "allowedPorts": [
+                    8001
+                ]
+            }
+        },
+        {
+            "id": "image-generation",
+            "name": "Image Generation Skill",
+            "description": "Generación y procesamiento de imágenes y assets de diseño gráfico (Banana Engine).",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "capabilities": [
+                "text-to-image",
+                "image-to-image",
+                "format-conversion"
+            ],
+            "rateLimit": {
+                "enabled": true,
+                "requestsPerMinute": 15
+            }
+        }
+    ]
+}
