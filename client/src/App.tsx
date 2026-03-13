@@ -9,17 +9,51 @@ import { Route, Switch } from "wouter";
 import ErrorBoundary from "./components/ErrorBoundary";
 import { ThemeProvider } from "./contexts/ThemeContext";
 import Home from "./pages/Home";
-import { ClerkProvider } from "@clerk/clerk-react";
+import { ClerkProvider, SignedIn, SignedOut, RedirectToSignIn } from "@clerk/clerk-react";
 
 function Router() {
   // make sure to consider if you need authentication for certain routes
   return (
     <Switch>
       <Route path={"/"} component={Home} />
-      <Route path={"/dashboard"} component={Dashboard} />
-      <Route path={"/agents"} component={AgentsPage} />
-      <Route path={"/projects/new"} component={ProjectManualPage} />
-      <Route path={"/projects/assisted"} component={ProjectAssistedPage} />
+      
+      {/* Rutas Protegidas */}
+      <Route path={"/dashboard"}>
+        <SignedIn>
+          <Dashboard />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </Route>
+
+      <Route path={"/agents"}>
+        <SignedIn>
+          <AgentsPage />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </Route>
+
+      <Route path={"/projects/new"}>
+        <SignedIn>
+          <ProjectManualPage />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </Route>
+
+      <Route path={"/projects/assisted"}>
+        <SignedIn>
+          <ProjectAssistedPage />
+        </SignedIn>
+        <SignedOut>
+          <RedirectToSignIn />
+        </SignedOut>
+      </Route>
+
       <Route path={"/404"} component={NotFound} />
       {/* Final fallback route */}
       <Route component={NotFound} />

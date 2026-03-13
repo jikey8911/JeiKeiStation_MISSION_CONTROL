@@ -1,11 +1,29 @@
 {
+    "meta": {
+        "lastTouchedVersion": "2026.3.8",
+        "lastTouchedAt": "2026-03-12T10:53:55.571Z"
+    },
+    "wizard": {
+        "lastRunAt": "2026-03-12T10:53:55.554Z",
+        "lastRunVersion": "2026.3.8",
+        "lastRunCommand": "configure",
+        "lastRunMode": "local"
+    },
     "logging": {
         "level": "debug"
+    },
+    "auth": {
+        "profiles": {
+            "openai-codex:default": {
+                "provider": "openai-codex",
+                "mode": "oauth"
+            }
+        }
     },
     "models": {
         "providers": {
             "ollama": {
-                "baseUrl": "http://optimistic_cohen:11434",
+                "baseUrl": "http://openclaw-ollama:11434",
                 "apiKey": "ollama-local",
                 "api": "ollama",
                 "models": [
@@ -21,33 +39,79 @@
     },
     "agents": {
         "defaults": {
-            "model": "ollama/llama3.2:latest",
-            "compaction": {
-                "mode": "safeguard"
+            "model": {
+                "primary": "ollama/llama3.2:latest"
             },
+            "models": {
+                "ollama/llama3.2:latest": {}
+            },
+            "workspace": "/root/.openclaw/workspace",
             "memorySearch": {
                 "enabled": false
+            },
+            "compaction": {
+                "mode": "safeguard"
+            }
+        }
+    },
+    "tools": {
+        "profile": "coding"
+    },
+    "commands": {
+        "native": "auto",
+        "nativeSkills": "auto",
+        "restart": true,
+        "ownerDisplay": "raw"
+    },
+    "session": {
+        "dmScope": "per-channel-peer"
+    },
+    "hooks": {
+        "internal": {
+            "enabled": true,
+            "entries": {
+                "boot-md": {
+                    "enabled": true
+                },
+                "bootstrap-extra-files": {
+                    "enabled": true
+                },
+                "command-logger": {
+                    "enabled": true
+                },
+                "session-memory": {
+                    "enabled": true
+                }
             }
         }
     },
     "channels": {
         "telegram": {
-            "enabled": false
+            "enabled": true,
+            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
+            "dmPolicy": "allowlist",
+            "allowFrom": [
+                8503241862
+            ],
+            "groupPolicy": "allowlist",
+            "streaming": "partial"
         }
     },
     "gateway": {
         "port": 5000,
         "mode": "local",
-        "bind": "0.0.0.0",
         "controlUi": {
             "allowedOrigins": [
                 "http://localhost:5000",
-                "http://127.0.0.1:5000"
+                "http://127.0.0.1:5000",
+                "http://localhost:3001",
+                "http://127.0.0.1:3001",
+                "http://host.docker.internal:5000"
             ]
         },
         "auth": {
             "mode": "token",
-            "token": "f0d0cacfc00b31300734f88df90f2b9282d4c7f873403744"
+            "token": "d6a9477ff358e25dd91d22c97aafc29028ee8a6a6bc84e84"
         },
         "trustedProxies": [
             "127.0.0.1",
@@ -55,6 +119,16 @@
             "10.0.0.0/8",
             "172.16.0.0/12",
             "192.168.0.0/16"
-        ]
+        ],
+        "tailscale": {
+            "mode": "off",
+            "resetOnExit": false
+        }
+    },
+    "skills": {
+        "install": {
+            "nodeManager": "npm"
+        },
+        "entries": {}
     }
 }

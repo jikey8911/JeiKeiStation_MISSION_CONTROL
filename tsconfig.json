@@ -28,7 +28,8 @@
     "moduleResolution": "bundler",
     "baseUrl": ".",
     "types": [
-      "node"
+      "node",
+      "vite/client"
     ],
     "paths": {
       "@/*": [

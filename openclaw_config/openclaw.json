@@ -23,7 +23,7 @@
   "models": {
     "providers": {
       "ollama": {
-        "baseUrl": "http://ollama:11434",
+        "baseUrl": "http://openclaw-ollama:11434",
         "apiKey": "ollama-local",
         "api": "ollama",
         "models": [
@@ -104,12 +104,14 @@
       "allowedOrigins": [
         "http://localhost:5000",
         "http://127.0.0.1:5000",
+        "http://localhost:3001",
+        "http://127.0.0.1:3001",
         "http://host.docker.internal:5000"
       ]
     },
     "auth": {
       "mode": "token",
-      "token": "f0d0cacfc00b31300734f88df90f2b9282d4c7f873403744"
+      "token": "d6a9477ff358e25dd91d22c97aafc29028ee8a6a6bc84e84"
     },
     "trustedProxies": [
       "127.0.0.1",
