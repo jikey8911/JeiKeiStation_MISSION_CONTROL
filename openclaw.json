@@ -32,14 +32,7 @@
     },
     "channels": {
         "telegram": {
-            "enabled": true,
-            "dmPolicy": "allowlist",
-            "botToken": "8589257849:AAGvfWk6jT9BIo9x8HrHDjXQYQhG7uiHoGo",
-            "allowFrom": [
-                8503241862
-            ],
-            "groupPolicy": "allowlist",
-            "streaming": "partial"
+            "enabled": false
         }
     },
     "gateway": {
