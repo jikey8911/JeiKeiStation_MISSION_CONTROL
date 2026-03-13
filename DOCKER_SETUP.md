@@ -1,73 +1,94 @@
-# OpenClaw Docker Setup - Infraestructura Separada
+# OpenClaw Docker Setup - Composiciones Completamente Separadas
 
-## Estructura
+## Archivos
 
-- **docker-compose.infra.yml** - Ollama + Redis (infraestructura persistente)
-- **docker-compose.openclaw.yml** - OpenClaw app (reconstruible sin afectar infra)
+- **docker-compose.ollama.yml** - Solo Ollama (NUNCA reconstruir en desarrollo)
+- **docker-compose.redis.yml** - Solo Redis (NUNCA reconstruir en desarrollo)
+- **docker-compose.openclaw.yml** - Solo OpenClaw (reconstruible sin afectar infra)
 
 ## Primer inicio (ONE TIME)
 
 ```bash
-# 1. Levantar infraestructura (Ollama + Redis)
-docker compose -f docker-compose.infra.yml up -d
+# 1. Levantar Ollama
+docker compose -f docker-compose.ollama.yml up -d
 
-# 2. Descargar modelo en Ollama (primera vez toma tiempo)
+# 2. Levantar Redis
+docker compose -f docker-compose.redis.yml up -d
+
+# 3. Descargar modelo en Ollama (primera vez toma ~5min)
 docker exec openclaw-ollama ollama pull llama3.2:latest
 
-# 3. Levantar OpenClaw
+# 4. Levantar OpenClaw
 docker compose -f docker-compose.openclaw.yml up -d
 ```
 
-## Reinicios y reconstrucciones
+## Ciclo de desarrollo (NORMAL)
 
-### Reiniciar OpenClaw (sin tocar Ollama)
-```bash
-docker compose -f docker-compose.openclaw.yml restart
-```
-
-### Reconstruir imagen de OpenClaw
+### Reconstruir solo OpenClaw
 ```bash
 docker compose -f docker-compose.openclaw.yml down
 docker compose -f docker-compose.openclaw.yml build --no-cache
 docker compose -f docker-compose.openclaw.yml up -d
 ```
 
-### Reiniciar TODO (incluyendo Ollama)
+**Ollama y Redis siguen corriendo sin problemas** ✅
+**Modelo no se descarga nuevamente** ✅
+
+### Solo reiniciar OpenClaw
 ```bash
-docker compose -f docker-compose.infra.yml restart
 docker compose -f docker-compose.openclaw.yml restart
 ```
 
-### Limpieza COMPLETA (elimina TODOS los volúmenes)
+## Operaciones con infraestructura
+
+### Reiniciar Ollama (RARO - solo si hay problema)
 ```bash
-docker compose -f docker-compose.openclaw.yml down
-docker compose -f docker-compose.infra.yml down -v
+docker compose -f docker-compose.ollama.yml restart
 ```
 
-### Limpieza PARCIAL (solo OpenClaw, Ollama se mantiene)
+### Reiniciar Redis (RARO - solo si hay problema)
 ```bash
-docker compose -f docker-compose.openclaw.yml down
+docker compose -f docker-compose.redis.yml restart
 ```
 
-## Estado
-
+### Ver estado
 ```bash
-# Ver contenedores de infraestructura
-docker compose -f docker-compose.infra.yml ps
-
-# Ver contenedores de OpenClaw
+docker compose -f docker-compose.ollama.yml ps
+docker compose -f docker-compose.redis.yml ps
 docker compose -f docker-compose.openclaw.yml ps
+```
 
-# Ver logs de Ollama
-docker compose -f docker-compose.infra.yml logs openclaw-ollama
+### Ver logs
+```bash
+# Ollama
+docker compose -f docker-compose.ollama.yml logs -f
 
-# Ver logs de OpenClaw
-docker compose -f docker-compose.openclaw.yml logs openclaw-app
+# Redis
+docker compose -f docker-compose.redis.yml logs -f
+
+# OpenClaw
+docker compose -f docker-compose.openclaw.yml logs -f openclaw
+```
+
+## Limpieza
+
+### PARCIAL (solo OpenClaw, infra se mantiene)
+```bash
+docker compose -f docker-compose.openclaw.yml down
+```
+
+### TOTAL (elimina TODO incluyendo volúmenes)
+```bash
+docker compose -f docker-compose.openclaw.yml down
+docker compose -f docker-compose.redis.yml down -v
+docker compose -f docker-compose.ollama.yml down -v
 ```
 
 ## Ventajas
 
-✅ Ollama y Redis nunca se reconstruyen (modelo persistente)
-✅ Puedes reconstruir OpenClaw sin descargar modelo nuevamente
-✅ Infraestructura estable y separada
+✅ Ollama nunca se reconstruye (modelo persistente)
+✅ Redis nunca se reconstruye (datos persistentes)
+✅ Reconstruyes OpenClaw SIN AFECTAR infraestructura
+✅ Ollama y Redis son independientes
 ✅ Más rápido en ciclos de desarrollo
+✅ Fácil mantener versiones estables de dependencias

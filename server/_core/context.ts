@@ -17,18 +17,25 @@ export async function createContext(
   try {
     const clerkUser = await (sdk as any).authenticateRequest(opts.req);
     if (clerkUser && clerkUser.sub) {
-      // Intentar obtener el usuario de nuestra base de datos usando el openId (sub de Clerk)
+      // Obtener o crear el usuario en nuestra base de datos
       const dbUser = await getUserByOpenId(clerkUser.sub);
+      
       if (dbUser) {
         user = dbUser;
       } else {
-        // Si no existe en la DB, devolvemos un objeto parcial o nulo
-        // En una app real, aquí podrías hacer un auto-registro (upsert)
-        user = null;
+        // Auto-registro: Crear el usuario si no existe
+        const { upsertUser } = await import("../db");
+        user = await upsertUser({
+          openId: clerkUser.sub,
+          name: clerkUser.name || clerkUser.email || "User",
+          email: clerkUser.email || null,
+          loginMethod: "clerk",
+          lastSignedIn: new Date(),
+        }) as User;
       }
     }
   } catch (error) {
-    console.error("[Context] Error creating context:", error);
+    console.warn("[Context] Unauthorized or User not found:", error instanceof Error ? error.message : "Auth Check Failed");
     user = null;
   }
 

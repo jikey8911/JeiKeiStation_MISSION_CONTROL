@@ -1,11 +1,11 @@
 import { eq, and, desc, sql, inArray } from "drizzle-orm";
 import { drizzle } from "drizzle-orm/mysql2";
 import { createPool, Pool } from "mysql2/promise";
-import { InsertUser, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications } from "../drizzle/schema";
+import { InsertUser, User, users, agents, tasks, sprints, taskDependencies, taskHistory, notifications } from "../drizzle/schema";
 import { ENV } from "./_core/env";
 
-let _db: ReturnType<typeof drizzle> | null = null;
-let _pool: Pool | null = null;
+let _db: any = null;
+let _pool: any = null;
 
 export async function getDb() {
   if (_db) return _db;
@@ -18,7 +18,7 @@ export async function getDb() {
   try {
     console.log("[Database] Attempting to connect to the database...");
     _pool = createPool({ uri: ENV.databaseUrl });
-    _db = drizzle(_pool);
+    _db = drizzle(_pool as any);
     
     await _pool.query("SELECT 1");
     console.log("[Database] Connection successful!");
@@ -33,9 +33,9 @@ export async function getDb() {
 
 // ==================== USUARIOS ====================
 
-export async function upsertUser(user: InsertUser): Promise<void> {
+export async function upsertUser(user: InsertUser): Promise<User | null> {
   const db = await getDb();
-  if (!db) return;
+  if (!db) return null;
 
   try {
     const values: InsertUser = { openId: user.openId };
@@ -54,8 +54,12 @@ export async function upsertUser(user: InsertUser): Promise<void> {
     }
 
     await db.insert(users).values(values).onDuplicateKeyUpdate({ set: updateSet });
+    
+    // Devolver el usuario actualizado
+    return await getUserByOpenId(user.openId);
   } catch (error) {
     console.error("[DB:upsertUser] Error:", error);
+    return null;
   }
 }
 
@@ -285,7 +289,7 @@ export async function getBlockingTasks(taskId: number) {
   try {
     const deps = await db.select().from(taskDependencies).where(eq(taskDependencies.taskId, taskId));
     if (deps.length === 0) return [];
-    const blockingIds = deps.map(d => d.dependsOnTaskId);
+    const blockingIds = deps.map((d: any) => d.dependsOnTaskId);
     return await db.select().from(tasks).where(inArray(tasks.id, blockingIds));
   } catch (error) {
     console.error("[DB:getBlockingTasks] Error:", error);
