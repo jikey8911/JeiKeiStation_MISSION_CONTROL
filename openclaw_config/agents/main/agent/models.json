@@ -31,6 +31,35 @@
           "name": "llama3.2"
         }
       ]
+    },
+    "ollama": {
+      "baseUrl": "http://host.docker.internal:8000",
+      "apiKey": "ollama-local",
+      "api": "ollama",
+      "models": [
+        {
+          "id": "docker.io/ai/llama3.2:latest",
+          "name": "llama3.2",
+          "contextWindow": 16000,
+          "maxTokens": 16000,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "api": "ollama"
+        }
+      ]
+    },
+    "openai-codex": {
+      "baseUrl": "https://chatgpt.com/backend-api",
+      "api": "openai-codex-responses",
+      "models": []
     }
   }
 }

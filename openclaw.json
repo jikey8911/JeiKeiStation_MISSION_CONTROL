@@ -4,13 +4,16 @@
     },
     "models": {
         "providers": {
-            "docker-ai": {
-                "baseUrl": "http://host.docker.internal:8000/v1",
-                "apiKey": "not-needed",
+            "ollama": {
+                "baseUrl": "http://optimistic_cohen:11434",
+                "apiKey": "ollama-local",
+                "api": "ollama",
                 "models": [
                     {
-                        "id": "docker.io/ai/llama3.2:latest",
-                        "name": "llama3.2"
+                        "id": "llama3.2:latest",
+                        "name": "llama3.2",
+                        "contextWindow": 16000,
+                        "maxTokens": 16000
                     }
                 ]
             }
@@ -18,7 +21,13 @@
     },
     "agents": {
         "defaults": {
-            "model": "docker-ai/docker.io/ai/llama3.2:latest"
+            "model": "ollama/llama3.2:latest",
+            "compaction": {
+                "mode": "safeguard"
+            },
+            "memorySearch": {
+                "enabled": false
+            }
         }
     },
     "channels": {
@@ -35,14 +44,8 @@
     },
     "gateway": {
         "port": 5000,
-        "bind": "lan",
         "mode": "local",
-        "trustedProxies": [
-            "127.0.0.1",
-            "::1",
-            "172.16.0.0/12",
-            "192.168.0.0/16"
-        ],
+        "bind": "0.0.0.0",
         "controlUi": {
             "allowedOrigins": [
                 "http://localhost:5000",
@@ -51,12 +54,14 @@
         },
         "auth": {
             "mode": "token",
-            "token": "d59c713d72ede635689d531c27caa1a7ff37486db4eeaaca",
-            "rateLimit": {
-                "maxAttempts": 10,
-                "windowMs": 60000,
-                "lockoutMs": 300000
-            }
-        }
+            "token": "f0d0cacfc00b31300734f88df90f2b9282d4c7f873403744"
+        },
+        "trustedProxies": [
+            "127.0.0.1",
+            "::1",
+            "10.0.0.0/8",
+            "172.16.0.0/12",
+            "192.168.0.0/16"
+        ]
     }
 }
