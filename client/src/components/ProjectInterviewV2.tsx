@@ -49,7 +49,17 @@ export function ProjectInterviewV2() {
       }
     },
     onError: (err) => {
-      toast.error("Error al conectar con el Project Owner: " + err.message);
+      setState((prev) => ({
+        ...prev,
+        messages: [
+          ...prev.messages,
+          { 
+            role: "assistant", 
+            content: "⚠️ **Error de comunicación:** " + err.message + ". Por favor, intenta enviar tu mensaje de nuevo o revisa la conexión con el motor de IA." 
+          }
+        ],
+      }));
+      toast.error("Error al conectar con el Project Owner");
     },
   });
 

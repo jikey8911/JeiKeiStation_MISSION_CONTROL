@@ -16,30 +16,27 @@ import { projectOwnerRouter } from "./projectOwnerRouter";
 
 async function getLocalOpenClawAgents() {
   try {
-    const skillsDir = path.resolve(import.meta.dirname, "../openclaw/skills");
-    if (!fs.existsSync(skillsDir)) return [];
+    const agentsFile = path.resolve(import.meta.dirname, "../openclaw_config/agents/agents.json");
+    if (!fs.existsSync(agentsFile)) return [];
 
-    const dirs = fs.readdirSync(skillsDir, { withFileTypes: true }).filter(d => d.isDirectory()).map(d => d.name);
-    let idx = 1000;
+    const raw = fs.readFileSync(agentsFile, 'utf-8');
+    const agentsArray = JSON.parse(raw);
+    
+    if (!Array.isArray(agentsArray)) return [];
 
-    return dirs.map((dir) => {
-      const normalized = dir.toLowerCase();
-      const isDevOp = normalized.includes("devops");
-      const isProductOwner = normalized.includes("mission_control") || normalized.includes("owner") || normalized.includes("jeikei");
-
-      return {
-        id: idx++,
-        name: isDevOp ? "DevOp" : isProductOwner ? "Product Owner" : dir.replace(/[_-]/g, " "),
-        description: `OpenClaw skill: ${dir}`,
-        avatar: null,
-        skills: [dir],
-        status: "connected",
-        currentWorkload: 0,
-        maxCapacity: 10,
-        source: "openclaw",
-      };
-    });
-  } catch {
+    return agentsArray.map((agent: any, idx: number) => ({
+      id: 1000 + idx,
+      name: agent.name || "Agent",
+      description: agent.description || "",
+      avatar: agent.avatar || null,
+      skills: agent.skills || [],
+      status: agent.enabled ? "connected" : "offline",
+      currentWorkload: 0,
+      maxCapacity: agent.maxCapacity || 10,
+      source: "openclaw",
+    }));
+  } catch (error) {
+    console.error("Error reading OpenClaw agents:", error);
     return [];
   }
 }
@@ -196,8 +193,9 @@ export const appRouter = router({
         const completionPercentage = totalTasks > 0 ? (completedTasks / totalTasks) * 100 : 0;
 
         const skillDistribution: Record<string, number> = {};
-        tasksInSprint.forEach(task => {
-          (task.requiredSkills || []).forEach((skill: string) => {
+        tasksInSprint.forEach((task: any) => {
+          const s = task.requiredSkills as string[] | undefined;
+          (s || []).forEach((skill: string) => {
             skillDistribution[skill] = (skillDistribution[skill] || 0) + 1;
           });
         });
@@ -348,7 +346,7 @@ export const appRouter = router({
         };
         eventEmitter.on("taskUpdated", onTaskUpdate);
         return () => {
-          eventEmitter.removeListener("taskUpdated", onTaskUpdate);
+          eventEmitter.off("taskUpdated", onTaskUpdate);
         };
       });
     }),

@@ -20,14 +20,17 @@ export default function Dashboard() {
   const [, setLocation] = useLocation();
 
   const { data: tasks = [] } = trpc.tasks.list.useQuery({});
-  const { data: agentsRaw = [] } = trpc.agents.list.useQuery({});
-  const { data: sprints = [] } = trpc.sprints.list.useQuery({});
+  const { data: agentsRaw = [] } = trpc.agents.list.useQuery();
+  const { data: sprints = [] } = trpc.sprints.list.useQuery();
 
   const agents = useMemo(() => {
     const list = (agentsRaw as any[]) || [];
-    // Mostrar todos los agentes existentes/creados/conectados reportados por backend.
-    // Product Owner y DevOp aparecerán si existen en esta fuente.
-    return list;
+    // Filtrar agentes que no den error y estén habilitados/conectados.
+    return list.filter((a: any) => 
+      a.status !== "error" && 
+      a.status !== "failed" && 
+      a.status !== "offline"
+    );
   }, [agentsRaw]);
 
   const activeProjects = sprints.filter((s: any) => s.status === "active").length;
