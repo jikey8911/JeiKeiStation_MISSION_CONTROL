@@ -1,0 +1,8 @@
+FROM ollama/ollama:latest
+
+# Copiar script de inicialización
+COPY --chown=ollama:ollama ollama-init.sh /ollama-init.sh
+RUN chmod +x /ollama-init.sh
+
+# Usar el script como entrypoint
+ENTRYPOINT ["/ollama-init.sh"]
