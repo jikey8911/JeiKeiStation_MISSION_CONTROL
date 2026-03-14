@@ -39,6 +39,7 @@
   },
   "agents": {
     "defaults": {
+      "agentId": "user-assistant",
       "model": {
         "primary": "ollama/llama3.2:latest"
       },
@@ -54,10 +55,9 @@
       }
     }
   },
-  "tools": [
-    "web-search",
-    "memory-recall"
-  ],
+  "tools": {
+    "profile": "messaging"
+  },
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
@@ -95,8 +95,7 @@
         8503241862
       ],
       "groupPolicy": "allowlist",
-      "streaming": "partial",
-      "defaultAgentId": "user-assistant"
+      "streaming": "partial"
     }
   },
   "gateway": {

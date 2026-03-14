@@ -30,8 +30,8 @@
           {
             "id": "llama3.2:latest",
             "name": "llama3.2",
-            "contextWindow": 32000,
-            "maxTokens": 32000
+            "contextWindow": 36000,
+            "maxTokens": 36000
           }
         ]
       }
@@ -39,6 +39,7 @@
   },
   "agents": {
     "defaults": {
+      "agentId": "user-assistant",
       "model": {
         "primary": "ollama/llama3.2:latest"
       },
@@ -55,7 +56,7 @@
     }
   },
   "tools": {
-    "profile": "standard"
+    "profile": "messaging"
   },
   "commands": {
     "native": "auto",
