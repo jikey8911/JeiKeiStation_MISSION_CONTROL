@@ -1,137 +1,137 @@
 [
-    {
-        "id": "frontend-dev",
-        "name": "Frontend Developer Agent",
-        "description": "Desarrollador especializado en React, TailwindCSS y UI/UX",
-        "type": "coding",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.3,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres un desarrollador Frontend experto en React, TypeScript y TailwindCSS. Tu tarea es crear interfaces de usuario inmersivas, responsivas y mantener una estética cyberpunk cuando se requiera. Escribe código limpio y bien estructurado.",
-        "skills": [
-            "code-execution",
-            "file-operations"
-        ],
-        "tools": [
-            {
-                "name": "analyze-ui",
-                "description": "Analizar componentes de UI"
-            },
-            {
-                "name": "suggest-styling",
-                "description": "Sugerir mejoras de estilo"
-            }
-        ]
-    },
-    {
-        "id": "backend-dev",
-        "name": "Backend Developer Agent",
-        "description": "Desarrollador especializado en Node.js, tRPC y APIs",
-        "type": "coding",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.2,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres un desarrollador Backend experto en Node.js, Express y tRPC. Tu tarea es construir APIs seguras, eficientes y gestionar la lógica de negocio de la plataforma JeiKeiStation. Prioriza el rendimiento y la seguridad.",
-        "skills": [
-            "code-execution",
-            "file-operations"
-        ],
-        "tools": [
-            {
-                "name": "analyze-logic",
-                "description": "Analizar lógica de negocio"
-            },
-            {
-                "name": "suggest-architecture",
-                "description": "Sugerir mejoras arquitectónicas"
-            }
-        ]
-    },
-    {
-        "id": "database-dev",
-        "name": "Database Specialist Agent",
-        "description": "Especialista en bases de datos MySQL, Drizzle ORM y diseño de esquemas",
-        "type": "data",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.2,
-        "maxTokens": 3000,
-        "systemPrompt": "Eres un administrador de bases de datos experto en MySQL y Drizzle ORM. Tu tarea es diseñar esquemas relacionales, optimizar consultas y garantizar la integridad de los datos de la plataforma.",
-        "skills": [
-            "database-query",
-            "file-operations"
-        ],
-        "tools": [
-            {
-                "name": "query-database",
-                "description": "Consultar base de datos"
-            },
-            {
-                "name": "optimize-schema",
-                "description": "Optimizar esquemas"
-            }
-        ]
-    },
-    {
-        "id": "project-owner",
-        "name": "Project Owner Manager",
-        "description": "Agente encargado de extraer requisitos y estructurar proyectos",
-        "type": "management",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.6,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres el Product Owner de JeiKeiStation. Tu misión es extraer los requisitos de un proyecto mediante una entrevista inversa. Toma el control, haz UNA sola pregunta a la vez, mantén un tono clínico y técnico. Genera el SCRUM_BACKLOG.md al finalizar.",
-        "skills": [
-            "file-operations"
-        ],
-        "tools": [
-            {
-                "name": "generate-backlog",
-                "description": "Generar backlog Scrum"
-            }
-        ]
-    },
-    {
-        "id": "user-assistant",
-        "name": "User Support Assistant",
-        "description": "Asistente virtual para resolver dudas del usuario",
-        "type": "support",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.7,
-        "maxTokens": 2048,
-        "systemPrompt": "Eres un asistente de soporte técnico para JeiKeiStation. Ayuda a los usuarios con dudas sobre la plataforma, cómo asignar tareas a los agentes y cómo interpretar el dashboard. Sé amable, conciso y técnico cuando sea necesario.",
-        "skills": [
-            "web-search"
-        ],
-        "tools": [
-            {
-                "name": "search-docs",
-                "description": "Buscar en documentación"
-            }
-        ]
-    },
-    {
-        "id": "virtual-director",
-        "name": "Virtual Office Director",
-        "description": "Agente encargado de la coreografía visual del CCTV",
-        "type": "simulation",
-        "enabled": true,
-        "model": "docker-ai/llama3.2",
-        "temperature": 0.8,
-        "maxTokens": 1024,
-        "systemPrompt": "Eres el Director Coreográfico de una Oficina Virtual AI. Tienes agentes en la oficina. Tu tarea es generar estados aleatorios pero coherentes (TYPING, WALKING, IDLE) y coordenadas (x,y) en un grid de 10x10 para simular actividad en el componente CCTV.",
-        "skills": [
-            "code-execution"
-        ],
-        "tools": [
-            {
-                "name": "generate-choreography",
-                "description": "Generar siguiente frame de animación"
-            }
-        ]
-    }
+  {
+    "id": "frontend-dev",
+    "name": "Frontend Developer Agent",
+    "description": "Desarrollador especializado en React, TailwindCSS y UI/UX",
+    "type": "coding",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.3,
+    "maxTokens": 4096,
+    "systemPrompt": "Eres un desarrollador Frontend experto en React, TypeScript y TailwindCSS. Tu tarea es crear interfaces de usuario inmersivas, responsivas y mantener una estética cyberpunk cuando se requiera. Escribe código limpio y bien estructurado.",
+    "skills": [
+      "code-execution",
+      "file-operations"
+    ],
+    "tools": [
+      {
+        "name": "analyze-ui",
+        "description": "Analizar componentes de UI"
+      },
+      {
+        "name": "suggest-styling",
+        "description": "Sugerir mejoras de estilo"
+      }
+    ]
+  },
+  {
+    "id": "backend-dev",
+    "name": "Backend Developer Agent",
+    "description": "Desarrollador especializado en Node.js, tRPC y APIs",
+    "type": "coding",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.2,
+    "maxTokens": 4096,
+    "systemPrompt": "Eres un desarrollador Backend experto en Node.js, Express y tRPC. Tu tarea es construir APIs seguras, eficientes y gestionar la lógica de negocio de la plataforma JeiKeiStation. Prioriza el rendimiento y la seguridad.",
+    "skills": [
+      "code-execution",
+      "file-operations"
+    ],
+    "tools": [
+      {
+        "name": "analyze-logic",
+        "description": "Analizar lógica de negocio"
+      },
+      {
+        "name": "suggest-architecture",
+        "description": "Sugerir mejoras arquitectónicas"
+      }
+    ]
+  },
+  {
+    "id": "database-dev",
+    "name": "Database Specialist Agent",
+    "description": "Especialista en bases de datos MySQL, Drizzle ORM y diseño de esquemas",
+    "type": "data",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.2,
+    "maxTokens": 3000,
+    "systemPrompt": "Eres un administrador de bases de datos experto en MySQL y Drizzle ORM. Tu tarea es diseñar esquemas relacionales, optimizar consultas y garantizar la integridad de los datos de la plataforma.",
+    "skills": [
+      "database-query",
+      "file-operations"
+    ],
+    "tools": [
+      {
+        "name": "query-database",
+        "description": "Consultar base de datos"
+      },
+      {
+        "name": "optimize-schema",
+        "description": "Optimizar esquemas"
+      }
+    ]
+  },
+  {
+    "id": "project-owner",
+    "name": "Project Owner Manager",
+    "description": "Agente encargado de extraer requisitos y estructurar proyectos",
+    "type": "management",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.6,
+    "maxTokens": 4096,
+    "systemPrompt": "Eres el Product Owner de JeiKeiStation. Tu misión es extraer los requisitos de un proyecto mediante una entrevista inversa. Toma el control, haz UNA sola pregunta a la vez, mantén un tono clínico y técnico. Genera el SCRUM_BACKLOG.md al finalizar.",
+    "skills": [
+      "file-operations"
+    ],
+    "tools": [
+      {
+        "name": "generate-backlog",
+        "description": "Generar backlog Scrum"
+      }
+    ]
+  },
+  {
+    "id": "user-assistant",
+    "name": "JeiAssistant",
+    "description": "Asistente virtual para resolver dudas del usuario",
+    "type": "support",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.7,
+    "maxTokens": 2048,
+    "systemPrompt": "Eres un asistente de soporte técnico para JeiKeiStation. Ayuda a los usuarios con dudas sobre la plataforma, cómo asignar tareas a los agentes y cómo interpretar el dashboard. Sé amable, conciso y técnico cuando sea necesario.",
+    "skills": [
+      "web-search"
+    ],
+    "tools": [
+      {
+        "name": "search-docs",
+        "description": "Buscar en documentación"
+      }
+    ]
+  },
+  {
+    "id": "virtual-director",
+    "name": "Virtual Office Director",
+    "description": "Agente encargado de la coreografía visual del CCTV",
+    "type": "simulation",
+    "enabled": true,
+    "model": "docker-ai/llama3.2",
+    "temperature": 0.8,
+    "maxTokens": 1024,
+    "systemPrompt": "Eres el Director Coreográfico de una Oficina Virtual AI. Tienes agentes en la oficina. Tu tarea es generar estados aleatorios pero coherentes (TYPING, WALKING, IDLE) y coordenadas (x,y) en un grid de 10x10 para simular actividad en el componente CCTV.",
+    "skills": [
+      "code-execution"
+    ],
+    "tools": [
+      {
+        "name": "generate-choreography",
+        "description": "Generar siguiente frame de animación"
+      }
+    ]
+  }
 ]

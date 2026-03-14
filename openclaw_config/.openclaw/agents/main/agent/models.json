@@ -8,8 +8,8 @@
         {
           "id": "llama3.2:latest",
           "name": "llama3.2",
-          "contextWindow": 16000,
-          "maxTokens": 16000,
+          "contextWindow": 32000,
+          "maxTokens": 32000,
           "reasoning": false,
           "input": [
             "text"

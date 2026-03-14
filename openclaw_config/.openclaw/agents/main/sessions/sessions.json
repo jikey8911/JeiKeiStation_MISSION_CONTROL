@@ -10,7 +10,7 @@
       "accountId": "default"
     },
     "sessionId": "495dd4fb-22cb-41ca-b483-b46d414fd7a9",
-    "updatedAt": 1773448293688,
+    "updatedAt": 1773451877776,
     "deliveryContext": {
       "channel": "telegram",
       "to": "telegram:8503241862",
@@ -67,10 +67,10 @@
     },
     "modelProvider": "ollama",
     "model": "llama3.2:latest",
-    "contextTokens": 16000,
+    "contextTokens": 32000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773448090497,
+      "generatedAt": 1773450191431,
       "sessionId": "495dd4fb-22cb-41ca-b483-b46d414fd7a9",
       "sessionKey": "agent:main:telegram:direct:8503241862",
       "provider": "ollama",
@@ -266,9 +266,15 @@
         ]
       }
     },
-    "totalTokens": 8111,
+    "totalTokens": 9105,
     "totalTokensFresh": true,
-    "compactionCount": 7
+    "compactionCount": 8,
+    "inputTokens": 21044,
+    "outputTokens": 39,
+    "cacheRead": 0,
+    "cacheWrite": 0,
+    "memoryFlushAt": 1773450191218,
+    "memoryFlushCompactionCount": 8
   },
   "agent:main:telegram:slash:8503241862": {
     "origin": {

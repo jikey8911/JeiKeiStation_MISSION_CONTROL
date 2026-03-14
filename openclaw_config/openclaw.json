@@ -30,8 +30,8 @@
           {
             "id": "llama3.2:latest",
             "name": "llama3.2",
-            "contextWindow": -1,
-            "maxTokens": -1
+            "contextWindow": 36000,
+            "maxTokens": 36000
           }
         ]
       }
@@ -54,9 +54,10 @@
       }
     }
   },
-  "tools": {
-    "profile": "coding"
-  },
+  "tools": [
+    "web-search",
+    "memory-recall"
+  ],
   "commands": {
     "native": "auto",
     "nativeSkills": "auto",
@@ -94,7 +95,8 @@
         8503241862
       ],
       "groupPolicy": "allowlist",
-      "streaming": "partial"
+      "streaming": "partial",
+      "defaultAgentId": "user-assistant"
     }
   },
   "gateway": {
