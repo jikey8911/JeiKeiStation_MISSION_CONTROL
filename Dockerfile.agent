@@ -51,24 +51,26 @@ RUN mkdir -p $OPENCLAW_HOME/data \
     /root/skills
 
 # 5. Copiar archivos de configuración desde la carpeta unificada
-# Nota: Los volúmenes de Compose sobrescribirán esto en desarrollo, pero es vital para la imagen base
-COPY openclaw_config/openclaw.json $OPENCLAW_HOME/.openclaw/openclaw.json
+COPY openclaw_config/openclaw.json $OPENCLAW_HOME/openclaw.json
 COPY openclaw_config/agents/agents.json /root/agents/agents.json
 COPY openclaw_config/skills/skills.json /root/skills/skills.json
 
 # 6. Script de Inicialización Robusto
 RUN printf '#!/bin/bash\n\
     set -e\n\
-    echo "🤖 Iniciando OpenClaw Expert Mode..."\n\
+    echo "🤖 Iniciando OpenClaw en modo unificado..."\n\
     \n\
-    # Ajustar permisos (ignoramos errores si los volúmenes son de Windows/Mac)\n\
-    chmod 700 $OPENCLAW_HOME 2>/dev/null || true\n\
-    find $OPENCLAW_HOME -type f -name "*.json" -exec chmod 600 {} + 2>/dev/null || true\n\
+    # Asegurar que existe la carpeta .openclaw\n\
+    mkdir -p /root/.openclaw\n\
     \n\
-    echo "📂 Cargando configuración desde: $OPENCLAW_HOME"\n\
+    # Sincronizar configuración maestra si existe en /root\n\
+    if [ -f "/root/openclaw.json" ]; then\n\
+        echo "🔄 Sincronizando configuración maestra..."\n\
+        cp /root/openclaw.json /root/.openclaw/openclaw.json\n\
+    fi\n\
     \n\
-    echo "✅ Entorno listo. Ejecutando Gateway en puerto 5000..."\n\
-    exec openclaw gateway \n\
+    echo "✅ Entorno listo. Ejecutando Gateway..."\n\
+    exec openclaw gateway\n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # 7. Healthcheck
