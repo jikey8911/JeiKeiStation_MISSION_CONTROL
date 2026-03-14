@@ -51,7 +51,8 @@ RUN mkdir -p $OPENCLAW_HOME/data \
     /root/skills
 
 # 5. Copiar archivos de configuración desde la carpeta unificada
-COPY openclaw_config/openclaw.json $OPENCLAW_HOME/openclaw.json
+# Nota: Los volúmenes de Compose sobrescribirán esto en desarrollo, pero es vital para la imagen base
+COPY openclaw_config/openclaw.json $OPENCLAW_HOME/.openclaw/openclaw.json
 COPY openclaw_config/agents/agents.json /root/agents/agents.json
 COPY openclaw_config/skills/skills.json /root/skills/skills.json
 
@@ -66,14 +67,8 @@ RUN printf '#!/bin/bash\n\
     \n\
     echo "📂 Cargando configuración desde: $OPENCLAW_HOME"\n\
     \n\
-    # Limpieza preventiva de sesiones\n\
-    if [ -f "/root/agents/main/sessions/sessions.json" ]; then\n\
-    echo "🧹 Limpiando sesiones antiguas..."\n\
-    openclaw sessions cleanup --store "/root/agents/main/sessions/sessions.json" --enforce --fix-missing 2>/dev/null || true\n\
-    fi\n\
-    \n\
     echo "✅ Entorno listo. Ejecutando Gateway en puerto 5000..."\n\
-    exec openclaw gateway --allow-unconfigured \n\
+    exec openclaw gateway \n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # 7. Healthcheck
