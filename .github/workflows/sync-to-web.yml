@@ -14,7 +14,14 @@ jobs:
         with:
           fetch-depth: 0
 
+      - name: Configure Git Identity
+        run: |
+          git config --global user.name "github-actions[bot]"
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+
       - name: Sync to Destination Repository
         run: |
+          # Añade el remoto web
           git remote add web https://x-access-token:${{ secrets.WEB_SYNC_TOKEN }}@github.com/jikey8911/JeiKeiStation_MISSION_CONTROL_WEB.git
+          # Sincronización forzada
           git push web main:main --force
