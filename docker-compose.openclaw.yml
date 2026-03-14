@@ -15,9 +15,9 @@ services:
     volumes:
       # Sincronización de la carpeta de configuración unificada
       - ./openclaw_config:/root
-      # Persistencia gestionada por Docker
-      - openclaw_data:/root
-      - openclaw_cache:/root
+      # Persistencia de datos y caché en subdirectorios para evitar solapamiento
+      - openclaw_data:/root/data
+      - openclaw_cache:/root/cache
     environment:
       - NODE_ENV=production
       - OPENCLAW_HOME=/root
@@ -32,31 +32,6 @@ services:
       interval: 15s
       timeout: 5s
       retries: 3
-
-  # ===========================================================================
-  # TRABAJADOR DE AGENTES (Python/Node)
-  # ===========================================================================
-  openclaw_agent:
-    build:
-      context: .
-      dockerfile: Dockerfile.agent
-    container_name: openclaw_python_worker
-    env_file:
-      - .env
-    volumes:
-      - ./openclaw_config/openclaw.json:/root/config.json:ro
-      - ./openclaw_config/agents:/root/agents:ro
-      - ./openclaw_config/skills:/root/skills:ro
-      - openclaw_data:/root/data
-      - openclaw_cache:/root/cache
-    environment:
-      - NODE_ENV=production
-      - OPENCLAW_CONFIG=/root/config.json
-      - LOG_LEVEL=info
-      - OLLAMA_BASE_URL=http://openclaw-ollama:11434
-    networks:
-      - openclaw-net
-    restart: unless-stopped
 
 volumes:
   openclaw_data:
