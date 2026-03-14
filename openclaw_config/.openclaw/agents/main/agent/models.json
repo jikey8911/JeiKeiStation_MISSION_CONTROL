@@ -1,0 +1,32 @@
+{
+  "providers": {
+    "ollama": {
+      "baseUrl": "http://openclaw-ollama:11434",
+      "apiKey": "ollama-local",
+      "api": "ollama",
+      "models": [
+        {
+          "id": "llama3.2:latest",
+          "name": "llama3.2",
+          "contextWindow": 16000,
+          "maxTokens": 16000,
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "api": "ollama"
+        }
+      ]
+    },
+    "github-copilot": {
+      "baseUrl": "https://api.individual.githubcopilot.com",
+      "models": []
+    }
+  }
+}

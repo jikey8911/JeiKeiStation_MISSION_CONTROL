@@ -30,8 +30,8 @@
           {
             "id": "llama3.2:latest",
             "name": "llama3.2",
-            "contextWindow": -1,
-            "maxTokens": -1
+            "contextWindow": 16000,
+            "maxTokens": 16000
           }
         ]
       }
