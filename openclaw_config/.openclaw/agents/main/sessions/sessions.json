@@ -1,7 +1,7 @@
 {
   "agent:main:telegram:direct:8503241862": {
     "origin": {
-      "label": "Juan Carlos Guzman E id:8503241862",
+      "label": "Juan Carlos Guzman E",
       "provider": "telegram",
       "surface": "telegram",
       "chatType": "direct",
@@ -10,7 +10,7 @@
       "accountId": "default"
     },
     "sessionId": "495dd4fb-22cb-41ca-b483-b46d414fd7a9",
-    "updatedAt": 1773446143214,
+    "updatedAt": 1773448293688,
     "deliveryContext": {
       "channel": "telegram",
       "to": "telegram:8503241862",
@@ -70,7 +70,7 @@
     "contextTokens": 16000,
     "systemPromptReport": {
       "source": "run",
-      "generatedAt": 1773446133379,
+      "generatedAt": 1773448090497,
       "sessionId": "495dd4fb-22cb-41ca-b483-b46d414fd7a9",
       "sessionKey": "agent:main:telegram:direct:8503241862",
       "provider": "ollama",
@@ -266,9 +266,9 @@
         ]
       }
     },
-    "totalTokens": 7303,
+    "totalTokens": 8111,
     "totalTokensFresh": true,
-    "compactionCount": 4
+    "compactionCount": 7
   },
   "agent:main:telegram:slash:8503241862": {
     "origin": {
