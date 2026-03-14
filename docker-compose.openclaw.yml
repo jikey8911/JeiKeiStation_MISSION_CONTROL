@@ -13,14 +13,20 @@ services:
       - "5000:5000"
       - "8001:8001"
     volumes:
-      # Sincronización de la carpeta de configuración unificada
-      - ./openclaw_config:/root
-      # Persistencia de datos y caché en subdirectorios para evitar solapamiento
+      # Sincronización maestra: Mapeamos tu carpeta actual (donde está .openclaw) al /root del contenedor.
+      # Esto evita duplicados y asegura que la sincronización sea instantánea.
+      - ./:/root
+      # Persistencia de datos y caché en volúmenes de Docker para mantener tu carpeta de Windows limpia
       - openclaw_data:/root/data
       - openclaw_cache:/root/cache
+    env_file:
+      # Ruta directa a tu archivo de variables oculto en la nueva estructura
+      - ./.openclaw/.env
     environment:
       - NODE_ENV=production
       - OPENCLAW_HOME=/root
+      # Le decimos explícitamente a OpenClaw dónde encontrar su cerebro
+      - OPENCLAW_CONFIG=/root/openclaw.json
       - OLLAMA_BASE_URL=http://openclaw-ollama:11434
     networks:
       - openclaw-net
@@ -36,6 +42,7 @@ services:
 volumes:
   openclaw_data:
   openclaw_cache:
+
 
 networks:
   openclaw-net:

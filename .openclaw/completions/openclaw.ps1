@@ -949,7 +949,7 @@ Register-ArgumentCompleter -Native -CommandName openclaw -ScriptBlock {
             }
 
             if ($commandPath -eq 'openclaw gateway status') {
-                $completions = @('--url','--token','--password','--timeout','--no-probe','--deep','--json')
+                $completions = @('--url','--token','--password','--timeout','--no-probe','--require-rpc','--deep','--json')
                 $completions | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $_)
                 }
@@ -1033,7 +1033,7 @@ Register-ArgumentCompleter -Native -CommandName openclaw -ScriptBlock {
             }
 
             if ($commandPath -eq 'openclaw daemon status') {
-                $completions = @('--url','--token','--password','--timeout','--no-probe','--deep','--json')
+                $completions = @('--url','--token','--password','--timeout','--no-probe','--require-rpc','--deep','--json')
                 $completions | Where-Object { $_ -like "$wordToComplete*" } | ForEach-Object {
                     [System.Management.Automation.CompletionResult]::new($_, $_, 'ParameterName', $_)
                 }

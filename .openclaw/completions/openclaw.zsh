@@ -935,7 +935,7 @@ _openclaw_agent() {
     "(--to -t)"{--to,-t}"[Recipient number in E.164 used to derive the session key]" \
     "--session-id[Use an explicit session id]" \
     "--agent[Agent id (overrides routing bindings)]" \
-    "--thinking[Thinking level: off | minimal | low | medium | high]" \
+    "--thinking[Thinking level: off | minimal | low | medium | high | xhigh]" \
     "--verbose[Persist agent verbose level for the session]" \
     "--channel[Delivery channel: last|telegram|whatsapp|discord|irc|googlechat|slack|signal|imessage|line|feishu|nostr|msteams|mattermost|nextcloud-talk|matrix|bluebubbles|zalo|zalouser|synology-chat|tlon (omit to use the main session channel)]" \
     "--reply-to[Delivery target override (separate from session routing)]" \
@@ -1166,7 +1166,7 @@ _openclaw_browser_create_profile() {
     "--name[Profile name (lowercase, numbers, hyphens)]" \
     "--color[Profile color (hex format, e.g. #0066CC)]" \
     "--cdp-url[CDP URL for remote Chrome (http/https)]" \
-    "--driver[Profile driver (openclaw|extension). Default: openclaw]"
+    "--driver[Profile driver (openclaw|extension|existing-session). Default: openclaw]"
 }
 
 _openclaw_browser_delete_profile() {
@@ -1728,6 +1728,7 @@ _openclaw_gateway_status() {
     "--password[Gateway password (password auth)]" \
     "--timeout[Timeout in ms]" \
     "--no-probe[Skip RPC probe]" \
+    "--require-rpc[Exit non-zero when the RPC probe fails]" \
     "--deep[Scan system-level services]" \
     "--json[Output JSON]"
 }
@@ -1864,6 +1865,7 @@ _openclaw_daemon_status() {
     "--password[Gateway password (password auth)]" \
     "--timeout[Timeout in ms]" \
     "--no-probe[Skip RPC probe]" \
+    "--require-rpc[Exit non-zero when the RPC probe fails]" \
     "--deep[Scan system-level services]" \
     "--json[Output JSON]"
 }
@@ -3048,7 +3050,7 @@ _openclaw_cron_add() {
     "--exact[Disable cron staggering (set stagger to 0)]" \
     "--system-event[System event payload (main session)]" \
     "--message[Agent message payload]" \
-    "--thinking[Thinking level for agent jobs (off|minimal|low|medium|high)]" \
+    "--thinking[Thinking level for agent jobs (off|minimal|low|medium|high|xhigh)]" \
     "--model[Model override for agent jobs (provider/model or alias)]" \
     "--timeout-seconds[Timeout seconds for agent jobs]" \
     "--light-context[Use lightweight bootstrap context for agent jobs]" \
@@ -3132,7 +3134,7 @@ _openclaw_cron_edit() {
     "--exact[Disable cron staggering (set stagger to 0)]" \
     "--system-event[Set systemEvent payload]" \
     "--message[Set agentTurn payload message]" \
-    "--thinking[Thinking level for agent jobs]" \
+    "--thinking[Thinking level for agent jobs (off|minimal|low|medium|high|xhigh)]" \
     "--model[Model override for agent jobs]" \
     "--timeout-seconds[Timeout seconds for agent jobs]" \
     "--light-context[Enable lightweight bootstrap context for agent jobs]" \
