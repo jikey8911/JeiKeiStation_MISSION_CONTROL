@@ -1,0 +1,180 @@
+services:
+  # ===========================================================================
+  # BASE DE DATOS
+  # ===========================================================================
+  mysql:
+    image: mysql:8.0
+    container_name: jeikei_mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD:-root_password}
+      MYSQL_USER: ${MYSQL_USER:-jeikei_user}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD:-jeikei_password}
+      MYSQL_DATABASE: ${MYSQL_DATABASE:-jeikei_station}
+    ports:
+      - "3306:3306"
+    volumes:
+      - mysql_data:/var/lib/mysql
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-p${MYSQL_ROOT_PASSWORD:-root_password}" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+
+  # ===========================================================================
+  # OLLAMA (LLM)
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: openclaw-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    environment:
+      - OLLAMA_NUM_PARALLEL=1
+      - OLLAMA_NUM_CTX=16000
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:11434/api/tags" ]
+      interval: 15s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # REDIS (CACHE)
+  # ===========================================================================
+  redis:
+    image: redis:7-alpine
+    container_name: openclaw-redis
+    ports:
+      - "6379:6379"
+    volumes:
+      - redis_data:/data
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "redis-cli", "ping" ]
+      interval: 10s
+      timeout: 5s
+      retries: 5
+
+  # ===========================================================================
+  # OPENCLAW (AGENTE IA)
+  # ===========================================================================
+  openclaw-app:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw-app
+    ports:
+      - "5000:5000"
+      - "8001:8001"
+    volumes:
+      - ./openclaw_production/.openclaw:/root/.openclaw
+      - ./openclaw_production/workspace:/root/workspace
+      - openclaw_data:/root/data
+      - openclaw_cache:/root/cache
+    environment:
+      - NODE_ENV=production
+      - OPENCLAW_HOME=/root
+      - OLLAMA_BASE_URL=http://ollama:11434
+      - OPENCLAW_API_KEY=${OPENCLAW_API_KEY}
+      - OPENCLAW_GATEWAY_TOKEN=${OPENCLAW_GATEWAY_TOKEN}
+      - GITHUB_TOKEN=${GITHUB_TOKEN}
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    depends_on:
+      ollama:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================================================
+  # API BACKEND (NODE.JS / tRPC)
+  # ===========================================================================
+  jeikei_api:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: jeikei_api_server
+    command: [ "node", "dist/index.js" ]
+    ports:
+      - "3001:3001"
+    env_file:
+      - .env.production
+    environment:
+      - PORT=3001
+      - NODE_ENV=production
+      - DATABASE_URL=mysql://${MYSQL_USER:-jeikei_user}:${MYSQL_PASSWORD:-jeikei_password}@mysql:3306/${MYSQL_DATABASE:-jeikei_station}
+      - OPENCLAW_BASE_URL=http://openclaw-app:5000
+      - REDIS_HOST=redis
+      - REDIS_PORT=6379
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
+      redis:
+        condition: service_healthy
+      openclaw-app:
+        condition: service_healthy
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3001/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+  # ===========================================================================
+  # FRONTEND (VITE + REACT)
+  # ===========================================================================
+  jeikei_frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile
+      args:
+        - VITE_API_URL=http://jeikei_api:3001
+        - VITE_OAUTH_PORTAL_URL=http://openclaw-app:5000
+    container_name: jeikei_vite_frontend
+    command: pnpm run build:frontend && pnpm run preview:frontend
+    ports:
+      - "3005:3005"
+    env_file:
+      - .env.production
+    environment:
+      - PORT=3005
+      - NODE_ENV=production
+      - VITE_API_URL=http://jeikei_api:3001
+      - VITE_OAUTH_PORTAL_URL=http://openclaw-app:5000
+    networks:
+      - openclaw-net
+    restart: unless-stopped
+    depends_on:
+      - jeikei_api
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:3005" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  mysql_data:
+  redis_data:
+  ollama_data:
+  openclaw_data:
+  openclaw_cache:
+
+networks:
+  openclaw-net:
+    name: jeikeistation_mission_control_openclaw-net
+    driver: bridge
