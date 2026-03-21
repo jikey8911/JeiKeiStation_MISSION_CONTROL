@@ -17,7 +17,14 @@ jobs:
 
       - name: 🔄 Push to Deployment Repository (Main)
         env:
-          DEPLOY_TOKEN: ${{ secrets.JeiKei_DEPLOY_TOKEN }}
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
-          git remote add deployment https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git
-          git push deployment depl:main --force
+          if [ -z "$DEPLOY_TOKEN" ]; then
+            echo "❌ Error: DEPLOY_TOKEN is not set in GitHub Secrets."
+            exit 1
+          fi
+          
+          git remote add deployment "https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git" || git remote set-url deployment "https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
+          
+          echo "🚀 Pushing depl branch to deployment:main..."
+          git push deployment HEAD:main --force
