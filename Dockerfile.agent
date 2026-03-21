@@ -37,6 +37,7 @@ RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/instal
 
 # Volvemos a root y exponemos Homebrew al PATH global
 USER root
+ENV OPENCLAW_HOME=/app
 ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
 
 # 3. Instalar OpenClaw globalmente
@@ -47,13 +48,15 @@ RUN npm install -g openclaw@latest --ignore-scripts
 RUN mkdir -p $OPENCLAW_HOME/data \
     $OPENCLAW_HOME/cache \
     $OPENCLAW_HOME/credentials \
-    /root/agents/main/sessions \
-    /root/skills
+    $OPENCLAW_HOME/.openclaw/memory \
+    $OPENCLAW_HOME/.openclaw/identity \
+    /app/agents/main/sessions \
+    /app/skills
 
 # 5. Copiar archivos de configuración desde la carpeta unificada
-COPY openclaw_production/.openclaw/openclaw.json $OPENCLAW_HOME/openclaw.json
-COPY openclaw_production/.openclaw/agents/agents.json /root/agents/agents.json
-COPY openclaw_production/.openclaw/skills/skills.json /root/skills/skills.json
+COPY openclaw_production/.openclaw/openclaw.json $OPENCLAW_HOME/.openclaw/openclaw.json
+COPY openclaw_production/.openclaw/agents/agents.json /app/agents/agents.json
+COPY openclaw_production/.openclaw/skills/skills.json /app/skills/skills.json
 
 # 6. Script de Inicialización Robusto (v2026.3.13)
 RUN printf '#!/bin/bash\n\

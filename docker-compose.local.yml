@@ -73,12 +73,15 @@ services:
       - "5000:5000"
       - "8001:8001"
     volumes:
-      - ./openclaw_production/.openclaw:/root/.openclaw
-      - openclaw_data:/root/data
-      - openclaw_cache:/root/cache
+      - ./openclaw_production/.openclaw:/app/.openclaw
+      - openclaw_memory:/app/.openclaw/memory
+      - openclaw_sessions:/app/agents/main/sessions
+      - openclaw_identity:/app/.openclaw/identity
+      - openclaw_data:/app/data
+      - openclaw_cache:/app/cache
     environment:
       - NODE_ENV=production
-      - OPENCLAW_HOME=/root
+      - OPENCLAW_HOME=/app
       - OLLAMA_BASE_URL=http://openclaw-ollama:11434
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     networks:
@@ -154,6 +157,9 @@ volumes:
   ollama_data:
   openclaw_data:
   openclaw_cache:
+  openclaw_memory:
+  openclaw_sessions:
+  openclaw_identity:
 
 networks:
   jeikei-net:

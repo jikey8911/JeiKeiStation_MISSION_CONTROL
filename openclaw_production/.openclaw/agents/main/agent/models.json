@@ -6,7 +6,7 @@
       "api": "ollama",
       "models": [
         {
-          "id": "llama3.2:latest",
+          "id": "llama3.2:3b",
           "name": "llama3.2",
           "contextWindow": 36000,
           "maxTokens": 36000,

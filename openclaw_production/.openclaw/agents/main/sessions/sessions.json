@@ -284,7 +284,7 @@
   },
   "agent:main:main": {
     "origin": {
-      "label": "Juank G.E",
+      "label": "Juank G.E (@juank8911) id:8503241862",
       "provider": "telegram",
       "surface": "telegram",
       "chatType": "direct",
@@ -293,7 +293,7 @@
       "accountId": "default"
     },
     "sessionId": "264f5371-928f-45a5-a92e-9bd8fab99d57",
-    "updatedAt": 1774111066530,
+    "updatedAt": 1774113323772,
     "systemSent": true,
     "abortedLastRun": false,
     "chatType": "direct",
