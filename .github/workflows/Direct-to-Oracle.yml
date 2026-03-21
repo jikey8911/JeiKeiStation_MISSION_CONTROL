@@ -43,6 +43,10 @@ jobs:
             git fetch origin depl
             git reset --hard origin/depl
             
+            # --- NUEVO PASO: Destruir contenedores conflictivos ---
+            echo "🧹 Limpiando contenedores huérfanos..."
+            sudo docker rm -f openclaw-app jeikei_mysql openclaw-redis openclaw-ollama || true
+            
             # 4. Levantar Docker usando el archivo de producción
             echo "🚀 Desplegando contenedores..."
             sudo docker compose -f docker-compose.prod.yml down
