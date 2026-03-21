@@ -63,8 +63,11 @@ RUN printf '#!/bin/bash\n\
     # 1. Aplicar permisos estrictos (Crítico para Seguridad)\n\
     chmod 700 /root/.openclaw 2>/dev/null || true\n\
     \n\
+    # 2. Limpieza de sesiones huérfanas\n\
+    openclaw sessions cleanup\n\
+    \n\
     echo "✅ Entorno listo. Ejecutando Gateway (Direct Mode)..."\n\
-    # 2. Bypass Systemd: Ejecución directa con enlace a red LAN\n\
+    # 3. Bypass Systemd: Ejecución directa con enlace a red LAN\n\
     exec openclaw gateway run --bind lan\n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 

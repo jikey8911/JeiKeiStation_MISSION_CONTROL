@@ -1,6 +1,0 @@
-{
-  "primary": "ollama/llama3.2:latest",
-  "models": {
-    "ollama/llama3.2:latest": {}
-  }
-}
