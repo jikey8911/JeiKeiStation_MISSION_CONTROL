@@ -9,26 +9,22 @@ jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout Branch
+      - name: 📥 Checkout Source Repo
         uses: actions/checkout@v4
         with:
           ref: depl
           fetch-depth: 0
 
-      - name: 🔄 Sync Repositories
+      - name: 🔄 Push to Target Repo
+        uses: cpina/github-action-push-to-another-repository@main
         env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
-        run: |
-          git config --global user.email "juanguzmanescandonfp@gmail.com"
-          git config --global user.name "jikey8911"
-          
-          # Construimos la URL con tu usuario y el token directamente
-          REMOTE_URL="https://jikey8911:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
-          
-          git remote add target "$REMOTE_URL" || git remote set-url target "$REMOTE_URL"
-          
-          echo "🚀 Forzando sincronización hacia JeiKeiStattion_DokerDep:main..."
-          git push target HEAD:main --force
+          API_TOKEN_GITHUB: ${{ secrets.DEPLOY_TOKEN }}
+        with:
+          source-directory: '.'
+          destination-github-username: 'jikey8911'
+          destination-repository-name: 'JeiKeiStattion_DokerDep'
+          user-email: 'juanguzmanescandonfp@gmail.com'
+          target-branch: main
 
       - name: 🚀 Update Oracle Cloud
         uses: appleboy/ssh-action@v1.0.3
@@ -36,19 +32,17 @@ jobs:
           host: 147.224.220.58
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          connect_timeout: 30s
           script: |
-            cd /home/ubuntu/JeiKeiStattion_DokerDep || exit
+            if [ ! -d "/home/ubuntu/JeiKeiStattion_DokerDep" ]; then
+              git clone https://github.com/jikey8911/JeiKeiStattion_DokerDep.git /home/ubuntu/JeiKeiStattion_DokerDep
+            fi
             
-            # 1. Traer los cambios del repo de despliegue
+            cd /home/ubuntu/JeiKeiStattion_DokerDep
             git fetch origin main
             git reset --hard origin/main
             
-            # 2. Levantar usando ESPECÍFICAMENTE el archivo de producción
             echo "🔄 Desplegando con docker-compose.prod.yml..."
-            
-            # Usamos -f para forzar el archivo de producción
             sudo docker compose -f docker-compose.prod.yml down
             sudo docker compose -f docker-compose.prod.yml up -d --build
-            
-            # 3. Limpieza automática
             sudo docker image prune -f
