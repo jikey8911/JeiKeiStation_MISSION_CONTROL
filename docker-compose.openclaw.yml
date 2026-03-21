@@ -1,27 +1,29 @@
 version: '3.8'
 
 services:
-  # ===========================================================================
-  # GATEWAY PRINCIPAL DE OPENCLAW
-  # ===========================================================================
   openclaw:
     build:
       context: .
       dockerfile: Dockerfile.agent
     container_name: openclaw-app
+    env_file:
+      - .env
     ports:
-      - "5000:18789"
+      - "5000:5000"
       - "8001:8001"
     volumes:
-      # Sincronización de la carpeta de configuración unificada
-      - ./openclaw_config:/root
-      # Persistencia de datos y caché en subdirectorios para evitar solapamiento
-      - openclaw_data:/root/data
-      - openclaw_cache:/root/cache
+      # Mapeo del cerebro de producción
+      - ./openclaw_production/.openclaw:/root/.openclaw
+      # Mapeo del código para lectura/escritura
+      - .:/root/workspace
+      # Almacenamiento persistente
+      - openclaw_prod_data:/root/.openclaw/data
+      - openclaw_prod_cache:/root/.openclaw/cache
     environment:
       - NODE_ENV=production
       - OPENCLAW_HOME=/root
-      - OLLAMA_BASE_URL=http://openclaw-ollama:11434
+      - OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
+      - OLLAMA_BASE_URL=http://host.docker.internal:11434
     networks:
       - openclaw-net
     extra_hosts:
@@ -29,15 +31,16 @@ services:
     restart: unless-stopped
     healthcheck:
       test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
-      interval: 15s
-      timeout: 5s
+      interval: 30s
+      timeout: 10s
       retries: 3
 
 volumes:
-  openclaw_data:
-  openclaw_cache:
+  openclaw_prod_data:
+  openclaw_prod_cache:
+
 
 networks:
   openclaw-net:
-    name: jeikeistation_mission_control_openclaw-net
+    name: jeikeistation_prod_network
     driver: bridge
