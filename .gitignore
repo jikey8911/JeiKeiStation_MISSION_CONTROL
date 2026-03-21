@@ -31,3 +31,12 @@ logs/
 # Temporary files
 tmp/
 temp/
+openclaw.json.bak.*
+openclaw.json.bak
+# Large directories and backups
+workspace/
+backup_openclaw_final/
+openclaw_backups/
+.cache/
+.npm/
+.pnpm-store/
