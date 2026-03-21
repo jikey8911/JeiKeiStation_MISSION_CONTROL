@@ -18,7 +18,6 @@ jobs:
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           envs: GITHUB_TOKEN
-          connect_timeout: 30s
           script: |
             PROJECT_DIR="/home/ubuntu/JeiKeiStation_MISSION_CONTROL"
             REPO_URL="https://oauth2:$GITHUB_TOKEN@github.com/jikey8911/JeiKeiStation_MISSION_CONTROL.git"
