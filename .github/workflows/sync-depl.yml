@@ -1,0 +1,23 @@
+name: 🔄 Sync Depl to Deployment Repo
+
+on:
+  push:
+    branches:
+      - depl
+
+jobs:
+  sync:
+    runs-on: ubuntu-latest
+    steps:
+      - name: 📥 Checkout depl branch
+        uses: actions/checkout@v4
+        with:
+          ref: depl
+          fetch-depth: 0
+
+      - name: 🔄 Push to Deployment Repository (Main)
+        env:
+          DEPLOY_TOKEN: ${{ secrets.JeiKei_DEPLOY_TOKEN }}
+        run: |
+          git remote add deployment https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git
+          git push deployment depl:main --force
