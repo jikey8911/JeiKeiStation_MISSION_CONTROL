@@ -76,10 +76,10 @@ services:
       - "5000:5000"
       - "8001:8001"
     volumes:
-      - ./openclaw_production/.openclaw:/root/.openclaw
-      - ./openclaw_production/workspace:/root/workspace
-      - openclaw_data:/root/data
-      - openclaw_cache:/root/cache
+      - ./openclaw_production/.openclaw:/root/openclaw_production/.openclaw
+      - ./openclaw_production/.openclaw/workspace:/root/openclaw_production/.openclaw/workspace
+      - openclaw_data:/root/openclaw_production/.openclaw/data
+      - openclaw_cache:/root/openclaw_production/.openclaw/cache
     environment:
       - NODE_ENV=production
       - OPENCLAW_HOME=/root
@@ -173,6 +173,7 @@ volumes:
   ollama_data:
   openclaw_data:
   openclaw_cache:
+
 
 networks:
   openclaw-net:
