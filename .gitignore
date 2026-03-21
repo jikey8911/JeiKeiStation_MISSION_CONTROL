@@ -34,7 +34,6 @@ logs/
 .venv/
 backup*/
 openclaw_backups/
-workspace/
 openclaw.json.bak.*
 openclaw.json.bak
 # Temporary files

@@ -1,18 +1,15 @@
 #!/bin/bash
-# ollama-init.sh - Script para inicializar Ollama y descargar modelos
+# ollama-init.sh
 
-# Iniciar Ollama en segundo plano
+echo "Iniciando servidor Ollama en segundo plano..."
 ollama serve &
+PID=$!
 
-# Esperar a que Ollama esté listo (usando bash para evitar dependencia de curl)
-echo "Esperando a que Ollama se inicie en el puerto 11434..."
-while ! (echo > /dev/tcp/localhost/11434) >/dev/null 2>&1; do
-  sleep 2
-done
+# Le damos 5 segundos de gracia para que el servidor levante completamente
+sleep 5
 
-echo "Ollama está listo. Descargando modelo llama3.2:3b..."
+echo "Descargando modelo llama3.2:3b..."
 ollama pull llama3.2:3b
 
-# Mantener el proceso en primer plano para que el contenedor no se cierre
-echo "Modelo descargado. Manteniendo proceso activo..."
-wait
+echo "¡Modelo descargado y listo! Manteniendo el proceso principal vivo..."
+wait $PID

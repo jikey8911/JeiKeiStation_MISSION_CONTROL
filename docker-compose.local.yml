@@ -2,22 +2,21 @@ version: '3.8'
 
 services:
   # ===========================================================================
-  # DATABASE (MySQL)
+  # DATABASE (PostgreSQL) - Mission Control usa Postgres, no MySQL
   # ===========================================================================
-  mysql:
-    image: mysql:8.0
-    container_name: jeikei_mysql
+  db:
+    image: postgres:15-alpine
+    container_name: jeikei_postgres_local
     environment:
-      MYSQL_ROOT_PASSWORD: root_password
-      MYSQL_USER: jeikei_user
-      MYSQL_PASSWORD: jeikei_password
-      MYSQL_DATABASE: jeikei_station
+      POSTGRES_USER: ${POSTGRES_USER:-postgres}
+      POSTGRES_PASSWORD: ${POSTGRES_PASSWORD:-postgres}
+      POSTGRES_DB: ${POSTGRES_DB:-jeikei_station}
     ports:
-      - "3306:3306"
+      - "5432:5432"
     volumes:
-      - mysql_data:/var/lib/mysql
+      - postgres_data:/var/lib/postgresql/data
     healthcheck:
-      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost", "-u", "root", "-proot_password" ]
+      test: [ "CMD-SHELL", "pg_isready -U ${POSTGRES_USER:-postgres}" ]
       interval: 10s
       timeout: 5s
       retries: 5
@@ -26,37 +25,18 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
-  # REDIS (Cache)
-  # ===========================================================================
-  redis:
-    image: redis:7-alpine
-    container_name: openclaw-redis
-    ports:
-      - "6379:6379"
-    volumes:
-      - redis_data:/data
-    command: redis-server --appendonly yes
-    networks:
-      - jeikei-net
-    restart: unless-stopped
-    healthcheck:
-      test: [ "CMD", "redis-cli", "ping" ]
-      interval: 10s
-      timeout: 5s
-      retries: 5
-
-  # ===========================================================================
-  # OLLAMA (Local LLM) - Optimized for CPU only if GPU not available
+  # OLLAMA (Local LLM) - Mantenido si necesitas modelos locales
   # ===========================================================================
   ollama:
-    image: ollama/ollama:latest
-    container_name: openclaw-ollama
+    build:
+      context: .
+      dockerfile: Dockerfile.ollama
+    container_name: openclaw-ollama-local
     ports:
       - "11434:11434"
     volumes:
+      # Solo necesitamos mapear los datos del modelo, el script ya está dentro por el Dockerfile
       - ollama_data:/root/.ollama
-      - ./ollama-init.sh:/ollama-init.sh
-    entrypoint: [ "/bin/bash", "/ollama-init.sh" ]
     networks:
       - jeikei-net
     restart: unless-stopped
@@ -68,30 +48,27 @@ services:
     build:
       context: .
       dockerfile: Dockerfile.agent
-    container_name: openclaw-app
+    container_name: openclaw-app-local
     ports:
       - "5000:5000"
       - "8001:8001"
     volumes:
+      # Sincroniza tu configuración local con el contenedor
       - ./openclaw_production/.openclaw:/app/.openclaw
+      # Volúmenes persistentes
       - openclaw_memory:/app/.openclaw/memory
-      - openclaw_sessions:/app/agents/main/sessions
+      - openclaw_sessions:/app/.openclaw/agents/main/sessions
       - openclaw_identity:/app/.openclaw/identity
-      - openclaw_data:/app/data
-      - openclaw_cache:/app/cache
     environment:
-      - NODE_ENV=production
+      - NODE_ENV=development
       - OPENCLAW_HOME=/app
-      - OLLAMA_BASE_URL=http://openclaw-ollama:11434
+      - OLLAMA_BASE_URL=http://openclaw-ollama-local:11434
       - TELEGRAM_BOT_TOKEN=${TELEGRAM_BOT_TOKEN}
     networks:
       - jeikei-net
     restart: unless-stopped
     depends_on:
-      ollama:
-        condition: service_started
-      redis:
-        condition: service_healthy
+      - ollama
 
   # ===========================================================================
   # JEIKEI API (Backend)
@@ -100,7 +77,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jeikei_api_server
+    container_name: jeikei_api_server_local
     command: pnpm run dev:backend
     ports:
       - "3001:3001"
@@ -109,18 +86,15 @@ services:
     environment:
       - PORT=3001
       - NODE_ENV=development
-      - CI=true
+      - DATABASE_URL=postgresql://${POSTGRES_USER:-postgres}:${POSTGRES_PASSWORD:-postgres}@db:5432/${POSTGRES_DB:-jeikei_station}
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/client/node_modules
-      - /app/server/node_modules
-      - /app/shared/node_modules
     networks:
       - jeikei-net
     restart: unless-stopped
     depends_on:
-      mysql:
+      db:
         condition: service_healthy
 
   # ===========================================================================
@@ -130,7 +104,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
-    container_name: jeikei_vite_frontend
+    container_name: jeikei_vite_frontend_local
     command: pnpm run dev:frontend
     ports:
       - "3000:3000"
@@ -138,13 +112,11 @@ services:
       - .env
     environment:
       - PORT=3000
-      - CI=true
+      - NODE_ENV=development
+      - VITE_API_URL=http://localhost:3001
     volumes:
       - .:/app
       - /app/node_modules
-      - /app/client/node_modules
-      - /app/server/node_modules
-      - /app/shared/node_modules
     networks:
       - jeikei-net
     restart: unless-stopped
@@ -152,14 +124,12 @@ services:
       - jeikei_api
 
 volumes:
-  mysql_data:
-  redis_data:
+  postgres_data:
   ollama_data:
-  openclaw_data:
-  openclaw_cache:
   openclaw_memory:
   openclaw_sessions:
   openclaw_identity:
+
 
 networks:
   jeikei-net:
