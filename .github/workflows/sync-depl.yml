@@ -24,7 +24,14 @@ jobs:
             exit 1
           fi
           
-          git remote add deployment "https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git" || git remote set-url deployment "https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
+          # 1. Configurar identidad (Crucial)
+          git config --global user.email "github-actions[bot]@users.noreply.github.com"
+          git config --global user.name "github-actions[bot]"
+
+          # 2. Configurar el remoto
+          REMOTE_URL="https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
+          git remote add deployment "$REMOTE_URL" || git remote set-url deployment "$REMOTE_URL"
           
+          # 3. Empujar
           echo "🚀 Pushing depl branch to deployment:main..."
           git push deployment HEAD:main --force
