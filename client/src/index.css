@@ -1,0 +1,32 @@
+@import "tailwindcss";
+/* JeiKei Design System - Neural Grid Styles */
+.grid-base {
+  position: fixed;
+  inset: 0;
+  background:
+    linear-gradient(rgba(255,255,255,0.04) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(255,255,255,0.04) 1px, transparent 1px);
+  background-size: 40px 40px;
+  z-index: 0;
+}
+
+.grid-neural-overlay {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 1;
+}
+
+.neural-spark {
+  position: absolute;
+  width: 6px;
+  height: 6px;
+  border-radius: 50%;
+  background: radial-gradient(circle, #4ffcff, transparent 70%);
+  animation: spark 2s ease-out forwards;
+}
+
+@keyframes spark {
+  from { transform: scale(0.3); opacity: 1; }
+  to { transform: scale(2); opacity: 0; }
+}
