@@ -26,6 +26,29 @@ services:
     restart: unless-stopped
 
   # ===========================================================================
+  # OLLAMA (Local LLM Provider)
+  # ===========================================================================
+  ollama:
+    image: ollama/ollama:latest
+    container_name: openclaw-ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+      - ./ollama-init.sh:/ollama-init.sh
+    networks:
+      - jeikei-net
+    restart: unless-stopped
+    entrypoint: [ "/bin/bash", "/ollama-init.sh" ]
+    deploy:
+      resources:
+        reservations:
+          devices:
+            - driver: nvidia
+              count: all
+              capabilities: [ gpu ]
+
+  # ===========================================================================
   # API BACKEND (NODE)
   # ===========================================================================
   jeikei_api:
@@ -84,8 +107,41 @@ services:
       - jeikei-net
     restart: unless-stopped
 
+  # ===========================================================================
+  # AGENTE OPENCLAW - MODO PRODUCCIÓN (v2026.3.13)
+  # ===========================================================================
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw-app
+    ports:
+      - "5000:5000"
+      - "8001:8001"
+    env_file:
+      - .env
+    volumes:
+      # Raíz del proyecto para operación directa de los agentes
+      - .:/root/workspace
+      # Persistencia de configuración oficial
+      - ./openclaw_production/.openclaw:/root/.openclaw
+      # Directorios adicionales para evitar colisiones
+      - ./openclaw_production/workspace:/root/openclaw_workspace
+      - ./openclaw_production/skills:/root/skills
+    environment:
+      - NODE_ENV=production
+      - OPENCLAW_HOME=/root/.openclaw
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    networks:
+      - jeikei-net
+    restart: unless-stopped
+    depends_on:
+      - jeikei_api
+
 volumes:
   mysql_data:
+  ollama_data:
 
 networks:
   jeikei-net:

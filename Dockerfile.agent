@@ -55,22 +55,17 @@ COPY openclaw_production/.openclaw/openclaw.json $OPENCLAW_HOME/openclaw.json
 COPY openclaw_production/.openclaw/agents/agents.json /root/agents/agents.json
 COPY openclaw_production/.openclaw/skills/skills.json /root/skills/skills.json
 
-# 6. Script de Inicialización Robusto
+# 6. Script de Inicialización Robusto (v2026.3.13)
 RUN printf '#!/bin/bash\n\
     set -e\n\
-    echo "🤖 Iniciando OpenClaw en modo unificado..."\n\
+    echo "🤖 Iniciando OpenClaw en modo producción (v2026.3.13)..."\n\
     \n\
-    # Asegurar que existe la carpeta .openclaw\n\
-    mkdir -p /root/.openclaw\n\
+    # 1. Aplicar permisos estrictos (Crítico para Seguridad)\n\
+    chmod 700 /root/.openclaw 2>/dev/null || true\n\
     \n\
-    # Sincronizar configuración maestra si existe en /root\n\
-    if [ -f "/root/openclaw.json" ]; then\n\
-    echo "🔄 Sincronizando configuración maestra..."\n\
-    cp /root/openclaw.json /root/.openclaw/openclaw.json\n\
-    fi\n\
-    \n\
-    echo "✅ Entorno listo. Ejecutando Gateway..."\n\
-    exec openclaw gateway\n\
+    echo "✅ Entorno listo. Ejecutando Gateway (Direct Mode)..."\n\
+    # 2. Bypass Systemd: Ejecución directa con enlace a red LAN\n\
+    exec openclaw gateway run --bind lan\n\
     ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
 
 # 7. Healthcheck
