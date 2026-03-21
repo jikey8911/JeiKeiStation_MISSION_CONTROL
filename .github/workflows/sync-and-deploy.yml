@@ -1,4 +1,4 @@
-name: 🔄 Sync and Deploy
+name: 🚀 Deploy Direct to Oracle
 
 on:
   push:
@@ -6,43 +6,39 @@ on:
       - depl
 
 jobs:
-  sync-and-deploy:
+  deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout Source Repo
-        uses: actions/checkout@v4
-        with:
-          ref: depl
-          fetch-depth: 0
-
-      - name: 🔄 Push to Target Repo
-        uses: cpina/github-action-push-to-another-repository@main
-        env:
-          API_TOKEN_GITHUB: ${{ secrets.DEPLOY_TOKEN }}
-        with:
-          source-directory: '.'
-          destination-github-username: 'jikey8911'
-          destination-repository-name: 'JeiKeiStattion_DokerDep'
-          user-email: 'juanguzmanescandonfp@gmail.com'
-          target-branch: main
-
       - name: 🚀 Update Oracle Cloud
         uses: appleboy/ssh-action@v1.0.3
+        env:
+          GITHUB_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         with:
           host: 147.224.220.58
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
+          envs: GITHUB_TOKEN
           connect_timeout: 30s
           script: |
-            if [ ! -d "/home/ubuntu/JeiKeiStattion_DokerDep" ]; then
-              git clone https://github.com/jikey8911/JeiKeiStattion_DokerDep.git /home/ubuntu/JeiKeiStattion_DokerDep
+            # 1. Definir la carpeta en Oracle y la URL con el Token
+            PROJECT_DIR="/home/ubuntu/JeiKeiStation_MISSION_CONTROL"
+            REPO_URL="https://oauth2:$GITHUB_TOKEN@github.com/jikey8911/JeiKeiStation_MISSION_CONTROL.git"
+
+            # 2. Clonar la rama 'depl' si la carpeta no existe
+            if [ ! -d "$PROJECT_DIR" ]; then
+              echo "📥 Clonando repositorio por primera vez..."
+              git clone -b depl $REPO_URL $PROJECT_DIR
             fi
             
-            cd /home/ubuntu/JeiKeiStattion_DokerDep
-            git fetch origin main
-            git reset --hard origin/main
+            cd $PROJECT_DIR
             
-            echo "🔄 Desplegando con docker-compose.prod.yml..."
+            # 3. Forzar la descarga de los últimos cambios
+            echo "🔄 Sincronizando código..."
+            git fetch origin depl
+            git reset --hard origin/depl
+            
+            # 4. Levantar Docker
+            echo "🚀 Desplegando contenedores..."
             sudo docker compose -f docker-compose.prod.yml down
             sudo docker compose -f docker-compose.prod.yml up -d --build
             sudo docker image prune -f
