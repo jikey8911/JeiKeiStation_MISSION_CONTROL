@@ -22,8 +22,7 @@ services:
       timeout: 5s
       retries: 5
     networks:
-      - default
-      - openclaw-net
+      - jeikei-net
     restart: unless-stopped
 
   # ===========================================================================
@@ -34,7 +33,7 @@ services:
       context: .
       dockerfile: Dockerfile
     container_name: jeikei_api_server
-    command: [ "/app/scripts/entrypoint.sh" ]
+    command: pnpm run dev:backend
     ports:
       - "3001:3001"
     env_file:
@@ -45,12 +44,16 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/client/node_modules
+      - /app/server/node_modules
     extra_hosts:
       - "host.docker.internal:host-gateway"
     networks:
-      - openclaw-net
-      - default
+      - jeikei-net
     restart: unless-stopped
+    depends_on:
+      mysql:
+        condition: service_healthy
 
   # ===========================================================================
   # FRONTEND (VITE)
@@ -71,19 +74,17 @@ services:
     volumes:
       - .:/app
       - /app/node_modules
+      - /app/client/node_modules
+      - /app/server/node_modules
     depends_on:
       - jeikei_api
     networks:
-      - openclaw-net
-      - default
+      - jeikei-net
     restart: unless-stopped
 
 volumes:
   mysql_data:
 
 networks:
-  default:
+  jeikei-net:
     driver: bridge
-  openclaw-net:
-    name: jeikeistation_mission_control_openclaw-net
-    external: true

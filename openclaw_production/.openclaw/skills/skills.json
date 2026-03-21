@@ -1,0 +1,96 @@
+{
+    "skills": [
+        {
+            "id": "web-search",
+            "name": "Búsqueda Web",
+            "description": "Permite a los agentes buscar información actualizada en internet.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "provider": "tavily",
+            "authentication": {
+                "type": "api-key",
+                "required": true,
+                "envVar": "TAVILY_API_KEY"
+            }
+        },
+        {
+            "id": "file-operations",
+            "name": "Operaciones de Archivos",
+            "description": "Lectura, escritura y gestión del código fuente en el workspace.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "capabilities": [
+                "read",
+                "write",
+                "delete",
+                "list",
+                "create-directory"
+            ],
+            "permissions": {
+                "allowedPaths": [
+                    "/root/.openclaw/workspace",
+                    "/root/.openclaw/data",
+                    "/root/.openclaw/cache"
+                ]
+            }
+        },
+        {
+            "id": "code-execution",
+            "name": "Ejecución de Código",
+            "description": "Sandbox seguro para ejecutar scripts de Python, Node.js y comandos Bash.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "sandbox": true,
+            "supportedLanguages": [
+                "python",
+                "javascript",
+                "bash"
+            ],
+            "timeout": 60
+        },
+        {
+            "id": "database-query",
+            "name": "Consultas de Base de Datos",
+            "description": "Interacción con MySQL y PostgreSQL para el Agente de Base de Datos.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "authentication": {
+                "type": "connection-string",
+                "envVar": "DATABASE_URL"
+            }
+        },
+        {
+            "id": "websocket-broadcast",
+            "name": "Transmisión CCTV",
+            "description": "Habilidad del Director para enviar estados de animación a la Oficina Virtual.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "internal",
+            "capabilities": [
+                "broadcast-state"
+            ],
+            "network": {
+                "port": 8001
+            }
+        },
+        {
+            "id": "image-generation",
+            "name": "Generador de Assets",
+            "description": "Interfaz con el motor Banana para crear imágenes y elementos visuales.",
+            "version": "1.0.0",
+            "enabled": true,
+            "type": "external",
+            "capabilities": [
+                "text-to-image"
+            ],
+            "authentication": {
+                "type": "api-key",
+                "envVar": "BANANA_API_KEY"
+            }
+        }
+    ]
+}

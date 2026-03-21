@@ -10,16 +10,16 @@ WORKDIR /app
 RUN corepack enable pnpm && corepack prepare pnpm@10.30.3 --activate
 
 # Copiar archivos de definición de dependencias
-COPY package.json pnpm-lock.yaml ./
-COPY patches ./patches
+COPY package.json pnpm-lock.yaml pnpm-workspace.yaml ./
+COPY shared/package.json ./shared/
+COPY client/package.json ./client/
+COPY server/package.json ./server/
 
-# Instalar dependencias (incluyendo devDependencies para tsx, drizzle, vite)
+# Instalar dependencias
 RUN pnpm install --prod=false
 
 # Copiar el resto del código del proyecto
 COPY . .
-
-RUN chmod +x /app/scripts/entrypoint.sh
 
 # Exponer los puertos posibles
 EXPOSE 3000
@@ -30,4 +30,4 @@ ENV NODE_ENV=development
 ENV PORT=3000
 
 # El comando por defecto se sobreescribe en docker-compose.yml
-CMD pnpm run dev:frontend
+CMD pnpm run dev
