@@ -10,7 +10,7 @@ services:
       dockerfile: Dockerfile.agent
     container_name: openclaw-app
     ports:
-      - "5000:5000"
+      - "5000:18789"
       - "8001:8001"
     volumes:
       # Sincronización de la carpeta de configuración unificada
