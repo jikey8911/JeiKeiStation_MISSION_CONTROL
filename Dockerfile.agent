@@ -1,0 +1,83 @@
+FROM node:22-slim
+
+# 1. Configuración de Variables de Entorno (Alineado con el docker-compose)
+ENV OPENCLAW_HOME=/root
+ENV NODE_ENV=production
+ENV PYTHONUNBUFFERED=1
+
+WORKDIR /app
+
+# 2. Instalar dependencias del sistema (Kit completo para Skills y Compilación)
+RUN apt-get update && apt-get install -y --no-install-recommends \
+    curl \
+    lsof \
+    bash \
+    git \
+    python3 \
+    python3-pip \
+    python3-venv \
+    sqlite3 \
+    make \
+    g++ \
+    cmake \
+    build-essential \
+    openssl \
+    ca-certificates \
+    procps \
+    sudo && \
+    rm -rf /var/lib/apt/lists/*
+
+# 2.5. Instalar Homebrew (Linuxbrew) - Requiere un usuario no-root
+RUN useradd -m -s /bin/bash linuxbrew && \
+    echo "linuxbrew ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers
+
+USER linuxbrew
+ENV NONINTERACTIVE=1
+RUN /bin/bash -c "$(curl -fsSL https://raw.githubusercontent.com/Homebrew/install/HEAD/install.sh)"
+
+# Volvemos a root y exponemos Homebrew al PATH global
+USER root
+ENV PATH="/home/linuxbrew/.linuxbrew/bin:/home/linuxbrew/.linuxbrew/sbin:${PATH}"
+
+# 3. Instalar OpenClaw globalmente
+RUN npm install -g openclaw@latest --ignore-scripts
+
+# 4. Crear estructura de directorios siguiendo el estándar
+# Nota: Creamos también las carpetas de agents y skills fuera de .openclaw si las usas así
+RUN mkdir -p $OPENCLAW_HOME/data \
+    $OPENCLAW_HOME/cache \
+    $OPENCLAW_HOME/credentials \
+    /root/agents/main/sessions \
+    /root/skills
+
+# 5. Copiar archivos de configuración desde la carpeta unificada
+COPY openclaw_config/openclaw.json $OPENCLAW_HOME/openclaw.json
+COPY openclaw_config/agents/agents.json /root/agents/agents.json
+COPY openclaw_config/skills/skills.json /root/skills/skills.json
+
+# 6. Script de Inicialización Robusto
+RUN printf '#!/bin/bash\n\
+    set -e\n\
+    echo "🤖 Iniciando OpenClaw en modo unificado..."\n\
+    \n\
+    # Asegurar que existe la carpeta .openclaw\n\
+    mkdir -p /root/.openclaw\n\
+    \n\
+    # Sincronizar configuración maestra si existe en /root\n\
+    if [ -f "/root/openclaw.json" ]; then\n\
+        echo "🔄 Sincronizando configuración maestra..."\n\
+        cp /root/openclaw.json /root/.openclaw/openclaw.json\n\
+    fi\n\
+    \n\
+    echo "✅ Entorno listo. Ejecutando Gateway..."\n\
+    exec openclaw gateway\n\
+    ' > /app/entrypoint.sh && chmod +x /app/entrypoint.sh
+
+# 7. Healthcheck
+HEALTHCHECK --interval=30s --timeout=10s --start-period=60s --retries=3 \
+    CMD curl -f http://localhost:5000/health 2>/dev/null || exit 1
+
+# Puertos
+EXPOSE 5000 8000 8001
+
+ENTRYPOINT ["/app/entrypoint.sh"]

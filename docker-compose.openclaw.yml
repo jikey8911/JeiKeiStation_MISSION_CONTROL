@@ -1,0 +1,43 @@
+version: '3.8'
+
+services:
+  # ===========================================================================
+  # GATEWAY PRINCIPAL DE OPENCLAW
+  # ===========================================================================
+  openclaw:
+    build:
+      context: .
+      dockerfile: Dockerfile.agent
+    container_name: openclaw-app
+    ports:
+      - "5000:5000"
+      - "8001:8001"
+    volumes:
+      # Sincronización de la carpeta de configuración unificada
+      - ./openclaw_config:/root
+      # Persistencia de datos y caché en subdirectorios para evitar solapamiento
+      - openclaw_data:/root/data
+      - openclaw_cache:/root/cache
+    environment:
+      - NODE_ENV=production
+      - OPENCLAW_HOME=/root
+      - OLLAMA_BASE_URL=http://openclaw-ollama:11434
+    networks:
+      - openclaw-net
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    restart: unless-stopped
+    healthcheck:
+      test: [ "CMD", "curl", "-f", "http://localhost:5000/health" ]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+
+volumes:
+  openclaw_data:
+  openclaw_cache:
+
+networks:
+  openclaw-net:
+    name: jeikeistation_mission_control_openclaw-net
+    driver: bridge
