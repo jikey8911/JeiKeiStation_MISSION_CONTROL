@@ -22,7 +22,7 @@
         "api": "ollama",
         "models": [
           {
-            "id": "llama3.2:latest",
+            "id": "llama3.2:3b",
             "name": "llama3.2",
             "contextWindow": 36000,
             "maxTokens": 36000
@@ -34,10 +34,10 @@
   "agents": {
     "defaults": {
       "model": {
-        "primary": "ollama/llama3.2:latest"
+        "primary": "ollama/llama3.2:3b"
       },
       "models": {
-        "ollama/llama3.2:latest": {}
+        "ollama/llama3.2:3b": {}
       },
       "workspace": "/root/workspace",
       "memorySearch": {
@@ -46,103 +46,14 @@
       "compaction": {
         "mode": "safeguard"
       }
-    },
-    "list": [
-      {
-        "id": "frontend-dev",
-        "name": "Frontend Developer Agent",
-        "description": "Desarrollador especializado en React, TailwindCSS y UI/UX",
-        "type": "coding",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.3,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres un desarrollador Frontend experto en React, TypeScript y TailwindCSS. Tu tarea es crear interfaces de usuario inmersivas, responsivas y mantener una estética cyberpunk cuando se requiera. Escribe código limpio y bien estructurado.",
-        "skills": [
-          "code-execution",
-          "file-operations"
-        ]
-      },
-      {
-        "id": "backend-dev",
-        "name": "Backend Developer Agent",
-        "description": "Desarrollador especializado en Node.js, tRPC y APIs",
-        "type": "coding",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.2,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres un desarrollador Backend experto en Node.js, Express y tRPC. Tu tarea es construir APIs seguras, eficientes y gestionar la lógica de negocio de la plataforma JeiKeiStation. Prioriza el rendimiento y la seguridad.",
-        "skills": [
-          "code-execution",
-          "file-operations"
-        ]
-      },
-      {
-        "id": "database-dev",
-        "name": "Database Specialist Agent",
-        "description": "Especialista en bases de datos MySQL, Drizzle ORM y diseño de esquemas",
-        "type": "data",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.2,
-        "maxTokens": 3000,
-        "systemPrompt": "Eres un administrador de bases de datos experto en MySQL y Drizzle ORM. Tu tarea es diseñar esquemas relacionales, optimizar consultas y garantizar la integridad de los datos de la plataforma.",
-        "skills": [
-          "database-query",
-          "file-operations"
-        ]
-      },
-      {
-        "id": "project-owner",
-        "name": "Project Owner Manager",
-        "description": "Agente encargado de extraer requisitos y estructurar proyectos",
-        "type": "management",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.6,
-        "maxTokens": 4096,
-        "systemPrompt": "Eres el Product Owner de JeiKeiStation. Tu misión es extraer los requisitos de un proyecto mediante una entrevista inversa. Toma el control, haz UNA sola pregunta a la vez, mantén un tono clínico y técnico. Genera el SCRUM_BACKLOG.md al finalizar.",
-        "skills": [
-          "file-operations"
-        ]
-      },
-      {
-        "id": "user-assistant",
-        "name": "JeiAssistant",
-        "description": "Asistente virtual para resolver dudas del usuario",
-        "type": "support",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.7,
-        "maxTokens": 2048,
-        "systemPrompt": "Eres un asistente de soporte técnico para JeiKeiStation. Ayuda a los usuarios con dudas sobre la plataforma, cómo asignar tareas a los agentes y cómo interpretar el dashboard. Sé amable, conciso y técnico cuando sea necesario.",
-        "skills": [
-          "web-search"
-        ]
-      },
-      {
-        "id": "virtual-director",
-        "name": "Virtual Office Director",
-        "description": "Agente encargado de la coreografía visual del CCTV",
-        "type": "simulation",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "temperature": 0.8,
-        "maxTokens": 1024,
-        "systemPrompt": "Eres el Director Coreográfico de una Oficina Virtual AI. Tienes agentes en la oficina. Tu tarea es generar estados aleatorios pero coherentes (TYPING, WALKING, IDLE) y coordenadas (x,y) en un grid de 10x10 para simular actividad en el componente CCTV.",
-        "skills": [
-          "code-execution"
-        ]
-      }
-    ]
-  },
-  "tools": {
-    "profile": "messaging"
+    }
   },
   "gateway": {
     "port": 18789,
-    "mode": "lan",
+    "mode": "local",
+    "controlUi": {
+      "dangerouslyAllowHostHeaderOriginFallback": true
+    },
     "auth": {
       "mode": "token",
       "token": "d6a9477ff358e25dd91d22c97aafc29028ee8a6a6bc84e84"

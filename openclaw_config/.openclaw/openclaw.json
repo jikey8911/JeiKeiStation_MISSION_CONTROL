@@ -1,23 +1,31 @@
 {
   "meta": {
     "lastTouchedVersion": "2026.3.13",
-    "lastTouchedAt": "2026-03-21T10:00:00.000Z"
+    "lastTouchedAt": "2026-03-17T19:05:00.000Z"
   },
   "logging": {
-    "level": "info"
+    "level": "debug"
+  },
+  "auth": {
+    "profiles": {
+      "openai-codex:default": {
+        "provider": "openai-codex",
+        "mode": "oauth"
+      }
+    }
   },
   "models": {
     "providers": {
       "ollama": {
-        "baseUrl": "http://host.docker.internal:11434",
+        "baseUrl": "http://openclaw-ollama:11434",
         "apiKey": "ollama-local",
         "api": "ollama",
         "models": [
           {
             "id": "llama3.2:latest",
             "name": "llama3.2",
-            "contextWindow": 16000,
-            "maxTokens": 4096
+            "contextWindow": 36000,
+            "maxTokens": 36000
           }
         ]
       }
@@ -28,77 +36,35 @@
       "model": {
         "primary": "ollama/llama3.2:latest"
       },
+      "models": {
+        "ollama/llama3.2:3b": {}
+      },
       "workspace": "/root/workspace",
       "memorySearch": {
         "enabled": false
-      }
-    },
-    "list": [
-      {
-        "id": "asistente",
-        "name": "JeiAssistant",
-        "type": "support",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "systemPrompt": "Eres JeiAssistant. Ayuda al Arquitecto a gestionar su infraestructura AI.",
-        "skills": [
-          "web-search"
-        ]
       },
-      {
-        "id": "frontend-dev",
-        "name": "Frontend Dev",
-        "type": "coding",
-        "enabled": true,
-        "model": "ollama/llama3.2:latest",
-        "systemPrompt": "Eres un experto en React y Tailwind. Tu misión es crear interfaces cyberpunk.",
-        "skills": [
-          "code-execution",
-          "file-operations"
-        ]
-      }
-    ]
-  },
-  "bindings": [
-    {
-      "agentId": "asistente",
-      "match": {
-        "channel": "telegram",
-        "accountId": "*"
-      }
-    },
-    {
-      "agentId": "frontend-dev",
-      "match": {
-        "channel": "webchat",
-        "accountId": "*"
+      "compaction": {
+        "mode": "safeguard"
       }
     }
-  ],
+  },
   "gateway": {
-    "port": 5000,
+    "port": 18789,
     "mode": "local",
-    "bind": "lan",
     "auth": {
-      "mode": "none"
-    },
-    "controlUi": {
-      "allowedOrigins": [
-        "*"
-      ]
+      "mode": "token",
+      "token": "d6a9477ff358e25dd91d22c97aafc29028ee8a6a6bc84e84"
     }
   },
   "channels": {
-    "webchat": {
-      "enabled": true
-    },
     "telegram": {
       "enabled": true,
       "botToken": "${TELEGRAM_BOT_TOKEN}",
+      "dmPolicy": "allowlist",
       "allowFrom": [
         8503241862
       ],
-      "groupPolicy": "open",
+      "groupPolicy": "allowlist",
       "streaming": "partial"
     }
   }

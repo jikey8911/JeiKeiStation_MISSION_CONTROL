@@ -13,16 +13,16 @@ services:
       - "8001:8001"
     volumes:
       # Mapeo del cerebro de producción
-      - ./openclaw_production/.openclaw:/root/.openclaw
+      - ./openclaw_production/.openclaw:/root
       # Mapeo del código para lectura/escritura
       - .:/root/workspace
       # Almacenamiento persistente
-      - openclaw_prod_data:/root/.openclaw/data
-      - openclaw_prod_cache:/root/.openclaw/cache
+      - openclaw_prod_data:/root/data
+      - openclaw_prod_cache:/root/cache
     environment:
       - NODE_ENV=production
       - OPENCLAW_HOME=/root
-      - OPENCLAW_CONFIG=/root/.openclaw/openclaw.json
+      - OPENCLAW_CONFIG=/root/openclaw.json
       - OLLAMA_BASE_URL=http://host.docker.internal:11434
     networks:
       - openclaw-net

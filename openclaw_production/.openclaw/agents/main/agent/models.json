@@ -8,7 +8,8 @@
         {
           "id": "llama3.2:latest",
           "name": "llama3.2",
-          "api": "ollama",
+          "contextWindow": 36000,
+          "maxTokens": 36000,
           "reasoning": false,
           "input": [
             "text"
@@ -19,8 +20,7 @@
             "cacheRead": 0,
             "cacheWrite": 0
           },
-          "contextWindow": 28000,
-          "maxTokens": 28000
+          "api": "ollama"
         }
       ]
     }
