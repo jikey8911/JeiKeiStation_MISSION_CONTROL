@@ -27,7 +27,17 @@ docker-compose.override.yml
 # Logs
 logs/
 *.log
-
+.npm/*
+**/.npm/
+.pnpm*
+.venv*
+.venv/
+backup*/
+openclaw_backups/
+workspace/
+openclaw.json.bak.*
+openclaw.json.bak
 # Temporary files
 tmp/
 temp/
+.cache/
