@@ -51,9 +51,9 @@ RUN mkdir -p $OPENCLAW_HOME/data \
     /root/skills
 
 # 5. Copiar archivos de configuración desde la carpeta unificada
-COPY openclaw_config/openclaw.json $OPENCLAW_HOME/openclaw.json
-COPY openclaw_config/agents/agents.json /root/agents/agents.json
-COPY openclaw_config/skills/skills.json /root/skills/skills.json
+COPY openclaw_production/.openclaw/openclaw.json $OPENCLAW_HOME/openclaw.json
+COPY openclaw_production/.openclaw/agents/agents.json /root/agents/agents.json
+COPY openclaw_production/.openclaw/skills/skills.json /root/skills/skills.json
 
 # 6. Script de Inicialización Robusto
 RUN printf '#!/bin/bash\n\
@@ -65,8 +65,8 @@ RUN printf '#!/bin/bash\n\
     \n\
     # Sincronizar configuración maestra si existe en /root\n\
     if [ -f "/root/openclaw.json" ]; then\n\
-        echo "🔄 Sincronizando configuración maestra..."\n\
-        cp /root/openclaw.json /root/.openclaw/openclaw.json\n\
+    echo "🔄 Sincronizando configuración maestra..."\n\
+    cp /root/openclaw.json /root/.openclaw/openclaw.json\n\
     fi\n\
     \n\
     echo "✅ Entorno listo. Ejecutando Gateway..."\n\
