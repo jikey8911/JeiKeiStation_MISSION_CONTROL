@@ -1,0 +1,87 @@
+name: Manual Deploy Service
+
+on:
+  workflow_dispatch:
+    inputs:
+      service:
+        description: 'Service to deploy'
+        required: true
+        default: 'ollama'
+        type: choice
+        options:
+          - ollama
+          - openclaw
+          - mysql
+          - redis
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      - name: Deploy ${{ inputs.service }}
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_CLOUD_HOST }}
+          username: ${{ secrets.ORACLE_CLOUD_USER }}
+          key: ${{ secrets.ORACLE_CLOUD_SSH_KEY }}
+          script: |
+            cd /opt/jeikei
+            
+            SERVICE="${{ inputs.service }}"
+            
+            echo "🚀 Deploying $SERVICE..."
+            
+            case $SERVICE in
+              ollama)
+                echo "📥 Pulling Ollama image..."
+                docker-compose -f docker-compose.prod.yml pull ollama
+                echo "🔄 Starting Ollama..."
+                docker-compose -f docker-compose.prod.yml up -d ollama
+                echo "⏳ Waiting for Ollama to be healthy..."
+                sleep 10
+                docker exec openclaw-ollama ollama pull llama3.2:latest || echo "Model pull in progress"
+                ;;
+              
+              openclaw)
+                echo "🔨 Building OpenClaw..."
+                docker-compose -f docker-compose.prod.yml build openclaw-app
+                echo "🔄 Starting OpenClaw..."
+                docker-compose -f docker-compose.prod.yml up -d openclaw-app
+                ;;
+              
+              mysql)
+                echo "⚠️  WARNING: Restarting MySQL will interrupt services"
+                echo "🔄 Restarting MySQL..."
+                docker-compose -f docker-compose.prod.yml restart mysql
+                echo "⏳ Waiting for MySQL to be healthy..."
+                sleep 10
+                ;;
+              
+              redis)
+                echo "🔄 Restarting Redis..."
+                docker-compose -f docker-compose.prod.yml restart redis
+                echo "⏳ Waiting for Redis to be healthy..."
+                sleep 5
+                ;;
+            esac
+            
+            echo "✅ $SERVICE deployment completed"
+            echo ""
+            echo "📊 Service Status:"
+            docker ps | grep $SERVICE || echo "Service not found"
+
+      - name: Notify Slack
+        if: always()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: ${{ job.status }}
+          text: '${{ job.status == ''success'' && ''✅'' || ''❌'' }} Manual Deploy: ${{ inputs.service }}'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true

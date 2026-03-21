@@ -1,0 +1,120 @@
+name: Sync Dev to Main & Deploy Frontend/Backend
+
+on:
+  push:
+    branches:
+      - dev
+    paths:
+      - 'apps/frontend/**'
+      - 'apps/backend/**'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/sync-and-deploy.yml'
+
+env:
+  REGISTRY: ghcr.io
+
+jobs:
+  sync-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+      - name: Checkout main branch
+        uses: actions/checkout@v4
+        with:
+          ref: main
+          token: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Configure Git
+        run: |
+          git config user.name "JeiKei Control"
+          git config user.email "control@jeikei.dev"
+
+      - name: Add upstream remote
+        run: |
+          git remote add upstream https://github.com/jikey8911/JeiKeiStation_MISSION_CONTROL.git
+          git fetch upstream dev
+
+      - name: Merge dev into main
+        run: |
+          git merge upstream/dev -m "🔄 Sync: Merge dev into main for deployment"
+          git push origin main
+        continue-on-error: true
+
+      - name: Deploy Frontend to Oracle Cloud
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_CLOUD_HOST }}
+          username: ${{ secrets.ORACLE_CLOUD_USER }}
+          key: ${{ secrets.ORACLE_CLOUD_SSH_KEY }}
+          script: |
+            cd /opt/jeikei
+            
+            echo "📥 Pulling latest changes from deployment repo..."
+            git pull origin main
+            
+            echo "🚀 Rebuilding Frontend..."
+            docker-compose -f docker-compose.prod.yml build jeikei_frontend
+            
+            echo "🔄 Restarting Frontend..."
+            docker-compose -f docker-compose.prod.yml up -d jeikei_frontend
+            
+            echo "✅ Frontend deployed successfully"
+            docker ps | grep jeikei_frontend
+
+      - name: Deploy Backend to Oracle Cloud
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_CLOUD_HOST }}
+          username: ${{ secrets.ORACLE_CLOUD_USER }}
+          key: ${{ secrets.ORACLE_CLOUD_SSH_KEY }}
+          script: |
+            cd /opt/jeikei
+            
+            echo "📥 Pulling latest changes from deployment repo..."
+            git pull origin main
+            
+            echo "🚀 Rebuilding Backend..."
+            docker-compose -f docker-compose.prod.yml build jeikei_api
+            
+            echo "🔄 Restarting Backend..."
+            docker-compose -f docker-compose.prod.yml up -d jeikei_api
+            
+            echo "✅ Backend deployed successfully"
+            docker ps | grep jeikei_api
+
+      - name: Verify deployment
+        uses: appleboy/ssh-action@master
+        with:
+          host: ${{ secrets.ORACLE_CLOUD_HOST }}
+          username: ${{ secrets.ORACLE_CLOUD_USER }}
+          key: ${{ secrets.ORACLE_CLOUD_SSH_KEY }}
+          script: |
+            echo "📊 Services Status:"
+            docker ps --format "table {{.Names}}\t{{.Status}}\t{{.Ports}}"
+            
+            echo ""
+            echo "🔍 Backend Health:"
+            curl -s http://localhost:3001/health || echo "Backend not responding"
+            
+            echo ""
+            echo "🔍 Frontend Health:"
+            curl -s http://localhost:3000 | head -20 || echo "Frontend not responding"
+
+      - name: Notify Slack on success
+        if: success()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: success
+          text: '✅ JeiKei Deployment Successful\n• Frontend: Deployed\n• Backend: Deployed'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
+
+      - name: Notify Slack on failure
+        if: failure()
+        uses: 8398a7/action-slack@v3
+        with:
+          status: failure
+          text: '❌ JeiKei Deployment Failed\nCheck GitHub Actions for details'
+          webhook_url: ${{ secrets.SLACK_WEBHOOK }}
+        continue-on-error: true
