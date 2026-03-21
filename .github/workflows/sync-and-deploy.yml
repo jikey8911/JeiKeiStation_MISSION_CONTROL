@@ -1,54 +1,54 @@
-name: 🔄 Sync to DockerDep and Deploy to Oracle
+name: 🔄 Sync and Deploy
 
 on:
   push:
     branches:
-      - depl  # Se activa cuando actualizas 'depl'
+      - depl
 
 jobs:
   sync-and-deploy:
     runs-on: ubuntu-latest
     steps:
-      - name: 📥 Checkout MISSION_CONTROL (depl)
+      - name: 📥 Checkout Branch
         uses: actions/checkout@v4
         with:
           ref: depl
           fetch-depth: 0
 
-      - name: 🔄 Push to JeiKeiStattion_DokerDep (main)
+      - name: 🔄 Sync Repositories
         env:
-          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }} # El token ghp_ que creamos
+          DEPLOY_TOKEN: ${{ secrets.DEPLOY_TOKEN }}
         run: |
-          git config --global user.email "github-actions[bot]@users.noreply.github.com"
-          git config --global user.name "github-actions[bot]"
+          git config --global user.email "juanguzmanescandonfp@gmail.com"
+          git config --global user.name "jikey8911"
           
-          # Configurar el remoto del repo de despliegue
-          REMOTE_URL="https://x-access-token:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
-          git remote add target "$REMOTE_URL"
+          # Construimos la URL con tu usuario y el token directamente
+          REMOTE_URL="https://jikey8911:${DEPLOY_TOKEN}@github.com/jikey8911/JeiKeiStattion_DokerDep.git"
           
-          # Forzar la rama 'depl' actual hacia la 'main' del repo de destino
-          echo "🚀 Sincronizando repositorios..."
+          git remote add target "$REMOTE_URL" || git remote set-url target "$REMOTE_URL"
+          
+          echo "🚀 Forzando sincronización hacia JeiKeiStattion_DokerDep:main..."
           git push target HEAD:main --force
 
-      - name: 🚀 SSH and Update Oracle Cloud
+      - name: 🚀 Update Oracle Cloud
         uses: appleboy/ssh-action@v1.0.3
         with:
           host: 147.224.220.58
           username: ubuntu
           key: ${{ secrets.SSH_PRIVATE_KEY }}
           script: |
-            echo "✅ Conectado a Oracle Cloud"
-            cd /home/ubuntu/JeiKeiStattion_DokerDep || git clone https://github.com/jikey8911/JeiKeiStattion_DokerDep.git /home/ubuntu/JeiKeiStattion_DokerDep
-            cd /home/ubuntu/JeiKeiStattion_DokerDep
+            cd /home/ubuntu/JeiKeiStattion_DokerDep || exit
             
-            # Actualizar código local en la VM
+            # 1. Traer los cambios del repo de despliegue
             git fetch origin main
             git reset --hard origin/main
             
-            # Recargar contenedores
-            echo "🔄 Reiniciando Docker Services..."
-            docker compose down
-            docker compose up -d --build
+            # 2. Levantar usando ESPECÍFICAMENTE el archivo de producción
+            echo "🔄 Desplegando con docker-compose.prod.yml..."
             
-            # Limpieza de imágenes huérfanas para no llenar el disco de Oracle
-            docker image prune -f
+            # Usamos -f para forzar el archivo de producción
+            sudo docker compose -f docker-compose.prod.yml down
+            sudo docker compose -f docker-compose.prod.yml up -d --build
+            
+            # 3. Limpieza automática
+            sudo docker image prune -f
