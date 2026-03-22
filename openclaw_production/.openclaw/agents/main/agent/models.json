@@ -1,15 +1,13 @@
 {
   "providers": {
     "ollama": {
-      "baseUrl": "http://openclaw-ollama:11434",
-      "apiKey": "ollama-local",
+      "baseUrl": "http://openclaw-ollama-local:11434",
+      "apiKey": "OLLAMA_API_KEY",
       "api": "ollama",
       "models": [
         {
           "id": "llama3.2:3b",
-          "name": "llama3.2",
-          "contextWindow": 36000,
-          "maxTokens": 36000,
+          "name": "llama3.2:3b",
           "reasoning": false,
           "input": [
             "text"
@@ -20,6 +18,25 @@
             "cacheRead": 0,
             "cacheWrite": 0
           },
+          "contextWindow": 128000,
+          "maxTokens": 8192,
+          "api": "ollama"
+        },
+        {
+          "id": "glm-4.7-flash",
+          "name": "glm-4.7-flash",
+          "reasoning": false,
+          "input": [
+            "text"
+          ],
+          "cost": {
+            "input": 0,
+            "output": 0,
+            "cacheRead": 0,
+            "cacheWrite": 0
+          },
+          "contextWindow": 131072,
+          "maxTokens": 8192,
           "api": "ollama"
         }
       ]

@@ -1,0 +1,22 @@
+ M .github/workflows/Direct-to-Oracle.yml
+ M docker-compose.local.yml
+ M docker-compose.prod.yml
+ M openclaw_production/.openclaw/agents/asistente/agent/models.json
+ M openclaw_production/.openclaw/agents/main/agent/models.json
+ M openclaw_production/.openclaw/completions/openclaw.bash
+ M openclaw_production/.openclaw/completions/openclaw.fish
+ M openclaw_production/.openclaw/completions/openclaw.ps1
+ M openclaw_production/.openclaw/completions/openclaw.zsh
+ M openclaw_production/.openclaw/devices/paired.json
+ M openclaw_production/.openclaw/devices/pending.json
+ M openclaw_production/.openclaw/openclaw.json
+ M openclaw_production/.openclaw/telegram/update-offset-default.json
+?? .openclaw/.openclaw/
+?? .openclaw/workspace/
+?? DEPLOYMENT_ORACLE_UPDATES.md
+?? git_status.txt
+?? openclaw_config/.openclaw/workspace/
+?? openclaw_production/.openclaw/agents/main/agent/auth-profiles.json
+?? openclaw_production/.openclaw/credentials/
+?? openclaw_production/.openclaw/workspace/
+?? workspace/

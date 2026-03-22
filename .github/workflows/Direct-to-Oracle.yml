@@ -46,10 +46,14 @@ jobs:
             echo "🧹 Limpiando contenedores huérfanos..."
             sudo docker rm -f openclaw-app jeikei_mysql openclaw-redis openclaw-ollama || true
             
-            # 4. Levantar Docker usando el archivo de producción
-            echo "🚀 Desplegando contenedores..."
-            sudo docker compose -f docker-compose.prod.yml down
-            sudo docker compose -f docker-compose.prod.yml up -d --build
+            # 4. Reconstruir imágenes si es necesario (sin tumbar los servicios aún)
+            echo "🏗️ Construyendo nuevas imágenes (si hay cambios)..."
+            sudo docker compose -f docker-compose.prod.yml build
             
-            # 5. Limpiar sistema para no llenar el disco de Oracle
+            # 5. Levantar Docker usando el archivo de producción (recrea solo lo que cambió)
+            echo "🚀 Desplegando contenedores (actualizando sin downtime completo)..."
+            sudo docker compose -f docker-compose.prod.yml up -d
+            
+            # 6. Limpiar sistema para no llenar el disco de Oracle
+            echo "🧹 Limpiando imágenes sin uso..."
             sudo docker image prune -f
