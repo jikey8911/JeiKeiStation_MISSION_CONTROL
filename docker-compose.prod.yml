@@ -29,6 +29,8 @@ services:
       context: .
       dockerfile: Dockerfile.ollama
     container_name: openclaw-ollama-prod
+    ports:
+      - "100.122.166.17:11434:11434"
     volumes:
       - ollama_data:/root/.ollama
     networks:
